@@ -76,11 +76,11 @@ function register_callbacks(scene::Scene, native_window)
 end
 
 
-button_key{T}(x::Type{T}) = error("Must be a keyboard or mouse button. Found: $T")
+button_key(x::Type{T}) where {T} = error("Must be a keyboard or mouse button. Found: $T")
 button_key(x::Type{Keyboard.Button}) = :keyboardbuttons
 button_key(x::Type{Mouse.Button}) = :mousebuttons
-button_key{T}(x::Set{T}) = button_key(T)
-button_key{T}(x::T) = button_key(T)
+button_key(x::Set{T}) where {T} = button_key(T)
+button_key(x::T) where {T} = button_key(T)
 
 """
 returns true if `button` is pressed in scene[:mousebuttons or :keyboardbuttons]
