@@ -240,7 +240,7 @@ dim3(x::NTuple{3, Any}) = x
 dim2(x) = ntuple(i-> x, Val{2})
 dim2(x::NTuple{2, Any}) = x
 
-lerp{T}(a::T, b::T, val::AbstractFloat) = (a .+ (val * (b .- a)))
+lerp(a::T, b::T, val::AbstractFloat) where {T} = (a .+ (val * (b .- a)))
 
 
 
