@@ -326,7 +326,7 @@ function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::At
     # PlotType
     FinalType = Combined{Typ, ArgTyp}
 
-    plot_attributes, scene_attributes = merged_get!(()-> default_theme(scene, FinalType, args_converted...), plotsym(FinalType), scene, attributes)
+    plot_attributes, scene_attributes = merged_get!(()-> default_theme(scene, FinalType, to_value(args_converted)...), plotsym(FinalType), scene, attributes)
     trans = get(plot_attributes, :transformation, automatic)
     transformation = if to_value(trans) == automatic
         Transformation(scene)
