@@ -5,9 +5,9 @@ const Theme = Attributes
 
 Theme(x::AbstractPlot) = x.attributes
 
-default_theme(scene, T::Type, args...) = Attributes()
+default_theme(scene, T; kwargs...) = Attributes()
 
-function default_theme(scene, args...)
+function default_theme(scene; kwargs...)
     light = Vec3f0[Vec3f0(1.0,1.0,1.0), Vec3f0(0.1,0.1,0.1), Vec3f0(0.9,0.9,0.9), Vec3f0(20,20,20)]
     Theme(
         color = theme(scene, :color),
@@ -326,7 +326,7 @@ function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::At
     # PlotType
     FinalType = Combined{Typ, ArgTyp}
 
-    plot_attributes, scene_attributes = merged_get!(()-> default_theme(scene, FinalType, to_value(args_converted)...), plotsym(FinalType), scene, attributes)
+    plot_attributes, scene_attributes = merged_get!(()-> default_theme(scene, FinalType; args = to_value(args_converted)), plotsym(FinalType), scene, attributes)
     trans = get(plot_attributes, :transformation, automatic)
     transformation = if to_value(trans) == automatic
         Transformation(scene)
