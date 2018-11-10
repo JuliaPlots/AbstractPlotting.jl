@@ -386,8 +386,8 @@ function seperate_tuple(args::Node{<: NTuple{N, Any}}) where N
 end
 
 function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::Attributes, args) where Typ
-    input = lift(tuple, to_node.(args)...)
-    argnodes = lift(input) do args
+    input = to_node.(args)
+    argnodes = lift(input...) do args...
         convert_arguments(PlotType, args...)
     end
     PlotType(scene, attributes, input, argnodes)
@@ -417,7 +417,7 @@ function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::At
         transformation.model
     end
     # create the plot, with the full attributes, the input signals, and the final signal nodes.
-    plot_obj = FinalType(scene, transformation, plot_attributes, seperate_tuple(input), seperate_tuple(args))
+    plot_obj = FinalType(scene, transformation, plot_attributes, input, seperate_tuple(args))
     calculated_attributes!(plot_obj)
     plot_obj, scene_attributes
 end
@@ -485,21 +485,21 @@ function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, args...; k
     # plottype will lose the argument types, so we just extract the plot func
     # type and recreate the type with the argument type
     PreType = Combined{plotfunc(PreType), typeof(argvalues)}
-    keys = used_attributes(PreType, args...)
+    keys = used_attributes(PreType, argvalues...)
     kw_signal = if isempty(keys) # lift(f) isn't supported so we need to catch the empty case
         Node(())
     else
         lift((args...)-> Pair.(keys, args), getindex.(attributes, keys)...) # make them one tuple to easier pass through
     end
     # call convert_arguments for a first time to get things started
-    converted = convert_arguments(PreType, args...; kw_signal[]...)
+    converted = convert_arguments(PreType, argvalues...; kw_signal[]...)
     # convert_arguments can return different things depending on the recipe type
     # apply_conversion deals with that!
     FinalType, argsconverted = apply_convert!(P, attributes, converted)
     @show FinalType
     converted_node = Node(argsconverted)
-    input_nodes = lift(tuple, to_node.(args)...)
-    onany(kw_signal, input_nodes) do kwargs, args
+    input_nodes =  to_node.(args)
+    onany(kw_signal, lift(tuple, input_nodes...)) do kwargs, args
         # do the argument conversion inside a lift
         result = convert_arguments(PlotType1, args...; kwargs...)
         argsconverted, finaltype = apply_convert!(attributes, result)
@@ -529,9 +529,7 @@ function _plot!(p::Combined{X, T}) where {X, T}
 end
 
 
-function plot!(scene::SceneLike, ::Type{PlotType}, attributes::Attributes, input::Node, args::Node) where PlotType <: AbstractPlot
-    println(typeof(input[]))
-    println(typeof(args[]))
+function plot!(scene::SceneLike, ::Type{PlotType}, attributes::Attributes, input::NTuple{N, Node}, args::Node) where {N, PlotType <: AbstractPlot}
 
     # create "empty" plot type - empty meaning containing no plots, just attributes + arguments
     plot_object, scene_attributes = PlotType(scene, attributes, input, args)
