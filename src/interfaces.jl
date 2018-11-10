@@ -435,11 +435,27 @@ e.g.:
     plottype(x::Array{<: AbstractFlot, 3}) = Volume
 ```
 """
-plottype(plot_args...) = Combined{Any, Tuple{typeof.(to_value.(plot_args))...}}
-
-
+plottype(plot_args...) = Combined{Any, Tuple{typeof.(to_value.(plot_args))...}} # default to dispatch to type recipes!
 plottype(::AbstractVector, ::AbstractVector) = Lines
 plottype(::AbstractMatrix) = Heatmap
+# If the Combined has no plot func, calculate them
+plottype(::Type{<: Combined{Any}}, argvalues...) = plottype(argvalues...)
+# If it has something more concrete than Any, use it directly
+plottype(P::Type{<: Combined{T}}, argvalues...) where T = P
+
+"""
+    plottype(P1::Type{<: Combined{T1}}, P2::Type{<: Combined{T2}})
+
+Chooses the more concrete plot type
+```example
+function convert_arguments(P::PlotFunc, args...)
+    ptype = plottype(P, Lines)
+    ...
+end
+"""
+plottype(P1::Type{<: Combined{Any}}, P2::Type{<: Combined{T}}) where T = P2
+plottype(P1::Type{<: Combined{T}}, P2::Type{<: Combined}) where T = P1
+
 
 """
 Returns the Combined type that represents the signature of `args`.
@@ -472,8 +488,8 @@ eval(default_plot_signatures(:plot, :plot!, :Any))
 # plots to scene
 
 plotfunc(::Combined{F}) where F = F
-plottype(::Type{Any}, argvalues...) = plottype(argvalues...)
-plottype(::Type{T}, argvalues...) where T <: AbstractPlot = T
+
+
 
 """
 Main plotting signatures that plot/plot! route to if no Plot Type is given
