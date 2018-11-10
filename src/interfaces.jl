@@ -495,14 +495,13 @@ function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, args...; k
     converted = convert_arguments(PreType, argvalues...; kw_signal[]...)
     # convert_arguments can return different things depending on the recipe type
     # apply_conversion deals with that!
-    FinalType, argsconverted = apply_convert!(P, attributes, converted)
-    @show FinalType
+    FinalType, argsconverted = apply_convert!(PreType, attributes, converted)
     converted_node = Node(argsconverted)
     input_nodes =  to_node.(args)
     onany(kw_signal, lift(tuple, input_nodes...)) do kwargs, args
         # do the argument conversion inside a lift
-        result = convert_arguments(PlotType1, args...; kwargs...)
-        argsconverted, finaltype = apply_convert!(attributes, result)
+        result = convert_arguments(FinalType, args...; kwargs...)
+        finaltype, argsconverted = apply_convert!(FinalType, attributes, result)
         if finaltype != FinalType
             error("Plot type changed from $FinalType to $finaltype after conversion.
                 Changing the plot type based on values in convert_arguments is not allowed"
