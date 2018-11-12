@@ -501,11 +501,11 @@ function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, args...; k
     # plottype will lose the argument types, so we just extract the plot func
     # type and recreate the type with the argument type
     PreType = Combined{plotfunc(PreType), typeof(argvalues)}
-    keys = used_attributes(PreType, argvalues...)
-    kw_signal = if isempty(keys) # lift(f) isn't supported so we need to catch the empty case
+    convert_keys = intersect(used_attributes(PreType, argvalues...), keys(attributes))
+    kw_signal = if isempty(convert_keys) # lift(f) isn't supported so we need to catch the empty case
         Node(())
     else
-        lift((args...)-> Pair.(keys, args), getindex.(attributes, keys)...) # make them one tuple to easier pass through
+        lift((args...)-> Pair.(convert_keys, args), getindex.(attributes, convert_keys)...) # make them one tuple to easier pass through
     end
     # call convert_arguments for a first time to get things started
     converted = convert_arguments(PreType, argvalues...; kw_signal[]...)
