@@ -10,11 +10,15 @@ Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(nam
 
 # add all methods that will be necessary to remove ambiguities
 for s in [:(Key), :(Key{:color}), :(Key{:linestyle})]
-    @eval function convert_attribute(p::Palette, key::($s))
-        attr = convert_attribute(p.values[p.i[]], key)
-        increment!(p)
-        attr
-    end
+    @eval convert_attribute(p::Palette, key::($s)) = convert_palette(p, key)
+end
+
+convert_attribute(p::Palette, m::Key{:marker}, s::Key{:scatter}) = convert_palette(p, m, s)
+
+function convert_palette(p::Palette, args...)
+    attr = convert_attribute(p[], args...)
+    increment!(p)
+    attr
 end
 
 function increment!(p::Palette, n = 1)
@@ -25,3 +29,5 @@ end
 Base.size(p::Palette) = Base.size(p.values)
 
 Base.getindex(p::Palette, i) = p.values[(i+p.i[]-2) % length(p)+1]
+
+Base.getindex(p::Palette) = p.values[p.i[]]

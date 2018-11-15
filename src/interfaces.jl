@@ -146,7 +146,7 @@ Plots a marker for each element in `(x, y, z)`, `(x, y)`, or `positions`.
 @recipe(Scatter) do scene
     Theme(;
         default_theme(scene)...,
-        marker = Circle,
+        marker = theme(scene, :marker),
         markersize = 0.1,
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
