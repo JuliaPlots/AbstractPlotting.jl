@@ -4,6 +4,7 @@ const minimal_default = Attributes(
     backgroundcolor = RGBAf0(1,1,1,1),
     color = Palette(ColorBrewer.palette("Dark2", 8), cycle = true),
     colormap = :viridis,
+    linestyle = Palette([nothing, :dash, :dot, :dashdot, :dashdotdot]),
     resolution = reasonable_resolution(),
     visible = true,
     clear = true,

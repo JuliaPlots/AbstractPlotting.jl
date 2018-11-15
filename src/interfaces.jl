@@ -104,7 +104,7 @@ Creates a connected line plot for each element in `(x, y, z)`, `(x, y)` or `posi
         linewidth = 1.0,
         colormap = theme(scene, :colormap),
         colorrange = automatic,
-        linestyle = nothing,
+        linestyle = theme(scene, :linestyle),
         fxaa = false
     )
 end

@@ -9,7 +9,7 @@ end
 Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(name, n); kwargs...)
 
 # add all methods that will be necessary to remove ambiguities
-for s in [:(Key), :(Key{:color})]
+for s in [:(Key), :(Key{:color}), :(Key{:linestyle})]
     @eval function convert_attribute(p::Palette, key::($s))
         attr = convert_attribute(p.values[p.i[]], key)
         p.cycle && (p.i[] = p.i[] == length(p.values) ? one(UInt8) : p.i[] + one(UInt8))
