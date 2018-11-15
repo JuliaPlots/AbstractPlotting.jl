@@ -12,11 +12,16 @@ Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(nam
 for s in [:(Key), :(Key{:color}), :(Key{:linestyle})]
     @eval function convert_attribute(p::Palette, key::($s))
         attr = convert_attribute(p.values[p.i[]], key)
-        p.cycle && (p.i[] = p.i[] == length(p.values) ? one(UInt8) : p.i[] + one(UInt8))
+        increment!(p)
         attr
     end
 end
 
+function increment!(p::Palette, n = 1)
+    p.cycle && (p.i[] = (p.i[]+n-1)%length(p)+1)
+    p
+end
+
 Base.size(p::Palette) = Base.size(p.values)
 
-Base.getindex(p::Palette, i) = p.values[(i+p.i[]-2) % length(p.values)+1]
+Base.getindex(p::Palette, i) = p.values[(i+p.i[]-2) % length(p)+1]
