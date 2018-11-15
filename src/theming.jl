@@ -2,7 +2,7 @@
 const minimal_default = Attributes(
     font = "Dejavu Sans",
     backgroundcolor = RGBAf0(1,1,1,1),
-    color = :black,
+    color = Palette(ColorBrewer.palette("Dark2", 8), cycle = true),
     colormap = :viridis,
     resolution = reasonable_resolution(),
     visible = true,

@@ -25,6 +25,7 @@ include("interaction/nodes.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
+include("palette.jl")
 include("theming.jl")
 include("recipes.jl")
 include("interfaces.jl")
