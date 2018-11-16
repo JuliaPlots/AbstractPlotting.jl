@@ -4,9 +4,12 @@ struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
    values::T
    i::Ref{UInt8}
    cycle::Bool
-   Palette(values::T; cycle = true) where {T<:AbstractVector} =
-       new{eltype(T), T}(values, Ref{UInt8}(1), cycle)
+   Palette(values::T, i::Ref{UInt8}; cycle = true) where {T<:AbstractVector} =
+       new{eltype(T), T}(values, i, cycle)
 end
+
+Palette(values::T; cycle = true) where {T<:AbstractVector} =
+    Palette(values, Ref{UInt8}(1-cycle); cycle = true)
 
 Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(name, n); kwargs...)
 
@@ -17,8 +20,8 @@ end
 convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = _convert_attribute(p, m, s)
 
 function convert_attribute(p::AbstractPalette)
-    attr = p[]
     is_cycle(p) && forward!(p)
+    attr = p[]
     attr
 end
 
@@ -30,11 +33,7 @@ function forward!(p::Palette, n = 1)
     p
 end
 
-function freeze(p::Palette)
-    f = Palette(p.values, cycle = false)
-    f.i[] = p.i[]
-    f
-end
+freeze(p::Palette) = Palette(p.values, p.i, cycle = false)
 
 reset(p::Palette) = Palette(p.values, cycle = p.cycle)
 
