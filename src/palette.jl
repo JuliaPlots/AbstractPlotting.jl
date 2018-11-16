@@ -8,6 +8,8 @@ struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
        new{eltype(T), T}(values, i, cycle)
 end
 
+Base.eltype(::AbstractPalette{S}) where {S} = S
+
 Palette(values::T; cycle = true) where {T<:AbstractVector} =
     Palette(values, Ref{UInt8}(1-cycle); cycle = true)
 
