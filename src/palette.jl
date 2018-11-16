@@ -3,15 +3,16 @@ abstract type AbstractPalette{S} end
 struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
    values::T
    i::Ref{UInt8}
+   offset::Int8
    cycle::Bool
-   Palette(values::T, i::Ref{UInt8}; cycle = true) where {T<:AbstractVector} =
-       new{eltype(T), T}(values, i, cycle)
+   Palette(values::T, i::Ref{UInt8}, offset::Int8=Int8(0); cycle = true) where {T<:AbstractVector} =
+       new{eltype(T), T}(values, i, offset, cycle)
 end
 
 Base.eltype(::AbstractPalette{S}) where {S} = S
 
-Palette(values::T; cycle = true) where {T<:AbstractVector} =
-    Palette(values, Ref{UInt8}(1-cycle); cycle = cycle)
+Palette(values::T, offset::Int8=Int8(0); cycle = true) where {T<:AbstractVector} =
+    Palette(values, Ref{UInt8}(1), offset; cycle = cycle)
 
 Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(name, n); kwargs...)
 
@@ -22,8 +23,8 @@ end
 convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = _convert_attribute(p, m, s)
 
 function convert_attribute(p::AbstractPalette)
-    is_cycle(p) && forward!(p)
     attr = p[]
+    is_cycle(p) && forward!(p)
     attr
 end
 
@@ -35,7 +36,7 @@ function forward!(p::Palette, n = 1)
     p
 end
 
-freeze(p::Palette) = Palette(p.values, p.i, cycle = false)
+freeze(p::Palette) = Palette(p.values, p.i, Int8(p.offset - 1), cycle = false)
 
 reset(p::Palette) = Palette(p.values, cycle = p.cycle)
 
@@ -44,6 +45,4 @@ is_cycle(p::Palette) = p.cycle
 Base.size(p::Palette) = Base.size(p.values)
 Base.length(p::Palette) = Base.length(p.values)
 
-Base.getindex(p::Palette, i) = p.values[(i+p.i[]-2) % length(p)+1]
-
-Base.getindex(p::Palette) = p.values[p.i[]]
+Base.getindex(p::Palette, i=1) = p.values[(i+p.i[]+p.offset-2) % length(p)+1]
