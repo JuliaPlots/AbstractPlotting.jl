@@ -30,13 +30,17 @@ function current_default_theme(; kw_args...)
     merge!(new_theme, rest)
 end
 
-function reset!(theme::Attributes)
-    for (key, val) in theme
-        if (val[] isa AbstractPalette) && is_cycle(val[])
-            val[] = reset(val[])
+for (func, func!) in zip([:freeze, :reset], [:freeze!, :reset!])
+    @eval begin
+        $func(x) = x
+        $func(x::Observable{T}, args...) where {T} = Observable{T}($func(x[]), args...)
+
+        function $func!(theme::Attributes)
+            kwargs = ((k => $func(v)) for (k, v) in theme if isa(v[], AbstractPalette) && is_cycle(v[]))
+            merge!(theme, Attributes(; kwargs...))
         end
+        $func(theme::Attributes) = $func!(copy(theme))
     end
-    theme
 end
 
 function set_theme!(new_theme::Attributes)
