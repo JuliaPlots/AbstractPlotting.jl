@@ -19,11 +19,11 @@ convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = conve
 
 function convert_palette(p::AbstractPalette, args...)
     attr = convert_attribute(p[], args...)
-    increment!(p)
+    forward!(p)
     attr
 end
 
-function increment!(p::Palette, n = 1)
+function forward!(p::Palette, n = 1)
     is_cycle(p) && (p.i[] = (p.i[]+n-1)%length(p)+1)
     p
 end
