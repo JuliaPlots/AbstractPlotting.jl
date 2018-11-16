@@ -11,7 +11,7 @@ end
 Base.eltype(::AbstractPalette{S}) where {S} = S
 
 Palette(values::T; cycle = true) where {T<:AbstractVector} =
-    Palette(values, Ref{UInt8}(1-cycle); cycle = true)
+    Palette(values, Ref{UInt8}(1-cycle); cycle = cycle)
 
 Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(name, n); kwargs...)
 
