@@ -1,4 +1,6 @@
-struct Palette{S, T<:AbstractVector{S}} <: AbstractVector{S}
+abstract type AbstractPalette{S} <: AbstractVector{S} end
+
+struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
    values::T
    i::Ref{UInt8}
    cycle::Bool
@@ -10,12 +12,12 @@ Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(nam
 
 # add all methods that will be necessary to remove ambiguities
 for s in [:(Key), :(Key{:color}), :(Key{:linestyle})]
-    @eval convert_attribute(p::Palette, key::($s)) = convert_palette(p, key)
+    @eval convert_attribute(p::AbstractPalette, key::($s)) = convert_palette(p, key)
 end
 
-convert_attribute(p::Palette, m::Key{:marker}, s::Key{:scatter}) = convert_palette(p, m, s)
+convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = convert_palette(p, m, s)
 
-function convert_palette(p::Palette, args...)
+function convert_palette(p::AbstractPalette, args...)
     attr = convert_attribute(p[], args...)
     increment!(p)
     attr
