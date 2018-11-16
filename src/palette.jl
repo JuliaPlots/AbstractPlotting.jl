@@ -36,7 +36,7 @@ function forward!(p::Palette, n = 1)
     p
 end
 
-freeze(p::Palette) = Palette(p.values, p.i, Int8(p.offset - 1), cycle = false)
+freeze(p::Palette, offset = -1) = Palette(p.values, p.i, Int8(p.offset + offset), cycle = false)
 
 reset(p::Palette) = Palette(p.values, cycle = p.cycle)
 

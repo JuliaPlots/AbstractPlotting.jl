@@ -32,14 +32,14 @@ end
 
 for (func, func!) in zip([:freeze, :reset], [:freeze!, :reset!])
     @eval begin
-        $func(x) = x
-        $func(x::Observable{T}, args...) where {T} = Observable{T}($func(x[]), args...)
+        $func(x, args...) = x
+        $func(x::Observable{T}, args...) where {T} = Observable{T}($func(x[], args...))
 
-        function $func!(theme::Attributes)
-            kwargs = ((k => $func(v)) for (k, v) in theme if isa(v[], AbstractPalette) && is_cycle(v[]))
+        function $func!(theme::Attributes, args...)
+            kwargs = ((k => $func(v, args...)) for (k, v) in theme if isa(v[], AbstractPalette) && is_cycle(v[]))
             merge!(theme, Attributes(; kwargs...))
         end
-        $func(theme::Attributes) = $func!(copy(theme))
+        $func(theme::Attributes, args...) = $func!(copy(theme), args...)
     end
 end
 
