@@ -1,4 +1,4 @@
-abstract type AbstractPalette{S} <: AbstractVector{S} end
+abstract type AbstractPalette{S} end
 
 struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
    values::T
@@ -12,16 +12,18 @@ Palette(name::Union{String, Symbol}, n = 8; kwargs...) = Palette(to_colormap(nam
 
 # add all methods that will be necessary to remove ambiguities
 for s in [:(Key), :(Key{:color}), :(Key{:linestyle})]
-    @eval convert_attribute(p::AbstractPalette, key::($s)) = convert_palette(p, key)
+    @eval convert_attribute(p::AbstractPalette, key::($s)) = _convert_attribute(p, key)
 end
+convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = _convert_attribute(p, m, s)
 
-convert_attribute(p::AbstractPalette, m::Key{:marker}, s::Key{:scatter}) = convert_palette(p, m, s)
-
-function convert_palette(p::AbstractPalette, args...)
-    attr = convert_attribute(p[], args...)
+function convert_attribute(p::AbstractPalette)
+    attr = p[]
     is_cycle(p) && forward!(p)
     attr
 end
+
+# Necessary to avoid dispatch issues: will be removed when above method becomes sufficient
+_convert_attribute(p::AbstractPalette, args...) = convert_attribute(convert_attribute(p), args...)
 
 function forward!(p::Palette, n = 1)
     (p.i[] = (p.i[]+n-1)%length(p)+1)
@@ -39,6 +41,7 @@ reset(p::Palette) = Palette(p.values, cycle = p.cycle)
 is_cycle(p::Palette) = p.cycle
 
 Base.size(p::Palette) = Base.size(p.values)
+Base.length(p::Palette) = Base.length(p.values)
 
 Base.getindex(p::Palette, i) = p.values[(i+p.i[]-2) % length(p)+1]
 
