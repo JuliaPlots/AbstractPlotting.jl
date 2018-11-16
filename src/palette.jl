@@ -4,7 +4,7 @@ struct Palette{S, T<:AbstractVector{S}} <: AbstractPalette{S}
    values::T
    i::Ref{UInt8}
    cycle::Bool
-   Palette(values::T; cycle = false) where {T<:AbstractVector} =
+   Palette(values::T; cycle = true) where {T<:AbstractVector} =
        new{eltype(T), T}(values, Ref{UInt8}(1), cycle)
 end
 
@@ -24,9 +24,13 @@ function convert_palette(p::AbstractPalette, args...)
 end
 
 function increment!(p::Palette, n = 1)
-    p.cycle && (p.i[] = (p.i[]+n-1)%length(p)+1)
+    is_cycle(p) && (p.i[] = (p.i[]+n-1)%length(p)+1)
     p
 end
+
+reset(p::Palette) = Palette(p.values, cycle = p.cycle)
+
+is_cycle(p::Palette) = p.cycle
 
 Base.size(p::Palette) = Base.size(p.values)
 

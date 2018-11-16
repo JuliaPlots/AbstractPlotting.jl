@@ -30,6 +30,15 @@ function current_default_theme(; kw_args...)
     merge!(new_theme, rest)
 end
 
+function reset!(theme::Attributes)
+    for (key, val) in theme
+        if (val[] isa AbstractPalette) && is_cycle(val[])
+            val[] = reset(val[])
+        end
+    end
+    theme
+end
+
 function set_theme!(new_theme::Attributes)
     empty!(_current_default_theme)
     new_theme, rest = merge_attributes!(new_theme, minimal_default)

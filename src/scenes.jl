@@ -283,7 +283,7 @@ function Scene(;
         kw_args...
     )
     events = Events()
-    theme = current_default_theme(; kw_args...)
+    theme = current_default_theme(; kw_args...) |> reset!
     resolution = theme[:resolution][]
     px_area = Observable(IRect(0, 0, resolution))
     on(events.window_area) do w_area
