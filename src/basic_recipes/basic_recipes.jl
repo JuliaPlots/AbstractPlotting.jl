@@ -444,9 +444,9 @@ function AbstractPlotting.plot!(p::BarPlot)
     )
 end
 
-convert_arguments(P::Type{<:AbstractPlot}, r::AbstractVector, f::Function) = convert_arguments(P, r, f.(r))
+convert_arguments(P::PlotFunc, r::AbstractVector, f::Function) = convert_arguments(P, r, f.(r))
 
-function convert_arguments(P::Type{<:AbstractPlot}, i::AbstractInterval, f::Function)
+function convert_arguments(P::PlotFunc, i::AbstractInterval, f::Function)
     convert_arguments(P, PlotUtils.adapted_grid(f, endpoints(i)), f)
 end
 
