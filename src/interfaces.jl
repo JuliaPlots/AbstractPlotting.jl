@@ -104,7 +104,7 @@ Creates a connected line plot for each element in `(x, y, z)`, `(x, y)` or `posi
         linewidth = 1.0,
         colormap = theme(scene, :colormap),
         colorrange = automatic,
-        linestyle = nothing,
+        linestyle = theme(scene, :linestyle),
         fxaa = false
     )
 end
@@ -146,7 +146,7 @@ Plots a marker for each element in `(x, y, z)`, `(x, y)`, or `positions`.
 @recipe(Scatter) do scene
     Theme(;
         default_theme(scene)...,
-        marker = Circle,
+        marker = theme(scene, :marker),
         markersize = 0.1,
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
