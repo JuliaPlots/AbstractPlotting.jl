@@ -467,7 +467,7 @@ end
 
 function plot!(p::Combined{scatterlines, <:NTuple{N, Any}}) where N
     plot!(p, Lines, Theme(p), p[1:N]...)
-    plot!(p, Scatter, freeze(Theme(p)), p[1:N]...)
+    plot!(p, Scatter, Theme(p), p[1:N]...)
 end
 
 
