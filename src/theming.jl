@@ -27,6 +27,7 @@ const minimal_default = Attributes(
     color = :black,
     colormap = :viridis,
     marker = Circle,
+    markersize = 0.1,
     linestyle = nothing,
     resolution = reasonable_resolution(),
     visible = true,

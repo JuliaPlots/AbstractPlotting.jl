@@ -147,7 +147,7 @@ Plots a marker for each element in `(x, y, z)`, `(x, y)`, or `positions`.
     Theme(;
         default_theme(scene)...,
         marker = theme(scene, :marker),
-        markersize = 0.1,
+        markersize = theme(scene, :markersize),
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
         glowcolor = RGBA(0, 0, 0, 0),
@@ -173,7 +173,7 @@ Plots a mesh for each element in `(x, y, z)`, `(x, y)`, or `positions` (similar 
     Theme(;
         default_theme(scene)...,
         marker = Sphere(Point3f0(0), 1f0),
-        markersize = 0.1,
+        markersize = theme(scene, :markersize),
         rotations = Quaternionf0(0, 0, 0, 1),
         colormap = theme(scene, :colormap),
         colorrange = automatic,
