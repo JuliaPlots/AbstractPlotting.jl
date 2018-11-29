@@ -556,3 +556,21 @@ function plot!(p::LinesFill)
     yhigh = y
     plot!(p, Band, theme, x, ylow, yhigh)
 end
+
+@recipe(ScatterLinesFill) do scene
+    Theme(;
+        default_theme(scene, Band)...,
+        default_theme(scene, ScatterLines)...,
+        alpha = 0.2
+    )
+end
+
+function plot!(p::ScatterLinesFill)
+    x, y = p[1:2]
+    plot!(p, ScatterLines, Theme(p), x, y)
+    theme = copy(Theme(p))
+    theme[:color] = lift(combine_color_alpha, Theme(p)[:color], Theme(p)[:alpha])
+    ylow = lift(t -> fill!(similar(t), 0), y)
+    yhigh = y
+    plot!(p, Band, theme, x, ylow, yhigh)
+end
