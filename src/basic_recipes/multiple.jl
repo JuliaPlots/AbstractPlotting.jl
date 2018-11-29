@@ -40,14 +40,14 @@ function convert_arguments(P::PlotFunc, m::PlotList)
     PlotSpec{MultiplePlot}(pl)
 end
 
-combine(o1, o2, o3) = o3
+combine(val1, val2; palette = nothing) = val2
 
 function combine!(theme1::Theme, theme2::Theme)
     palette = get(theme1, :palette, current_default_theme()[:palette])
     for (key, val) in theme2
-        o1 = get(theme1, key, nothing)
-        o2 = get(palette, key, nothing)
-        theme1[key] = lift(combine, to_node(o1), to_node(o2), val)
+        tv = get(theme1, key, nothing) |> to_node
+        pv = get(palette, key, nothing) |> to_node
+        theme1[key] = lift((t, p, v) -> combine(t, v, palette = p), tv, pv, val)
     end
     theme1
 end
