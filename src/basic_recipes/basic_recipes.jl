@@ -517,3 +517,42 @@ function fill_between!(x, y1, y2; where = nothing, scene = current_scene(), kw_a
 end
 
 export fill_between!
+
+function combine_color_alpha(c, alpha)
+    col = to_color(c)
+    RGBAf0(col.r, col.g, col.b, alpha)
+end
+
+@recipe(Ribbon) do scene
+    Theme(;
+        default_theme(scene, Band)...,
+        default_theme(scene, Lines)...,
+        alpha = 0.2
+    )
+end
+
+function plot!(p::Ribbon)
+    x, y, ylow, yhigh = p[1:4]
+    plot!(p, Lines, Theme(p), x, y)
+    theme = copy(Theme(p))
+    theme[:color] = lift(combine_color_alpha, Theme(p)[:color], Theme(p)[:alpha])
+    plot!(p, Band, theme, x, ylow, yhigh)
+end
+
+@recipe(LinesFill) do scene
+    Theme(;
+        default_theme(scene, Band)...,
+        default_theme(scene, Lines)...,
+        alpha = 0.2
+    )
+end
+
+function plot!(p::LinesFill)
+    x, y = p[1:2]
+    plot!(p, Lines, Theme(p), x, y)
+    theme = copy(Theme(p))
+    theme[:color] = lift(combine_color_alpha, Theme(p)[:color], Theme(p)[:alpha])
+    ylow = lift(t -> fill!(similar(t), 0), y)
+    yhigh = y
+    plot!(p, Band, theme, x, ylow, yhigh)
+end
