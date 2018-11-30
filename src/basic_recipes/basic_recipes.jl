@@ -539,20 +539,13 @@ function plot!(p::Ribbon)
     plot!(p, Band, theme, x, ylow, yhigh)
 end
 
-@recipe(LinesFill) do scene
-    Theme(;
-        default_theme(scene, Band)...,
-        default_theme(scene, Lines)...,
-        alpha = 0.2
-    )
-end
-
 function plot!(p::LinesFill)
-    x, y = p[1:2]
-    plot!(p, Lines, Theme(p), x, y)
+    pts = p[1]
+    x = lift(t -> getindex.(t, 1), pts)
+    yhigh = lift(t -> getindex.(t, 2), pts)
+    ylow = lift(t -> fill!(similar(t), 0), yhigh)
+    plot!(p, Lines, Theme(p), pts)
     theme = copy(Theme(p))
     theme[:color] = lift(combine_color_alpha, Theme(p)[:color], Theme(p)[:alpha])
-    ylow = lift(t -> fill!(similar(t), 0), y)
-    yhigh = y
     plot!(p, Band, theme, x, ylow, yhigh)
 end

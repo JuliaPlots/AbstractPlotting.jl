@@ -110,6 +110,19 @@ Creates a connected line plot for each element in `(x, y, z)`, `(x, y)` or `posi
 end
 
 """
+    `lines(x, y, z)` / `lines(x, y)` / or `lines(positions)`
+
+Creates a connected line plot for each element in `(x, y, z)`, `(x, y)` or `positions`.
+"""
+@recipe(LinesFill) do scene
+    Theme(;
+        default_theme(scene, Band)...,
+        default_theme(scene, Lines)...,
+        alpha = 0.2
+    )
+end
+
+"""
     `linesegments(x, y, z)` / `linesegments(x, y)` / `linesegments(positions)`
 
 Plots a line for each pair of points in `(x, y, z)`, `(x, y)`, or `positions`.

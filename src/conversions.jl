@@ -34,7 +34,7 @@ convert_attribute(x, key::Key) = x
 # By default, don't apply any conversions
 convert_arguments(P, args...) = args
 
-const PointBased = Union{MeshScatter, Scatter, Lines, LineSegments}
+const PointBased = Union{MeshScatter, Scatter, Lines, LinesFill, LineSegments}
 const XYBased = PointBased
 
 function convert_arguments(::Type{<: PointBased}, positions::AbstractVector{<: VecTypes{N, <: Number}}) where N
