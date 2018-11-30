@@ -78,6 +78,6 @@ end
 function Base.:*(::Type{<:Combined{S}}, ::Type{<:Combined{T}}) where {S, T}
     params1 = S isa Function ? [S] : S.params
     params2 = T isa Function ? [T] : T.params
-    params = union(params1, params2) |> Tuple
+    params = union(params1, params2)
     Combined{Tuple{params...}}
 end
