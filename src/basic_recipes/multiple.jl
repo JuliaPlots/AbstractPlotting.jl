@@ -66,7 +66,7 @@ function plot!(p::Combined{multipleplot, <:Tuple{PlotList}})
 end
 
 function default_theme(scene, ::Type{<:Combined{S, T}}) where {S<:Tuple, T}
-    merge((default_theme(scene, pt) for pt in S.parameters)...)
+    merge((default_theme(scene, Combined{pt}) for pt in S.parameters)...)
 end
 
 function plot!(p::Combined{S, <:Tuple{Vararg{Any, N}}}) where {S <: Tuple, N}
