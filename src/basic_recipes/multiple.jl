@@ -76,8 +76,8 @@ function plot!(p::Combined{S, <:Tuple{Vararg{Any, N}}}) where {S <: Tuple, N}
 end
 
 function Base.:*(::Type{<:Combined{S}}, ::Type{<:Combined{T}}) where {S, T}
-    params1 = S isa Function ? [S] : S.parameters
-    params2 = T isa Function ? [T] : T.parameters
+    params1 = S isa Type{<:Tuple} ? S.parameters : [S]
+    params2 = T isa Type{<:Tuple} ? T.parameters : [T]
     params = union(params1, params2)
     Combined{Tuple{params...}}
 end
