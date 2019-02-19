@@ -142,6 +142,10 @@ export plot!, plot
 export Stepper, step!, replay_events, record_events, RecordEvents, record, VideoStream
 export VideoStream, recordframe!, record
 
+# saving functions
+
+export save
+
 # default icon for Makie
 function icon()
     path = joinpath(dirname(pathof(AbstractPlotting)), "..", "assets", "icons")
