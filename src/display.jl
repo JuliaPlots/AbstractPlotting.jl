@@ -125,6 +125,10 @@ function FileIO.save(filename::String, scene::Scene)
         show(IOContext(s, :full_fidelity => true), MIME"image/png"(), scene)
     end
 end
+
+# here we define a `save` method which can be exported by 
+save(filename::String, scene::Scene) = FileIO.save(filename, scene)
+
 """
     step!(s::Stepper)
 steps through a `Makie.Stepper` and outputs a file with filename `filename-step.jpg`.
