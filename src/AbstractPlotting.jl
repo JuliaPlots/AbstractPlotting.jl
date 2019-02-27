@@ -61,6 +61,7 @@ include("basic_recipes/legend.jl")
 include("interaction/events.jl")
 include("interaction/gui.jl")
 include("interaction/interactive_api.jl")
+include("interaction/widgets.jl")
 
 # documentation and help functions
 include("documentation/documentation.jl")
