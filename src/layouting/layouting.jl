@@ -180,9 +180,9 @@ function update!(p::Scene)
 end
 
 vbox(plots::Transformable...; kw_args...) = vbox([plots...]; kw_args...)
-vbox(plots...; kw_args...) = vbox([render(plot) for plot in plots]; kw_args...)
+vbox(plots...; kw_args...) = vbox([convert(Scene, plot) for plot in plots]; kw_args...)
 hbox(plots::Transformable...; kw_args...) = hbox([plots...]; kw_args...)
-hbox(plots...; kw_args...) = hbox([render(plot) for plot in plots]; kw_args...)
+hbox(plots...; kw_args...) = hbox([convert(Scene, plot) for plot in plots]; kw_args...)
 
 function hbox(plots::Vector{T}; parent = Scene(clear = false), kw_args...) where T <: Scene
     layout(plots, 2; parent = parent, kw_args...)
