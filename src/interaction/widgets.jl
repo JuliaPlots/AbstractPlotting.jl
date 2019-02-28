@@ -13,9 +13,7 @@ function Widgets.slider(::MakieBackend, range; label = nothing)
     Widget{:slider}([:label => label], output = val, layout = _ -> scn)
 end
 
-render(w::Widget) = w.layout(w)
-
-Base.show(io::IO, x::Widget) = show(io, render(x))
-Base.display(w::Widget) = display(render(w))
+render(x) = x
+render(w::Widget) = Widgets.render(w)
 
 Widgets.manipulatelayout(::MakieBackend) = hbox
