@@ -17,4 +17,8 @@ function Base.convert(::Type{S}, w::Widget) where {S <: Scene}
     convert(S, Widgets.render(w))
 end
 
-Widgets.defaultlayout(::MakieBackend) = ui -> hbox(values(components(ui))..., observe(ui))
+function Base.convert(::Type{S}, ::Nothing) where {S <: Scene}
+    Scene()
+end
+
+Widgets.defaultlayout(::MakieBackend) = ui -> hbox(values(components(ui))..., ui[])
