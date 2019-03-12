@@ -1,5 +1,5 @@
 import Widgets
-using Widgets: Widget
+using Widgets: Widget, components, observe
 
 struct MakieBackend <: Widgets.AbstractBackend; end
 
@@ -17,4 +17,4 @@ function Base.convert(::Type{S}, w::Widget) where {S <: Scene}
     convert(S, Widgets.render(w))
 end
 
-Widgets.manipulatelayout(::MakieBackend) = hbox
+Widgets.defaultlayout(::MakieBackend) = ui -> hbox(values(components(ui))..., observe(ui))
