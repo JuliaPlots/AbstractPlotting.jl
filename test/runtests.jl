@@ -4,9 +4,9 @@ using Test
 
 include("quaternions.jl")
 
-if get(ENV, "IS_TRAVIS_CI", "false") == "false"
-  exit(0);
-end
+# if get(ENV, "IS_TRAVIS_CI", "false") == "false"
+#   exit(0);
+# end
 
 ## begin CI-only testing
 
