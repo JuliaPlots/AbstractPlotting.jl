@@ -14,7 +14,7 @@ include("quaternions.jl")
 
 # import Pkg; Pkg.add("MakieGallery#soft-only") . # or whatever that branch is called, where GL is not a requirement
 
-import Pkg; Pkg.add("MakieGallery")
+# import Pkg; Pkg.add("MakieGallery")
 
 using MakieGallery
 
