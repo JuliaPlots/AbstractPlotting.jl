@@ -30,3 +30,9 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 
 [compat]
 GeometryTypes = ">=0.7.2"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
