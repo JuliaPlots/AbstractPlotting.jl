@@ -20,12 +20,12 @@ ffmpeg_exs  = [
                 "Moire", "pong", "pulsing marker", "Travelling wave",
                 "Type recipe for molecule simulation"
 
-]
+                ]
 
 glmakie_exs = [
                 "Textured Mesh", "Load Mesh", "Wireframe of a Mesh",
                 "FEM mesh 3D", "Normals of a Cat", "Line GIF"
-]
+                ]
 
 gdal_exs = ["WorldClim visualization"]
 
@@ -54,6 +54,6 @@ for i in 1:length(database)
   MakieGallery.eval_example(database[i]);
 
   end
-end
+
 
 # TODO write some AbstractPlotting specific tests... So far functionality is tested in Makie.jl
