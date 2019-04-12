@@ -131,11 +131,11 @@ end
             font = lift(dim3, theme(scene, :font)),
         ),
 
-        frame = Theme(
+        frame = Theme( # TODO change API?
             linecolor = (grid_color, grid_color, grid_color),
             linewidth = (grid_thickness, grid_thickness, grid_thickness),
             axiscolor = (:black, :black, :black),
-        )
+        ),
     )
 end
 
