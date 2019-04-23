@@ -8,15 +8,9 @@ include("quaternions.jl")
 #   exit(0);
 # end
 
-## begin CI-only testing
-
 using MakieGallery
 
-database = MakieGallery.load_database()
-
-using MakieGallery
-
-# Load the database
+ # Load the database
 database = MakieGallery.load_database()
 
 ## Exceptions are made on basis of title and not index,
@@ -42,7 +36,7 @@ gdal_exs = [
         "WorldClim visualization"
 ]
 
-# Requires GLMakie and ModernGL, so ignored
+ # Requires GLMakie and ModernGL, so ignored
 moderngl_exs = [
             "Explicit frame rendering"
 ]
@@ -68,14 +62,14 @@ for i in 1:length(database)
   # skip if the title is in the list of exceptions
   if database[i].title ∈ exc_str
 
-    print("Skipping " * database[i].title * "\n(removed from tests explicitly)\n")
+     print("Skipping " * database[i].title * "\n(removed from tests explicitly)\n")
 
-    continue  # skip the entry
+     continue  # skip the entry
 
-  end
+   end
 
-  print("Running " * database[i].title * "\n(index $i)\n")
+   print("Running " * database[i].title * "\n(index $i)\n")
 
-  MakieGallery.eval_example(database[i]);  # evaluate the entry
+   MakieGallery.eval_example(database[i]);  # evaluate the entry
 
-  end
+   end

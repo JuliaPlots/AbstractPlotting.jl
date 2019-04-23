@@ -165,7 +165,6 @@ estimated_space(x, N, w) = 1/N
 ispixelcam(x::Union{PixelCamera, Camera2D}) = true
 ispixelcam(x) = false
 
-
 vbox(plots::Transformable...; kw_args...) = vbox([plots...]; kw_args...)
 hbox(plots::Transformable...; kw_args...) = hbox([plots...]; kw_args...)
 
@@ -300,7 +299,7 @@ function layout_sizes(scenes, size, dim)
 end
 
 
-function vbox(plots::Vector{T}; kw_args...) where T <: AbstractPlot
+function vbox!(plots::Vector{T}; kw_args...) where T <: AbstractPlot
     N = length(plots)
     w = 0.0
     for idx in 1:N

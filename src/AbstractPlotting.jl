@@ -113,7 +113,7 @@ export unicode_input
 export dropped_files
 export hasfocus
 export entered_window
-export disconnect!, must_update, force_update!
+export disconnect!, must_update, force_update!, update!
 
 
 # gui
@@ -147,8 +147,8 @@ export Stepper, step!, replay_events, record_events, RecordEvents, record, Video
 export VideoStream, recordframe!, record
 export save
 
-# colormap stuff from PlotUtils
-export clibraries, cgradients, clibrary
+# colormap stuff from PlotUtils, and showlibrary, showgradients
+export clibraries, cgradients, clibrary, showlibrary, showgradients
 
 
 # default icon for Makie
