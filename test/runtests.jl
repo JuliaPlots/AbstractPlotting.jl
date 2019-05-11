@@ -72,23 +72,21 @@ end
 
 @testset "Gallery short tests" begin
 
-# iterate over database
-@testset "$(database[i].title) (#$i)" for i in 1:length(database)
+    # iterate over database
+    @testset "$(database[i].title) (#$i)" for i in 1:length(database)
 
-   # skip if the title is in the list of exceptions
-  if database[i].title ∈ exc_str
+           # skip if the title is in the list of exceptions
+          if database[i].title ∈ exc_str
 
-     print("Skipping " * database[i].title * "\n(removed from tests explicitly)\n")
+             print("Skipping " * database[i].title * "\n(removed from tests explicitly)\n")
 
-     continue
+             continue
 
-   end
+           end
 
-   # print("Running " * database[i].title * "\n(index $i)\n")
+           # print("Running " * database[i].title * "\n(index $i)\n")
 
-   @test_nowarn MakieGallery.eval_example(database[i]);  # evaluate the entry
-
-   end
+           @test_nowarn MakieGallery.eval_example(database[i]);  # evaluate the entry
 
    end
 
