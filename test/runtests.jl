@@ -4,11 +4,11 @@ using Test
 
 include("quaternions.jl")
 
-const _COMPLETE = get(ENV, "ABSTRACTPLOTTING_COMPLETE", "false")
+const _MINIMAL = get(ENV, "ABSTRACTPLOTTING_MINIMAL", "true")
 
 using MakieGallery
 
-if _COMPLETE == "true"
+if _MINIMAL == "false"
 
     # Load all entries in the database
 
