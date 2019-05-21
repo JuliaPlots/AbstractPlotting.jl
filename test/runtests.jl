@@ -1,9 +1,4 @@
 using AbstractPlotting
-using Makie
-scene = scatter(rand(4))
-
-
-
 using Test
 
 include("quaternions.jl")
