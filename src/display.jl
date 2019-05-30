@@ -220,7 +220,7 @@ end
 """
     VideoStream(scene::Scene, framerate = 24)
 
-returns a stream and a buffer that you can use to not allocate for new frames.
+Returns a stream and a buffer that you can use, to not allocate for new frames.
 Use `recordframe!(stream)` to add new video frames to the stream.
 Use `save(path, stream; framerate=24)` to save the video.
 """
@@ -271,11 +271,11 @@ end
 """
     save(path::String, io::VideoStream; framerate = 24)
 
-Flushes the video stream and converts the file to the extension found in `path` which can
-be `mkv`, `gif`, `mp4` and `webm`.
-`mkv` is default and doesn't need to convert, `mp4` is recommended for the internet, since it's the most supported format.
-`webm` yields the smallest file size, `mp4` and `mk4` are marginally bigger and `gif`s are up to
-6 times bigger with same quality!
+Flushes the video stream and converts the file to the extension found in `path`, which can
+be `.mkv`, `.gif`, `.mp4` or `.webm`.
+`.mkv` is the default, and doesn't need to convert; `.mp4` is recommended for the internet, since it's the most supported format;
+`.webm` yields the smallest file size. `.mp4` and `.mk4` are marginally bigger and `.gif`s are up to
+6 times bigger with the same quality!
 """
 function save(path::String, io::VideoStream;
               framerate::Int = 24)
