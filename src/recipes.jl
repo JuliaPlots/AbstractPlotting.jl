@@ -26,7 +26,7 @@ end
 """
 # Plot Recipes in `AbstractPlotting`
 
-There's two types of recipes. *Type recipes* define a simple mapping from a
+There are two types of recipes. *Type recipes* define a simple mapping from a
 user defined type to an existing plot type. *Full recipes* can customize the
 theme and define a custom plotting function.
 
