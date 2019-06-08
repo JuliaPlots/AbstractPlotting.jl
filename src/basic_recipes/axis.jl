@@ -131,10 +131,16 @@ end
             font = lift(dim3, theme(scene, :font)),
         ),
 
+        grid = Theme(
+            linecolor = (grid_color, grid_color, grid_color),
+            linewidth = (grid_thickness, grid_thickness, grid_thickness),
+            linestyle = (nothing, nothing, nothing),
+        )
+
         frame = Theme(
             linecolor = (grid_color, grid_color, grid_color),
             linewidth = (grid_thickness, grid_thickness, grid_thickness),
-            axiscolor = (:black, :black, :black),
+            linestyle = (nothing, nothing, nothing),
         )
     )
 end
@@ -603,9 +609,10 @@ end
 
 
 function plot!(scene::SceneLike, ::Type{<: Axis3D}, attributes::Attributes, args...)
+
     axis, non_plot_kwargs = Axis3D(scene, attributes, args)
     textbuffer = TextBuffer(axis, Point{3}, transparency = true)
-    linebuffer = LinesegmentBuffer(axis, Point{3}, transparency = true)
+    linebuffers = [LinesegmentBuffer(axis, Point{3}, transparency = true) for _ in 1:3]
 
     tstyle, ticks, frame = to_value.(getindex.(axis, (:names, :ticks, :frame)))
     titlevals = getindex.(tstyle, (:axisnames, :textcolor, :textsize, :rotation, :align, :font, :gap))
