@@ -868,7 +868,7 @@ function showgradients(
         resolution = automatic
     )::Scene
 
-    res = (resolution == automatic) ? (length(cgrads) * 84, 500) : resolution
+    res = (resolution == automatic) ? (800, length(cgrads) * 84) : resolution
 
     scene = Scene(resolution = res)
 
