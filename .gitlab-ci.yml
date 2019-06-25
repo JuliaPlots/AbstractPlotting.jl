@@ -1,0 +1,25 @@
+variables:
+    CI_IMAGE_TAG: "opengl"
+    MODERNGL_DEBUGGING: "true"
+    JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
+
+job:
+    image: "juliagpu/julia:v1.0-${CI_IMAGE_TAG}"
+    before_script:
+        - apt-get -qq update
+        # glfw
+        - apt-get install -y cmake libxrandr-dev libxinerama-dev libxcursor-dev mesa-utils
+        # cairo etc
+        - apt-get install -y gettext libpango1.0-0 libcairo2 libmagickwand-6.q16
+        - apt-get install -y ffmpeg p7zip-full
+
+    script:
+      - mkdir $JULIA_DEPOT_PATH # Pkg.jl#325
+      - julia -e 'using InteractiveUtils; versioninfo()'
+      - julia --project -e 'using Pkg; Pkg.pkg"add StatsMakie#master Makie#master GLMakie#master; test"'
+
+    artifacts:
+        when: on_failure
+        paths:
+        - test/tested_different
+        expire_in: 1 week
