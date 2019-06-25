@@ -14,7 +14,7 @@ include("projection_math.jl")
 end
 
 # does this machine have a OPENGL?
-const OPENGL = haskey(ENV, "OPENGL") || haskey(ENV, "GITLAB") # if it's Gitlab, it must be JuliaGPU
+const OPENGL = haskey(ENV, "OPENGL") || haskey(ENV, "GITLAB_CI") # if it's Gitlab, it must be JuliaGPU
 
 # does this machine have FFMPEG?  We'll take it on faith if you tell us...
 const FFMPEG = haskey(ENV, "FFMPEG") || try; run(`ffmpeg -version`); true; catch; false; end;
