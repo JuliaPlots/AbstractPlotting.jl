@@ -126,7 +126,7 @@ if !OPENGL # run software only tests...
 
 else # full MakieGallery comparisons here
 
-    using Makie, GLMakie
+    using GLMakie
 
     @info("Running full tests - artifacts will be stored!")
 
