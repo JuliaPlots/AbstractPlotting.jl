@@ -171,7 +171,6 @@ function zoom!(scene, point, zoom_step)
     ray_dir = normalize(ray_dir)
     zoom_translation = ray_dir * zoom_step
     cam.eyeposition[] = eyeposition + zoom_translation
-    cam.lookat[] = lookat + zoom_translation
     update_cam!(scene, cam)
 end
 
@@ -186,7 +185,7 @@ function rotate_cam!(scene::Scene, cam::Camera3D, _theta_v::VecTypes)
     dir = normalize(eyeposition - lookat)
     right_v = normalize(cross(upvector, dir))
     upvector = normalize(cross(dir, right_v))
-    rotation = rotate_cam(theta_v, right_v, Vec3f0(0, 0, sign(upvector[3])), dir)
+    rotation = rotate_cam(theta_v, right_v, upvector, dir)
     r_eyepos = lookat + rotation * (eyeposition - lookat)
     r_up = normalize(rotation * upvector)
     cam.eyeposition[] = r_eyepos
