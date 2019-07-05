@@ -21,6 +21,7 @@ end
 Base.haskey(scene::Scene, key::Symbol) = haskey(scene.attributes, key)
 Base.getindex(scene::Scene, key::Symbol) = scene.attributes[key]
 Base.setindex!(scene::Scene, value, key::Symbol) = (scene.attributes[key] = value)
+Base.propertynames(scene::Scene; private = false) = keys(scene.attributes) # for autocomplete
 
 function Scene(
         events::Events,
