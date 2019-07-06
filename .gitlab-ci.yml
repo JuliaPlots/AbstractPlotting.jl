@@ -2,6 +2,7 @@ variables:
     CI_IMAGE_TAG: "opengl"
     MODERNGL_DEBUGGING: "true"
     JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
+    ABSTRACTPLOTTING_MINIMAL: "false"
 
 job:
     image: "juliagpu/julia:v1.1-${CI_IMAGE_TAG}"
@@ -17,7 +18,7 @@ job:
       - mkdir $JULIA_DEPOT_PATH # Pkg.jl#325
       - glxinfo | grep 'version'
       - julia -e 'using InteractiveUtils; versioninfo()'
-      - julia --project -e 'using Pkg; Pkg.pkg"add StatsMakie#master Makie#master GLMakie#master; test"'
+      - julia --project -e 'using Pkg; Pkg.pkg"add StatsMakie#master MakieGallery#master GLMakie#master GDAL; test"'
 
     artifacts:
         when: on_failure
