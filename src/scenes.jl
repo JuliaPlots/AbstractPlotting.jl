@@ -57,7 +57,7 @@ function Scene(
 
     scene = Scene(
         parent, events, px_area, camera, camera_controls,
-        Node{Union{Nothing, FRect3D}}(scene_limits),
+        to_node(Union{Nothing, FRect3D}, scene_limits),
         transformation, plots, theme, attributes,
         children, current_screens, updated
     )
@@ -136,6 +136,8 @@ function Scene(
         transformation = Transformation(scene),
         theme = Attributes(theme(scene)...),
         current_screens = scene.current_screens,
+        limits = scene[:limits],
+        clear = false,
         kw_args...
     )
     child = Scene(
@@ -147,7 +149,7 @@ function Scene(
         transformation,
         AbstractPlot[],
         merge(current_default_theme(), theme),
-        Attributes(kw_args),
+        Attributes(limits = lift(identity, limits), clear = clear, kw_args...),
         Scene[],
         current_screens,
         scene
@@ -156,7 +158,11 @@ function Scene(
     child
 end
 
-function Scene(parent::Scene, area; attributes...)
+function Scene(
+        parent::Scene, area;
+        limits = parent.limits, clear = false,
+        attributes...
+    )
     events = parent.events
     px_area = lift(pixelarea(parent), to_node(area)) do p, a
         # make coordinates relative to parent
@@ -171,7 +177,7 @@ function Scene(parent::Scene, area; attributes...)
         Transformation(),
         AbstractPlot[],
         current_default_theme(; attributes...),
-        Attributes(attributes),
+        Attributes(limits = lift(identity, limits), clear = clear, attributes...),
         Scene[],
         parent.current_screens,
         parent
