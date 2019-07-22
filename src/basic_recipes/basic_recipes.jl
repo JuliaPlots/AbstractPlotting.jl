@@ -432,7 +432,12 @@ function plot!(plot::Annotations)
     plot
 end
 
-is2d(scene::SceneLike) = widths(limits(scene)[])[3] == 0.0
+function is2d(scene::SceneLike)
+    lims = scene_limits(scene)
+    # TODO return nothing. returning true for now for backwards compatibility
+    lims === nothing && return nothing
+    return widths(lims)[3] == 0.0
+end
 
 """
     arc(origin, radius, start_angle, stop_angle; kwargs...)
@@ -854,7 +859,7 @@ end
 """
     showgradients(
         cgrads::AbstractVector{Symbol};
-        h = 0.0, offset = 0.2, textsize = 0.7, 
+        h = 0.0, offset = 0.2, textsize = 0.7,
         resolution = (800, length(cgrads) * 84)
     )::Scene
 
