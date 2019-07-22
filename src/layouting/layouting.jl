@@ -297,7 +297,6 @@ function layout_sizes(scenes, size, dim)
     sizes
 end
 
-
 function vbox!(plots::Vector{T}; kw_args...) where T <: AbstractPlot
     N = length(plots)
     w = 0.0
