@@ -24,6 +24,8 @@ Plots a legend for the given plots with the given labels.
         markersize = 5,
         linepattern = Point2f0[(0, 0), (1, 0.0)],
         scatterpattern = Point2f0[(0.5, 0.0)],
+        raw = true,
+        camera = campixel!
     )
 end
 
