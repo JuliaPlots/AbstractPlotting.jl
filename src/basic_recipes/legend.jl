@@ -34,10 +34,10 @@ creates a legend from a colormap
 """
 @recipe(ColorLegend, colormap, colorrange) do scene
     Theme(
-        width = (20, theme(scene, :resolution)[2]),
+        width = (20, lift(x -> x[2], theme(scene, :resolution))),
         backgroundcolor = :white,
-        strokecolor = RGBA(0.3, 0.3, 0.3, 0.9,),
-        strokewidth = 1,
+        strokecolor = RGBA(0.3, 0.3, 0.3, 0.9 ),
+        strokewidth = 0.3,
         position = (1, 1),
         textgap = 15,
         padding = 10,
@@ -50,6 +50,8 @@ creates a legend from a colormap
         ranges = automatic,
         labels = automatic,
         formatter = Formatters.plain,
+        raw = true,
+        camera = campixel!
     )
 end
 
