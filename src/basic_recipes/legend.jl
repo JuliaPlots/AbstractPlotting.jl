@@ -36,7 +36,7 @@ creates a legend from a colormap
 """
 @recipe(ColorLegend, colormap, colorrange) do scene
     Theme(
-        width = (20, lift(x -> x[2], theme(scene, :resolution))),
+        width = (20, lift(x -> x[2], pixelarea(scene))),
         backgroundcolor = :white,
         strokecolor = RGBA(0.3, 0.3, 0.3, 0.9 ),
         strokewidth = 0.3,
