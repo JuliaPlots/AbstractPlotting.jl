@@ -103,6 +103,9 @@ export translated, translate!, transform!, scale!, rotate!, grid, Accum, Absolut
 export boundingbox, insertplots!, center!, translation, scene_limits
 export hbox, vbox
 
+# Units
+export rel, dip, px, mm
+
 # camera related
 export AbstractCamera, EmptyCamera, Camera, Camera2D, Camera3D, cam2d!, cam2d
 export campixel!, campixel, cam3d!, cam3d_cad!, update_cam!, rotate_cam!, translate_cam!, zoom!

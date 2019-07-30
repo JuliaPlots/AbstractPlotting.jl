@@ -62,7 +62,7 @@ const px = Pixel(1)
 
 """
 Millimeter on screen. This unit respects the dimension and pixel density of the screen
-to represent millimeters on the screen. This is the must use unit for layouting,
+to represent millimeters on the screen. This is the must-use unit for layouting,
 that needs to look the same on all kind of screens. Similar as with the [`Pixel`](@ref) unit,
 a camera can change the actually displayed dimensions of any object using the millimeter unit.
 """
