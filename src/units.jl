@@ -10,7 +10,7 @@ AbstractNumbers.number(x::Unit) = x.value
 
 """
 Unit space of the scene it's displayed on.
-Also referred to as data units
+Also referred to as data units.
 """
 struct SceneSpace{T} <: Unit{T}
     value::T
@@ -19,8 +19,8 @@ AbstractNumbers.basetype(::Type{<: SceneSpace}) = SceneSpace
 
 """
 Unit is relative to bounding frame.
-E.g. if the area is IRect(0, 0, 100, 100)
-Point(0.5rel, 0.5rel) == Point(50, 50)
+E.g. if the area is IRect(0, 0, 100, 100),
+Point(0.5rel, 0.5rel) == Point(50, 50).
 """
 struct Relative{T <: Number} <: Unit{T}
     value::T
@@ -32,7 +32,7 @@ const rel = Relative(1)
 https://en.wikipedia.org/wiki/Device-independent_pixel
 A device-independent pixel (also: density-independent pixel, dip, dp) is a
 physical unit of measurement based on a coordinate system held by a
-computer and represents an abstraction of a pixel for use by an
+computer, and represents an abstraction of a pixel for use by an
 application that an underlying system then converts to physical pixels.
 """
 struct DeviceIndependentPixel{T <: Number} <: Unit{T}
@@ -51,7 +51,7 @@ This one is a bit tricky, since it refers to a static attribute (pixels on scree
 but since every visual is attached to a camera, the exact scale might change.
 So in the end, this is just relative to some normed camera - the value on screen, depending on the camera,
 will not actually sit on those pixels. Only camera that guarantees the correct mapping is the
-`:pixel` camera type.
+`campixel` camera type.
 """
 struct Pixel{T} <: Unit{T}
     value::T
