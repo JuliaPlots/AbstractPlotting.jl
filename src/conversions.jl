@@ -467,7 +467,7 @@ convert_attribute(r::StaticVector, ::key"rotations") = to_rotation(r)
 convert_attribute(c, ::key"markersize", ::key"scatter") = to_2d_scale(c)
 convert_attribute(c, k1::key"markersize", k2::key"meshscatter") = to_3d_scale(c)
 
-to_2d_scale(x::Number) = Vec2f0(x)
+to_2d_scale(x::Number) = Vec2(x)
 to_2d_scale(x::VecTypes) = to_ndim(Vec2f0, x, 1)
 to_2d_scale(x::AbstractVector) = to_2d_scale.(x)
 

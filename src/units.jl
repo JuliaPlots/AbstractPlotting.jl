@@ -1,13 +1,11 @@
-using AbstractNumbers, Makie, LinearAlgebra, GeometryTypes
-import AbstractNumbers: number
-import AbstractPlotting: limits, to_screen, to_world, scene_limits
+
 function to_screen(scene::Scene, mpos)
     return Point2f0(mpos) .- Point2f0(minimum(pixelarea(scene)[]))
 end
 
 abstract type Unit{T} <: AbstractNumber{T} end
 
-number(x::Unit) = x.value
+AbstractNumbers.number(x::Unit) = x.value
 
 
 """
@@ -115,12 +113,12 @@ function Base.convert(::Type{<: Pixel}, scene::Scene, x::Millimeter)
     px = pixel_per_mm(scene) * x
     Pixel(number(px))
 end
-function Base.convert(::Type{<: Pixel}, scene::Scene, x::DIP)
-    inch = (x * dip_in_inch)
-    dots = dpi(scene) * inch
-    Pixel(number(dots))
+function Base.convert(::Type{<: Pixel}, scene::Scene, x::Union{T, Point{2, T}, Vec{2, T}}) where T <: DIP
+    inch = (x .* dip_in_inch)
+    dots = dpi(scene) .* inch
+    return Pixel.(number.(dots))
 end
-function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::DIP)
+function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::Union{T, Point{2, T}, Vec{2, T}}) where T <: DIP
     px = convert(Pixel, scene, x)
     convert(SceneSpace, scene, px)
 end
@@ -146,23 +144,3 @@ function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::Millimeter)
     pix = convert(Pixel, scene, x)
     (SceneSpace, mm)
 end
-
-
-# function unpack_plot(plot::AbstractPlot; unlift = false, convert = true)
-#     result = Dict()
-#
-#
-#
-# function get_boundingbox(x)
-
-
-x  = [Point2(0px), Point2(3px), Point2(4px)]
-Pixel <: AbstractNumber
-typemax(Pixel{Int})
-bb = Rect(x)
-scene = scatter(rand(4))
-to_world(scene, Point2f0(500))
-a = number.(convert(SceneSpace, scene, Point2(1rel)))
-b = number.(convert(SceneSpace, scene, Point2(0rel)))
-
-lines!(Rect(a, b.-a), raw = true)

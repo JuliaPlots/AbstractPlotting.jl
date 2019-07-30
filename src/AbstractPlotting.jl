@@ -5,7 +5,8 @@ using Observables, GeometryTypes, StaticArrays, ColorTypes, Colors, IntervalSets
 using ColorBrewer, FixedPointNumbers, Packing, SignedDistanceFields
 using Markdown, DocStringExtensions # documentation
 using Serialization # serialize events
-using StructArrays
+using StructArrays, AbstractNumbers
+import AbstractNumbers: number
 # Text related packages
 using FreeType, FreeTypeAbstraction, UnicodeFun
 using LinearAlgebra, Statistics
@@ -34,6 +35,7 @@ include("interaction/nodes.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
+include("units.jl")
 include("theming.jl")
 include("recipes.jl")
 include("interfaces.jl")
