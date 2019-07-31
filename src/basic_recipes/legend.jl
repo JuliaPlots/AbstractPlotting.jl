@@ -116,12 +116,49 @@ end
 outerbox(x::AbstractPlot) = outerbox(x.parent)
 outerbox(x::Scene) = pixelarea(x)
 
-convert_argument(::Type{<:Legend}, plots::AbstractVector, labels::AbstractVector{<: AbstractString}) = (plots, labels)
+function fp(mp)
+   mp isa MultiplePlot && return fp.(mp.plots)
+   mp isa AbstractVector && return fp.(mp)
+   return mp
+end
+
+"""
+    flat(arr::AbstractVector)
+
+Flattens an arbitrary-depth AbstractVector.
+Code taken from [Rosetta Code](https://rosettacode.org/wiki/Flatten_a_list#Julia).
+"""
+function flat(arr::AbstractVector)
+    rst = Any[]
+    grep(v) = for x in v
+        if isa(x, Array)
+            grep(x)
+        else
+            push!(rst, x)
+        end
+    end
+    grep(arr)
+    rst
+end
+
+"""
+    flatten_multiplot(mp)
+
+"Flattens" input into its component plots (_not_ primitives) by flattening multiplots.
+"""
+flatten_multiplot(mp) = flat(fp(mp))
+
+# convert_arguments(::Type{<:Legend}, plots::AbstractVector, labels::AbstractVector{<: AbstractString}) = (filter(x -> !(x isa Axis2D || x isa Axis3D), flatten_multiplot(plots)), labels)
+function convert_arguments(::Type{<: Legend}, plots::AbstractVector{T}) where T <: Union{AbstractPlot, AbstractVector}
+    filter(x -> !(x isa Axis2D || x isa Axis3D), flatten_multiplot(plots))
+end # FIXME I don't work
 
 function plot!(plot::Legend)
     @extract plot (plots, labels)
-    isempty(plots[]) && return
-    N = length(plots[])
+    ps = lift(y -> filter(x -> !(x isa Axis2D || x isa Axis3D), flatten_multiplot(y)), plots)
+    @debug(@show ps)
+    isempty(ps[]) && return
+    N = length(ps[])
     position, color, stroke, strokecolor, padding, opad = getindex.(plot, (
         :position, :backgroundcolor, :strokewidth, :strokecolor, :padding,
         :outerpadding
@@ -134,7 +171,7 @@ function plot!(plot::Legend)
         :textsize, :textcolor, :rotation, :align, :font
     ))
 
-    legends = make_label.(plot, plots[], labels[], 1:N, plot)
+    legends = make_label.(plot, ps[], labels[], 1:N, plot)
 
     map_once(labels, args...) do labels, w, gap, tgap, padding, font...
         start!(textbuffer)
