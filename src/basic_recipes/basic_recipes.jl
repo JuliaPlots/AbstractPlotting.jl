@@ -369,7 +369,7 @@ end
 
 
 """
-    `annotations(strings::Vector{String}, positions::Vector{Point})`
+    annotations(strings::Vector{String}, positions::Vector{Point})
 
 Plots an array of texts at each position in `positions`.
 
@@ -476,8 +476,6 @@ function plot!(p::Arc)
     end
     lines!(p, Theme(p), positions)
 end
-
-
 
 function AbstractPlotting.plot!(plot::Plot(AbstractVector{<: Complex}))
     plot[:axis, :labels] = ("Re(x)", "Im(x)")
