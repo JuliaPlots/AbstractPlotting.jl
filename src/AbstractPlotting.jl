@@ -6,7 +6,6 @@ using ColorBrewer, FixedPointNumbers, Packing, SignedDistanceFields
 using Markdown, DocStringExtensions # documentation
 using Serialization # serialize events
 using StructArrays, AbstractNumbers
-import AbstractNumbers: number
 # Text related packages
 using FreeType, FreeTypeAbstraction, UnicodeFun
 using LinearAlgebra, Statistics
