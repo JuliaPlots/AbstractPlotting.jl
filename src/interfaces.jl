@@ -419,11 +419,11 @@ function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::At
 end
 
 function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::Attributes, input, args) where Typ
-    # The argument type of the final plot object is the assumened to stay constant after
+    # The argument type of the final plot object is assumed to stay constant after
     # argument conversion. This might not always hold, but it simplifies
-    # things quite a bit
+    # things quite a bit.
     ArgTyp = typeof(to_value(args))
-    # construct the fully qualified plot type, from the possible incomplete (abstract)
+    # construct the fully qualified plot type, from the possibly incomplete (abstract)
     # PlotType
     FinalType = Combined{Typ, ArgTyp}
     plot_attributes = merged_get!(
@@ -455,7 +455,7 @@ end
 
 
 """
-    `plot_type(plot_args...)`
+    `plottype(plot_args...)`
 
 The default plot type for any argument is `lines`.
 Any custom argument combination that has only one meaningful way to be plotted should overload this.
