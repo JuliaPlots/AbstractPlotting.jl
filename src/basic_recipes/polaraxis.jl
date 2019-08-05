@@ -63,7 +63,12 @@ using GLMakie
 sc
 
 save("polar.png", sc; resolution = (2000, 2000))
+using UnicodeFun
+sc = text()
+update!(sc)
+sc |> save("fun.png")
 
 # TODO draw theta-ticks
 # TODO draw r-ticks
 # TODO theme
+UnicodeFun.to_subscript('A':'Z' .|> string)
