@@ -174,7 +174,7 @@ Stepper(scene::Scene, path::String, step::Int; format=:jpg) = Stepper(scene, pat
 
 function Stepper(scene::Scene, path::String; format = :jpg)
     ispath(path) || mkpath(path)
-    Stepper(scene, path, 1)
+    Stepper(scene, path, format, 1)
 end
 
 format2mime(::Type{FileIO.format"PNG"}) = MIME"image/png"()
