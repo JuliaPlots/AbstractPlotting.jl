@@ -166,9 +166,11 @@ pointed to by `path`, and the format is customizable by
 mutable struct Stepper
     scene::Scene
     folder::String
-    format::String
+    format::Symbol
     step::Int
 end
+
+Stepper(scene::Scene, path::String, step::Int; format=:jpg) = Stepper(scene, path, format, step)
 
 function Stepper(scene::Scene, path::String; format = :jpg)
     ispath(path) || mkpath(path)
