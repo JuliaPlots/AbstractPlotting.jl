@@ -995,20 +995,25 @@ end
         kwargs...)
 f must either accept `f(::Point)` or `f(x::Number, y::Number)`.
 f must return a Point2.
+
 Example:
 ```julia
-using MakieGallery, Makie
-run_example("streamplot")
+using Makie
+v(x::Point2{T}) = Point2f0(x[2], 4*x[1])
+streamplot(v, -2..2, -2..2)
 ```
 ## Theme
 $(ATTRIBUTES)
 """
 @recipe(StreamPlot, f, limits) do scene
-    Theme(
-        stepsize = 0.01,
-        gridsize = (32, 32, 32),
-        colormap = theme(scene, :colormap),
-        arrow_size = 0.03
+    merge(
+        Theme(
+            stepsize = 0.01,
+            gridsize = (32, 32, 32),
+            colormap = theme(scene, :colormap),
+            arrow_size = 0.03,
+        ),
+        default_theme(scene, Lines) # so that we can theme the lines as needed.
     )
 end
 
@@ -1115,7 +1120,9 @@ function plot!(p::StreamPlot)
     end
     lines!(
         p,
-        lift(x->x[3], data), color = lift(last, data), colormap = p.colormap
+        lift(x->x[3], data), color = lift(last, data), colormap = p.colormap,
+        linestyle = p.linestyle,
+        linewidth = p.linewidth
     )
     N = ndims(p.limits[])
     scatterfun(N)(
