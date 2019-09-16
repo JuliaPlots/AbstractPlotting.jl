@@ -1036,8 +1036,19 @@ function convert_arguments(::Type{<: StreamPlot}, f::Function, limits::Rect)
 end
 
 """
+    streamplot_impl(CallType, f, limits::Rect{N, T}, resolutionND, stepsize)
+
 Code adapted from an example implementation by Moritz Schauer (@mschauer)
 from https://github.com/JuliaPlots/Makie.jl/issues/355#issuecomment-504449775
+
+Background: The algorithm puts an arrow somewhere and extends the
+streamline in both directions from there. Then, it chooses a new
+position (from the remaining ones), repeating the the exercise until the
+streamline gets blocked, from which on a new starting point, the process
+repeats.
+
+So, ideally, the new starting points for streamlines are not too close to
+current streamlines.
 """
 function streamplot_impl(CallType, f, limits::Rect{N, T}, resolutionND, stepsize) where {N, T}
     resolution = to_ndim(Vec{N, Int}, resolutionND, last(resolutionND))
@@ -1057,7 +1068,7 @@ function streamplot_impl(CallType, f, limits::Rect{N, T}, resolutionND, stepsize
     else
         f(x0...)
     end
-    for c in CartesianIndices(mask)
+    for c in shuffle(MersenneTwister(1), CartesianIndices(mask))
         x0 = Point(ntuple(N) do i
             first(r[i]) + (c[i] - 0.5) * step(r[i])
         end)
