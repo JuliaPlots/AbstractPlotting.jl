@@ -186,7 +186,7 @@ struct Events
     """
     mouseposition::Node{Point2d{Float64}}
     """
-    The
+    The enum value of the mouse drag. 
     """
     mousedrag::Node{Mouse.DragEnum}
     """
