@@ -367,13 +367,6 @@ function plot!(sub::Series)
 end
 
 
-function convert_arguments(::Type{<: Annotations},
-                           strings::AbstractVector{<: AbstractString},
-                           text_positions::AbstractVector{<: Point{N}}) where N
-    return (map(strings, text_positions) do str, pos
-        (String(str), Point{N, Float32}(pos))
-    end,)
-end
 
 """
     `annotations(strings::Vector{String}, positions::Vector{Point})`
@@ -385,6 +378,14 @@ $(ATTRIBUTES)
 """
 @recipe(Annotations, text, position) do scene
     default_theme(scene, Text)
+end
+
+function convert_arguments(::Type{<: Annotations},
+                           strings::AbstractVector{<: AbstractString},
+                           text_positions::AbstractVector{<: Point{N}}) where N
+    return (map(strings, text_positions) do str, pos
+        (String(str), Point{N, Float32}(pos))
+    end,)
 end
 
 function plot!(plot::Annotations)
