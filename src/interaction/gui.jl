@@ -57,7 +57,9 @@ $(ATTRIBUTES)
         strokewidth = 1,
         textcolor = :black,
         slidercolor = (:gray, 0.6),
-        buttoncolor = :white,
+        buttoncolor = RGB(1, 1, 1),
+        buttoncolor_hover = LCHuv(85, 30, 240),
+        buttoncolor_active = LCHuv(70, 60, 240),
         buttonsize = 15,
         buttonstroke = 1.5,
         textsize = 15,
@@ -93,7 +95,8 @@ function plot!(slider::Slider)
     @extract(slider, (
         backgroundcolor, strokecolor, strokewidth, slidercolor, buttonstroke,
         buttonstrokecolor, buttonsize, buttoncolor, valueprinter, textspace,
-        sliderlength, sliderheight, textcolor, textsize, position, start
+        sliderlength, sliderheight, textcolor, textsize, position, start,
+        buttoncolor_hover, buttoncolor_active
     ))
     range = slider[1]
     val = slider[:value]
@@ -121,22 +124,46 @@ function plot!(slider::Slider)
     end
 
     linesegments!(slider, line, color = slidercolor)
+
+    bcolor = Node(buttoncolor[])
+
     button = scatter!(
         slider, lift(x-> x[1:1], line),
-        markersize = buttonsize, color = buttoncolor,
+        markersize = buttonsize, color = bcolor,
         strokewidth = buttonstroke, strokecolor = buttonstrokecolor
     ).plots[end]
+
+    mousestate = addmousestate!(slider, button)
+
+    on(mousestate) do state
+        statetype = typeof(state.state)
+
+        if statetype == MouseOut
+            bcolor[] = buttoncolor[]
+        elseif statetype == MouseOver
+            bcolor[] = buttoncolor_hover[]
+        elseif statetype in (MouseDown, MouseDragStart, MouseDrag)
+            bcolor[] = buttoncolor_active[]
+        end
+
+        if statetype == MouseDoubleclick
+            move!(slider, find_closest(range[], startval))
+        end
+    end
+
     dragslider(slider, button)
     move!(slider, find_closest(range[], startval))
     slider
 end
 
 function dragslider(slider, button)
-    mpos = mouse_in_scene(slider)
+    # mpos = mouse_in_scene(slider)
     drag_started = Ref(false)
     startpos = Base.RefValue(Vec(0.0, 0.0))
     range = slider[1]
+
     @extract slider (value, sliderlength, textspace)
+
     on(sliderlength) do sliderlength
         len = sliderlength - slider.buttonsize[] - textspace[]
         r = slider[1][]
@@ -144,6 +171,12 @@ function dragslider(slider, button)
         xpos = ((idx - 1) / (length(r) - 1)) * len
         translate!(slider.plots[end], xpos, 0, 0)
     end
+
+    # on(slider.mousestate) do state
+    #     if state == :mousedrag
+    #         !drag_started[] && drag_started[] = true
+    #     end
+    # end
     on(events(slider).mousedrag) do drag
         mpos = mouseposition(rootparent(slider))
         if drag == Mouse.down && mouseover(slider, button)
@@ -202,7 +235,9 @@ $(ATTRIBUTES)
 @recipe(Button) do scene
     Theme(
         dimensions = (40, 40),
-        backgroundcolor = (:white, 0.4),
+        backgroundcolor = RGB(1, 1, 1),
+        backgroundcolor_hover = LCHuv(85, 30, 240),
+        backgroundcolor_active = LCHuv(70, 60, 240),
         strokecolor = (:black, 0.4),
         strokewidth = 1,
         textcolor = :black,
@@ -229,7 +264,7 @@ function plot!(splot::Button)
     @extract(splot, (
         backgroundcolor, strokecolor, strokewidth,
         dimensions, textcolor, clicks, textsize, position,
-        padvalue
+        padvalue, backgroundcolor_hover, backgroundcolor_active,
     ))
 
     textpos = lift(position, dimensions) do pos, dims
@@ -251,17 +286,43 @@ function plot!(splot::Button)
         FRect(pos, dims)
     end
 
-    poly!(
+    buttoncolor = Node(backgroundcolor[])
+
+    buttonpoly = poly!(
         splot, box,
-        color = backgroundcolor, strokecolor = strokecolor, strokewidth = strokewidth)
+        color = buttoncolor, strokecolor = strokecolor, strokewidth = strokewidth)
+
     reverse!(splot.plots) # make poly first
 
-    on(events(splot).mousebuttons) do mb
-        if ispressed(mb, Mouse.left) && mouseover(parent_scene(splot), splot.plots...)
+    # on(events(splot).mousebuttons) do mb
+    #     if ispressed(mb, Mouse.left) && mouseover(parent_scene(splot), splot.plots...)
+    #         clicks[] = clicks[] + 1
+    #     end
+    #     return
+    # end
+
+    mousestate = addmousestate!(splot, buttonpoly)
+
+    on(mousestate) do s
+        statetype = typeof(s.state)
+
+        if statetype == MouseClick
             clicks[] = clicks[] + 1
         end
-        return
+
+        if statetype == MouseOver
+            buttoncolor[] = backgroundcolor_hover[]
+        elseif statetype == MouseOut
+            buttoncolor[] = backgroundcolor[]
+        elseif statetype == MouseDown
+            buttoncolor[] = backgroundcolor_active[]
+        end
+    #     if ispressed(mb, Mouse.left) && mouseover(parent_scene(splot), splot.plots...)
+    #         clicks[] = clicks[] + 1
+    #     end
+    #     return
     end
+
     splot
 end
 
