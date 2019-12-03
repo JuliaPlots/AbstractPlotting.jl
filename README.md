@@ -1,6 +1,6 @@
 # AbstractPlotting
 
-![logo](xAbstractPlotting.jl/blob/master/ap-logo.png)
+![logo](AbstractPlotting.jl/assets/icons/ap-logo.png)
 
 [![Build Status](https://travis-ci.org/JuliaPlots/AbstractPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/AbstractPlotting.jl)
 
