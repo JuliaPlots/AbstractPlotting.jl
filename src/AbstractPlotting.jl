@@ -1,17 +1,27 @@
 module AbstractPlotting
+                                                                                                                                                          5.11G   12:51:45 
+################################################################################
+#                                   Imports                                    #
+################################################################################
 
-using FFMPEG # get FFMPEG on any system!
-using Observables, GeometryTypes, StaticArrays, ColorTypes, Colors, IntervalSets, PlotUtils
-using ColorBrewer, FixedPointNumbers, Packing, SignedDistanceFields
-using Markdown, DocStringExtensions # documentation
-using Serialization # serialize events
-using StructArrays
+using Observables, GeometryTypes, StaticArrays, ColorTypes, Colors, IntervalSets, PlotUtils, FFMPEG
+using ColorBrewer, FixedPointNumbers, Packing, SignedDistanceFields, StructArrays
+
+# documentation
+using Markdown, DocStringExtensions
+
+# serialize events
+using Serialization 
+
+
 # Text related packages
 using FreeType, FreeTypeAbstraction, UnicodeFun
 using LinearAlgebra, Statistics
 import ImageMagick, FileIO, SparseArrays
 import FileIO: save
 using Printf: @sprintf
+
+using Observables: @on, @map, @map!
 
 using Base: RefValue
 using Base.Iterators: repeated, drop
@@ -22,6 +32,10 @@ module ContoursHygiene
 end
 using .ContoursHygiene
 const Contours = ContoursHygiene.Contour
+
+################################################################################
+#                                   Includes                                   #
+################################################################################
 
 include("documentation/docstringextension.jl")
 
@@ -71,6 +85,10 @@ include("interaction/interactive_api.jl")
 include("documentation/documentation.jl")
 include("display.jl")
 
+################################################################################
+#                                   Exports                                    #
+################################################################################
+
 # help functions and supporting functions
 export help, help_attributes, help_arguments
 
@@ -88,7 +106,7 @@ export xlabel!, ylabel!, zlabel!
 export Node, node, lift, map_once, to_value, on
 
 # utilities and macros
-export @recipe, @extract, @extractvalue, @key_str, @get_attribute
+export @recipe, @extract, @extractvalue, @key_str, @get_attribute, @on, @map, @map!
 export broadcast_foreach, to_vector, replace_automatic!
 
 # conversion infrastructure
@@ -162,6 +180,9 @@ export save
 # colormap stuff from PlotUtils, and showlibrary, showgradients
 export clibraries, cgradients, clibrary, showlibrary, showgradients
 
+################################################################################
+#                                Miscellaneous                                 #
+################################################################################
 
 # default icon for Makie
 function icon()
