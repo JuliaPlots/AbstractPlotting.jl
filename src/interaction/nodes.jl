@@ -24,7 +24,7 @@ to_node(x::Node) = x
 signal_convert(::Type{Node{T1}}, x::Node{T1}, name = :node) where T1 = x
 signal_convert(::Type{Node{T1}}, x::Node{T2}, name = :node) where {T1, T2} = lift(convert, Node(T1), x, typ = T1)
 signal_convert(::Type{Node{T1}}, x::T2, name = :node) where {T1, T2} = Node{T1}(convert(T1, x))
-signal_convert(t, x, name = :node) = x
+signal_convert(::Type{Node}, x, name = :node) = Node(x)
 
 node(name, node) = Node(node)
 node(name, node::Node) = lift(identity, node)

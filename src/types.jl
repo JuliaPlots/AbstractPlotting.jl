@@ -254,7 +254,7 @@ struct Transformation <: Transformable
     model::Node{Mat4f0}
     flip::Node{NTuple{3, Bool}}
     align::Node{Vec2f0}
-    data_func::Node{<: Any}
+    data_func::Node{Any}
     function Transformation(translation, scale, rotation, model, flip, align, data_func)
         return new(
             RefValue{Transformable}(),
@@ -286,9 +286,6 @@ value_convert(x::NamedTuple) = Attributes(x)
 
 node_pairs(pair::Union{Pair, Tuple{Any, Any}}) = (pair[1] => to_node(Any, value_convert(pair[2]), pair[1]))
 node_pairs(pairs) = (node_pairs(pair) for pair in pairs)
-Base.convert(::Type{<: Node}, x::T) where T = to_node(T, x)
-Base.convert(::Type{T}, x::T) where T <: Node = x
-Base.convert(::Type{Node{T}}, x::Node) where T = to_node(T, x)
 
 Attributes(; kw_args...) = Attributes(Dict{Symbol, Node}(node_pairs(kw_args)))
 Attributes(pairs::Pair...) = Attributes(Dict{Symbol, Node}(node_pairs(pairs)))
