@@ -286,7 +286,7 @@ value_convert(x::NamedTuple) = Attributes(x)
 
 node_pairs(pair::Union{Pair, Tuple{Any, Any}}) = (pair[1] => to_node(Any, value_convert(pair[2]), pair[1]))
 node_pairs(pairs) = (node_pairs(pair) for pair in pairs)
-Base.convert(::Type{<: Node}, x::T) = to_node(T, x)
+Base.convert(::Type{<: Node}, x::T) where T = to_node(T, x)
 Base.convert(::Type{T}, x::T) where T <: Node = x
 Base.convert(::Type{Node{T}}, x::Node) where T = to_node(T, x)
 
