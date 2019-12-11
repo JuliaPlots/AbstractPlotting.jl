@@ -26,7 +26,7 @@ function Transformation()
         model,
         flip,
         align,
-        signal_convert(Node{Any}, identity)
+        signal_convert(Node, identity)
     )
 end
 
@@ -55,7 +55,7 @@ function Transformation(scene::SceneLike)
         model,
         flip,
         align,
-        signal_convert(Node{Any}, identity)
+        signal_convert(Node, identity)
     )
     return trans
 end
