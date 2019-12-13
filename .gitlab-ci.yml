@@ -1,5 +1,6 @@
 variables:
     CI_IMAGE_TAG: "xorg"
+    DISPLAY: ":0"
     MODERNGL_DEBUGGING: "true"
     JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
     ABSTRACTPLOTTING_MINIMAL: "false"
