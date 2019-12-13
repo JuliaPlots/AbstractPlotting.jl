@@ -7,6 +7,8 @@ variables:
 
 test:
     image: "juliagpu/julia:v1.2-opengl"
+    tags: 
+      - xorg
     before_script:
         - apt-get -qq update
         # glfw
