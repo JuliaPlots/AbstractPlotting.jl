@@ -1,11 +1,14 @@
 variables:
-    CI_IMAGE_TAG: "xorg"
+    CI_IMAGE_TAG: "opengl"
     MODERNGL_DEBUGGING: "true"
     JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
     ABSTRACTPLOTTING_MINIMAL: "false"
 
+tags:
+    - xorg
+
 test:
-    image: "juliagpu/julia:v1.2-opengl"
+    image: "juliagpu/julia:v1.2-${CI_IMAGE_TAG}"
     before_script:
         - apt-get -qq update
         # glfw
