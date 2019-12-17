@@ -64,7 +64,6 @@ Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
 GLFW = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
@@ -89,4 +88,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [targets]
-test = ["Pkg", "Statistics", "Test", "Distributions", "Random", "ModernGL", "OrdinaryDiffEq", "ParameterizedFunctions", "RDatasets", "MeshIO", "ZipFile", "ColorSchemes", "StatsMakie", "Base64", "ColorVectorSpace", "ImageMagick", "Makie", "ImageCore", "StaticArrays", "DifferentialEquations", "GLFW", "DataFrames", "GDAL", "GLMakie", "ImageFiltering", "ImageTransformations", "MakieGallery"]
+test = ["Pkg", "Statistics", "Test", "Distributions", "Random", "ModernGL", "OrdinaryDiffEq", "ParameterizedFunctions", "RDatasets", "MeshIO", "ZipFile", "ColorSchemes", "StatsMakie", "Base64", "ColorVectorSpace", "ImageMagick", "Makie", "ImageCore", "StaticArrays", "GLFW", "DataFrames", "GDAL", "GLMakie", "ImageFiltering", "ImageTransformations", "MakieGallery"]
