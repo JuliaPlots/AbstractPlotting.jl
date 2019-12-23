@@ -394,7 +394,6 @@ function plot!(plot::Annotations)
         plot[1],
         getindex.(plot, (:color, :textsize, :align, :rotation))...,
     )
-    N = length(to_value(plot[1])[1][2])
     atlas = get_texture_atlas()
     combinedpos = [Point3f0(0)]
     colors = RGBAf0[RGBAf0(0,0,0,0)]
@@ -407,7 +406,6 @@ function plot!(plot::Annotations)
         position = combinedpos, color = colors,
         textsize = scales, font = fonts, rotation = rotations
     ).plots[end]
-    @show plot[1][]
     onany(sargs...) do model, font, text_pos, args...
         io = IOBuffer();
         empty!(combinedpos); empty!(colors); empty!(scales); empty!(fonts); empty!(rotations)
@@ -435,7 +433,6 @@ function plot!(plot::Annotations)
         tplot[:color] = colors
         tplot[:rotation] = rotations
         # fonts shouldn't need an update, since it will get udpated when listening on string
-        #
         return
     end
     # update one time in the beginning, since otherwise the above won't run
