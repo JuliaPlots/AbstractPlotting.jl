@@ -148,7 +148,7 @@ export Vec, Vec2, Vec3, Vec4, Point, Point2, Point3, Point4
 export (..), GLNormalUVMesh
 
 # Exports of units
-export rel, dip, mm, px
+export px
 
 # conflicting identifiers
 using GeometryTypes: widths
