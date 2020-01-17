@@ -6,6 +6,8 @@ variables:
 
 test:
     image: "juliagpu/julia:v1.2-${CI_IMAGE_TAG}"
+    tags:
+        - xorg
     before_script:
         - apt-get -qq update
         # glfw
