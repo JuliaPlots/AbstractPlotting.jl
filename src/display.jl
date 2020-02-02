@@ -95,6 +95,9 @@ function has_juno_plotpane()
         return nothing
     end
 end
+
+isijulia() = isdefined(Main, :IJulia) && isdefined(Main.IJulia, :clear_output)
+
 # fallback show when no backend is selected
 function backend_show(backend, io::IO, ::MIME"text/plain", scene::Scene)
     if isempty(available_backends)
@@ -105,13 +108,17 @@ function backend_show(backend, io::IO, ::MIME"text/plain", scene::Scene)
     end
     if !use_display[] && !isempty(available_backends)
         plotpane = has_juno_plotpane()
+        ij = isijulia()
         if plotpane !== nothing && !plotpane
             # we want to display as inline!, we are in Juno, but the plotpane is disabled
             @warn """Showing scene as inline with Plotpane disabled. This happens because `AbstractPlotting.inline!(true)` is set,
             while `Atom.PlotPaneEnabled[]` is false. Either enable the plotpane, or set inline to false!"""
         else
-            if plotpane === nothing || !plotpane
+            if plotpane === nothing && !isijulia()
                 @warn """Showing scene as text. This happens because `AbstractPlotting.inline!(true)` is set.
+                This needs to be false to show a plot in a window when in the REPL."""
+            elseif plotpane === nothing || !plotpane
+                 @warn """Showing scene as text. This happens because `AbstractPlotting.inline!(true)` is set.
                 This needs to be false to show a plot in a window when in the REPL."""
             end
         end
