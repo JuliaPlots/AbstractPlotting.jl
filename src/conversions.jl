@@ -53,6 +53,7 @@ function convert_arguments(T::PlotFunc, args...; kw...)
         convert_arguments(ct, args...; kw...)
     catch e
         if e isa MethodError
+            @show e
             error("No overload for $T and also no overload for trait $ct found! Arguments: $(typeof.(args))")
         else
             rethrow(e)
@@ -134,6 +135,27 @@ function convert_arguments(::PointBased, positions::NTuple{N, AbstractVector}) w
     PlotSpec(points, tickranges = xyrange, ticklabels = labels)
 end
 
+function convert_arguments(
+        SL::SurfaceLike,
+        x::AbstractVector, y::AbstractVector, z::AbstractMatrix{<: Number}
+    )
+    n, m = size(z)
+    positions = (x, y)
+    labels = categoric_labels.(positions)
+    xyrange = categoric_range.(labels)
+    args = convert_arguments(SL, 0..n, 0..m, z)
+    xyranges = (
+        to_linspace(0.5..(n-0.5), n),
+        to_linspace(0.5..(m-0.5), m)
+    )
+    return PlotSpec(
+        args...,
+        tickranges = xyranges, ticklabels = labels
+    )
+end
+
+convert_arguments(::SurfaceLike, x::AbstractMatrix, y::AbstractMatrix) = (x, y, zeros(size(y)))
+
 """
 Accepts a Vector of Pair of Points (e.g. `[Point(0, 0) => Point(1, 1), ...]`)
 to encode e.g. linesegments or directions.
@@ -196,6 +218,14 @@ function convert_arguments(P::PointBased, x::Rect2D)
     # TODO fix the order of decompose
     convert_arguments(P, decompose(Point2f0, x)[[1, 2, 4, 3, 1]])
 end
+
+function convert_arguments(::Type{<: LineSegments}, x::Rect2D)
+    # TODO fix the order of decompose
+    points = decompose(Point2f0, x)
+    return (points[[1, 2, 2, 4, 4, 3, 3, 1]],)
+end
+
+
 function convert_arguments(P::PointBased, x::Rect3D)
     inds = [
         1, 2, 3, 4, 5, 6, 7, 8,
@@ -214,11 +244,14 @@ outputs them in a Tuple.
 
 `P` is the plot Type (it is optional).
 """
-function convert_arguments(::SurfaceLike, x::AbstractVecOrMat, y::AbstractVecOrMat, z::AbstractMatrix)
-    (el32convert(x), el32convert(y), el32convert(z))
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<: Union{Number, Colorant}})
+    return (el32convert(x), el32convert(y), el32convert(z))
+end
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<:Number})
+    return (el32convert(x), el32convert(y), el32convert(z))
 end
 
-float32type(::Type{<: Number}) = Float32
+float32type(x::Type) = Float32
 float32type(::Type{<: RGB}) = RGB{Float32}
 float32type(::Type{<: RGBA}) = RGBA{Float32}
 float32type(::Type{<: Colorant}) = RGBA{Float32}
@@ -226,6 +259,11 @@ float32type(x::AbstractArray{T}) where T = float32type(T)
 float32type(x::T) where T = float32type(T)
 el32convert(x::AbstractArray) = elconvert(float32type(x), x)
 
+function el32convert(x::AbstractArray{T, N}) where {T<:Union{Missing, <: Number}, N}
+    map(x) do elem
+        return (ismissing(elem) ? NaN32 : convert(Float32, elem))::Float32
+    end::Array{Float32, N}
+end
 
 """
     convert_arguments(P, Matrix)::Tuple{ClosedInterval, ClosedInterval, Matrix}
@@ -469,7 +507,10 @@ convert_attribute(c, k1::key"markersize", k2::key"meshscatter") = to_3d_scale(c)
 
 to_2d_scale(x::Number) = Vec2f0(x)
 to_2d_scale(x::VecTypes) = to_ndim(Vec2f0, x, 1)
+to_2d_scale(x::Tuple{<:Number, <:Number}) = to_ndim(Vec2f0, x, 1)
 to_2d_scale(x::AbstractVector) = to_2d_scale.(x)
+to_2d_scale(x::Pixel) = Vec{2, Pixel{Float32}}(x, x)
+to_2d_scale(x::Tuple{<:Pixel, <:Pixel}) = Vec{2, Pixel{Float32}}(x, x)
 
 to_3d_scale(x::Number) = Vec3f0(x)
 to_3d_scale(x::VecTypes) = to_ndim(Vec3f0, x, 1)
@@ -626,8 +667,12 @@ struct Reverse{T}
     data::T
 end
 
-function convert_attribute(r::Reverse, ::key"colormap")
-    reverse(to_colormap(r.data))
+function convert_attribute(r::Reverse, ::key"colormap", n::Integer = 20)
+    reverse(to_colormap(r.data, n))
+end
+
+function convert_attribute(cs::ColorScheme, ::key"colormap", n::Integer = 20)
+    return to_colormap(cs.colors, n)
 end
 
 
@@ -645,7 +690,7 @@ function convert_attribute(cs::Union{Tuple, Pair}, ::key"colormap")
     [to_color.(cs)...]
 end
 
-to_colormap(x::Union{String, Symbol}, n::Integer) = convert_attribute(x, key"colormap"(), n)
+to_colormap(x, n::Integer) = convert_attribute(x, key"colormap"(), n)
 
 """
 A Symbol/String naming the gradient. For more on what names are available please see: `available_gradients()`.

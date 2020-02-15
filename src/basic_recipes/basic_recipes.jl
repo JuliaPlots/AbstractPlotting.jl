@@ -380,40 +380,37 @@ $(ATTRIBUTES)
     default_theme(scene, Text)
 end
 
-"""
-Pushes an updates to all listeners of `node`
-"""
-function notify!(node::Node)
-    node[] = node[]
+function convert_arguments(::Type{<: Annotations},
+                           strings::AbstractVector{<: AbstractString},
+                           text_positions::AbstractVector{<: Point{N}}) where N
+    return (map(strings, text_positions) do str, pos
+        (String(str), Point{N, Float32}(pos))
+    end,)
 end
 
 function plot!(plot::Annotations)
-    position = plot[2]
     sargs = (
         plot[:model], plot[:font],
-        plot[1], position,
+        plot[1],
         getindex.(plot, (:color, :textsize, :align, :rotation))...,
     )
-    N = to_value(position) |> eltype |> length
     atlas = get_texture_atlas()
-    combinedpos = [Point3f0(0)]; colors = RGBAf0[RGBAf0(0,0,0,0)]
-    scales = Vec2f0[(0,0)]; fonts = NativeFont[to_font("Dejavu Sans")]
+    combinedpos = [Point3f0(0)]
+    colors = RGBAf0[RGBAf0(0,0,0,0)]
+    scales = Vec2f0[(0,0)]
+    fonts = NativeFont[to_font("Dejavu Sans")]
     rotations = Quaternionf0[Quaternionf0(0,0,0,0)]
 
     tplot = text!(plot, "",
         align = Vec2f0(0), model = Mat4f0(I),
-        position = combinedpos, color = colors,
+        position = combinedpos, color = colors, visible = plot.visible,
         textsize = scales, font = fonts, rotation = rotations
     ).plots[end]
-
-    onany(sargs...) do model, font, args...
-        if length(args[1]) != length(args[2])
-            error("For each text annotation, there needs to be one position. Found: $(length(t)) strings and $(length(p)) positions")
-        end
+    onany(sargs...) do model, font, text_pos, args...
         io = IOBuffer();
         empty!(combinedpos); empty!(colors); empty!(scales); empty!(fonts); empty!(rotations)
 
-        broadcast_foreach(1:length(args[1]), args...) do idx, text, startpos, color, tsize, alignment, rotation
+        broadcast_foreach(1:length(text_pos), text_pos, args...) do idx, (text, startpos), color, tsize, alignment, rotation
             # the fact, that Font == Vector{FT_FreeType.Font} is pretty annoying for broadcasting.
             # TODO have a better Font type!
             f = to_font(font)
@@ -436,7 +433,6 @@ function plot!(plot::Annotations)
         tplot[:color] = colors
         tplot[:rotation] = rotations
         # fonts shouldn't need an update, since it will get udpated when listening on string
-        #
         return
     end
     # update one time in the beginning, since otherwise the above won't run
@@ -584,18 +580,21 @@ end
 
 """
     band(x, ylower, yupper; kwargs...)
+    band(lower, upper; kwargs...)
 
 Plots a band from `ylower` to `yupper` along `x`.
 
 ## Theme
 $(ATTRIBUTES)
 """
-@recipe(Band, x, ylower, yupper) do scene
+@recipe(Band, lowerpoints, upperpoints) do scene
     Theme(;
         default_theme(scene, Mesh)...,
         color = RGBAf0(1.0,0,0,0.2)
     )
 end
+
+convert_arguments(::Type{<: Band}, x, ylower, yupper) = (Point2f0.(x, ylower), Point2f0.(x, yupper))
 
 function band_connect(n)
     ns = 1:n-1
@@ -604,7 +603,9 @@ function band_connect(n)
 end
 
 function plot!(plot::Band)
-    coordinates = lift( (x, ylower, yupper) -> [Point2f0.(x, ylower); Point2f0.(x, yupper)], plot[1], plot[2], plot[3])
+    @extract plot (lowerpoints, upperpoints)
+    @lift(@assert length($lowerpoints) == length($upperpoints) "length of lower band is not equal to length of upper band!")
+    coordinates = @lift([$lowerpoints; $upperpoints])
     connectivity = lift(x -> band_connect(length(x)), plot[1])
     mesh!(plot, coordinates, connectivity;
         color = plot[:color], colormap = plot[:colormap],

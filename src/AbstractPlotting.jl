@@ -13,7 +13,13 @@ using Markdown, DocStringExtensions
 # serialize events
 using Serialization 
 
-
+using FFMPEG # get FFMPEG on any system!
+using Observables, GeometryTypes, StaticArrays, IntervalSets, PlotUtils
+using ColorBrewer, ColorTypes, Colors, ColorSchemes
+using FixedPointNumbers, Packing, SignedDistanceFields
+using Markdown, DocStringExtensions # documentation
+using Serialization # serialize events
+using StructArrays
 # Text related packages
 using FreeType, FreeTypeAbstraction, UnicodeFun
 using LinearAlgebra, Statistics
@@ -45,12 +51,14 @@ include("utilities/utilities.jl")
 include("utilities/logging.jl")
 include("utilities/texture_atlas.jl")
 include("interaction/nodes.jl")
+include("interaction/liftmacro.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
 include("theming.jl")
 include("recipes.jl")
 include("interfaces.jl")
+include("units.jl")
 include("conversions.jl")
 include("shorthands.jl")
 
@@ -102,8 +110,14 @@ export title
 export xlims!, ylims!, zlims!
 export xlabel!, ylabel!, zlabel!
 
+export xticklabels, yticklabels, zticklabels
+export xtickrange, ytickrange, ztickrange
+export xticks!, yticks!, zticks!
+export xtickrotation, ytickrotation, ztickrotation
+export xtickrotation!, ytickrotation!, ztickrotation!
+
 # Node/Signal related
-export Node, node, lift, map_once, to_value, on
+export Node, node, lift, map_once, to_value, on, @lift
 
 # utilities and macros
 export @recipe, @extract, @extractvalue, @key_str, @get_attribute, @on, @map, @map!
@@ -144,7 +158,6 @@ export disconnect!, must_update, force_update!, update!, update_limits!
 # currently special-cased functions (`textslider`) for example
 export textslider
 
-
 # gui
 export slider, button, playbutton
 export move!
@@ -162,6 +175,9 @@ export IRect, FRect, Rect, Sphere, Circle
 export Vec4f0, Vec3f0, Vec2f0, Point4f0, Point3f0, Point2f0
 export Vec, Vec2, Vec3, Vec4, Point, Point2, Point3, Point4
 export (..), GLNormalUVMesh
+
+# Exports of units
+export px
 
 # conflicting identifiers
 using GeometryTypes: widths
