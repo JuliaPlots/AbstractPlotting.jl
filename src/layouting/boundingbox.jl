@@ -106,29 +106,68 @@ function boundingbox(
 
 end
 
+# function boundingbox(
+#         text::String, position, textsize, fonts,
+#         align, rotation, model = Mat4f0(I)
+#     )
+#     isempty(text) && return FRect3D()
+#     pos_per_char = !isa(position, VecTypes)
+#
+#     start_pos = Vec(pos_per_char ? first(position) : position)
+#     start_pos3d = project(model, to_ndim(Vec3f0, start_pos, 0.0))
+#     bb = FRect3D(start_pos3d, Vec3f0(0))
+#
+#     if pos_per_char
+#         broadcast_foreach(position, textsize, fonts, collect(text)) do pos, scale, font, char
+#             rect, extent = FreeTypeAbstraction.metrics_bb(char, font, scale)
+#             bb = union(FRect3D(rect) + to_ndim(Vec3f0, pos, 0.0), bb)
+#             @show pos scale
+#         end
+#     else
+#         y_advance = 0.0
+#         line_advance = FreeTypeAbstraction.get_extent(fonts, 'x').advance[2]
+#         for line in split(text, r"(\r\n|\r|\n)")
+#             rectangles = FreeTypeAbstraction.glyph_rects(line, fonts, textsize)
+#             bb2d = reduce(union, rectangles)
+#             bb2d = bb2d + Vec2f0(0, y_advance)
+#             bb = union(bb, FRect3D(bb2d))
+#             y_advance += line_advance
+#             @show y_advance
+#         end
+#     end
+#     return bb
+# end
+
 function boundingbox(
-        text::String, position, textsize, fonts,
+        text::String, position, textsize, font,
         align, rotation, model = Mat4f0(I)
     )
-    isempty(text) && return FRect3D()
+    atlas = get_texture_atlas()
+    N = length(text)
+    ctext_state = iterate(text)
+    ctext_state === nothing && return FRect3D()
     pos_per_char = !isa(position, VecTypes)
     start_pos = Vec(pos_per_char ? first(position) : position)
+    start_pos2D = to_ndim(Point2f0, start_pos, 0.0)
+    last_pos = Point2f0(0, 0)
     start_pos3d = project(model, to_ndim(Vec3f0, start_pos, 0.0))
     bb = FRect3D(start_pos3d, Vec3f0(0))
-    for line in split(text, r"(\r\n|\r|\n)")
-        rectangles = FreeTypeAbstraction.glyph_rects(line, fonts, scales)
-        broadcast_foreach(rectangles, rotation, font, textsize) do box, rotation, font, scale
+    broadcast_foreach(1:N, rotation, font, textsize) do i, rotation, font, scale
+        c, text_state = ctext_state
+        ctext_state = iterate(text, text_state)
+        # TODO fix center + align + rotation
+        if c != '\r'
             pos = if pos_per_char
                 to_ndim(Vec3f0, position[i], 0.0)
             else
                 last_pos = calc_position(last_pos, Point2f0(0, 0), atlas, c, font, scale)
                 start_pos3d .+ (rotation * to_ndim(Vec3f0, last_pos, 0.0))
             end
-
-            rotated = rotation * bbox
+            s = glyph_scale!(atlas, c, font, scale)
+            srot = rotation * to_ndim(Vec3f0, s, 0.0)
             bb = GeometryTypes.update(bb, pos)
             bb = GeometryTypes.update(bb, pos .+ srot)
         end
     end
-    bb
+    return bb
 end
