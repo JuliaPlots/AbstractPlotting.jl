@@ -859,3 +859,4 @@ end
 
 convert_attribute(value, ::key"marker", ::key"scatter") = to_spritemarker(value)
 convert_attribute(value, ::key"isovalue", ::key"volume") = Float32(value)
+convert_attribute(value, ::key"isorange", ::key"volume") = Float32(value)
