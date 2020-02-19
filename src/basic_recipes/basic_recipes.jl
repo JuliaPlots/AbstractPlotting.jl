@@ -852,7 +852,7 @@ function plot!(vs::VolumeSlices)
     hattributes = vs[:heatmap]
     sliders = map(zip(planes, (x, y, z))) do plane_r
         plane, r = plane_r
-        idx = node(plane, Node(1))
+        idx = Node(1)
         vs[plane] = idx
         hmap = heatmap!(vs, hattributes, x, y, zeros(length(x[]), length(y[]))).plots[end]
         on(idx) do i
