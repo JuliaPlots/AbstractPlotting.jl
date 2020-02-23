@@ -144,7 +144,7 @@ end
 function glyph_index!(atlas::TextureAtlas, c::Char, font::NativeFont)
     if FT_Get_Char_Index(font, c) == 0
         for afont in alternativefonts()
-            if FT_Get_Char_Index(afont[], c) != 0
+            if FT_Get_Char_Index(afont, c) != 0
                 font = afont
             end
         end
