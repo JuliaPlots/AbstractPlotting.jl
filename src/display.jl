@@ -108,7 +108,6 @@ function backend_show(backend, io::IO, ::MIME"text/plain", scene::Scene)
     end
     if !use_display[] && !isempty(available_backends)
         plotpane = has_juno_plotpane()
-        ij = isijulia()
         if plotpane !== nothing && !plotpane
             # we want to display as inline!, we are in Juno, but the plotpane is disabled
             @warn """Showing scene as inline with Plotpane disabled. This happens because `AbstractPlotting.inline!(true)` is set,
