@@ -35,7 +35,7 @@ $(ATTRIBUTES)
 
         showgrid = true,
         showticks = true,
-		showtickmarks = true,
+        showtickmarks = true,
         padding = 0.1,
 
         ticks = Theme(
@@ -56,12 +56,12 @@ $(ATTRIBUTES)
             align = ((:center, :top), (:right, :center)),
             font = lift(dim2, theme(scene, :font)),
         ),
-		tickmarks = Theme(
-			length = (3.0, 3.0),
-			linewidth = (1,1),
-			linecolor = ((:black, 0.4), (:black, 0.2)),
-			linestyle = (nothing, nothing)
-		),
+        tickmarks = Theme(
+            length = (3.0, 3.0),
+            linewidth = (1,1),
+            linecolor = ((:black, 0.4), (:black, 0.2)),
+            linestyle = (nothing, nothing)
+        ),
 
         grid = Theme(
             linewidth = (0.5, 0.5),
@@ -144,7 +144,7 @@ $(ATTRIBUTES)
             textcolor = (tick_color, tick_color, tick_color),
 
             rotation = tickrotations3d,
-            textsize =  (tsize, tsize, tsize),
+            textsize = (tsize, tsize, tsize),
             align = tickalign3d,
             gap = 1,
             font = lift(dim3, theme(scene, :font)),
@@ -248,16 +248,16 @@ default_labels(x::Tuple, ranges, formatter) = default_labels.(x, (ranges,), (for
 default_labels(x::AbstractVector{<: AbstractString}, ranges, formatter::Function) = x
 default_labels(x::AbstractVector{<: AbstractString}, ranges::AbstractVector, formatter::Function) = x
 
-
-
 function convert_arguments(::Type{<: Axis2D}, limits::Rect)
     e = (minimum(limits), maximum(limits))
     (((e[1][1], e[2][1]), (e[1][2], e[2][2])),)
 end
+
 function convert_arguments(::Type{<: Axis3D}, limits::Rect)
     e = (minimum(limits), maximum(limits))
     (((e[1][1], e[2][1]), (e[1][2], e[2][2]), (e[1][3], e[2][3])),)
 end
+
 a_length(x::AbstractVector) = length(x)
 a_length(x::Automatic) = x
 
@@ -294,24 +294,18 @@ function draw_ticks(
 end
 
 function draw_tickmarks(
-						linebuffer, dim, origin, ticks,dir::NTuple{N},
-						linewidth, linecolor, linestyle,
-						textcolor, textsize, rotation,align,font
-						) where N
-	for (tick, str) in ticks
-		pos = ntuple(i-> i != dim ? origin[i] : tick, Val(2))
-		posf0 = Point2f0(pos)
-		dirf0  = Pointf0{N}(dir)
-		append!(linebuffer,
-		      [posf0, posf0 .+ dirf0],
-		      color = linecolor[dim], linewidth = linewidth[dim]
-		      )
-	end
+                        linebuffer, dim, origin, ticks,dir::NTuple{N},
+                        linewidth, linecolor, linestyle,
+                        textcolor, textsize, rotation,align,font
+                        ) where N
+    for (tick, str) in ticks
+        pos = ntuple(i-> i != dim ? origin[i] : tick, Val(2))
+        posf0 = Point2f0(pos)
+        dirf0  = Pointf0{N}(dir)
+        append!(linebuffer, [posf0, posf0 .+ dirf0],
+                color = linecolor[dim], linewidth = linewidth[dim])
+    end
 end
-
-
-
-
 
 function draw_grid(
         linebuffer, dim, origin, ticks, dir::NTuple{N},
@@ -457,9 +451,9 @@ function draw_axis2d(
         t_textcolor, t_textsize, t_rotation, t_align, t_font,
         t_gap, t_title_gap,
 
-	#tickmark attribures
-	tm_linewidth, tm_linecolor, tm_linestyle,
-	tm_length,
+        #tickmark attribures
+        tm_linewidth, tm_linecolor, tm_linestyle,
+        tm_length,
 
         # frame attributes
         f_linewidth, f_linecolor, f_linestyle,
@@ -504,15 +498,13 @@ function draw_axis2d(
     end
     tm_offsets = ((0.0, Float64(tm_length[2])), (Float64(tm_length[1]), Float64(0.0)))
     foreach(1:2, tm_offsets, xyticks) do dim, offset, ticks
-	    if showtickmarks[dim]
-		    draw_tickmarks(
-						   tickmarks_linebuffer[dim], dim, origin .- offset, ticks, offset,
-						   t_linewidth, t_linecolor, t_linestyle,
-						   t_textcolor, t_textsize, t_rotation, t_align, t_font
-						   )
-	    end
-	end
-	t_offsets = ((0.0, Float64(t_gap[2] + tm_length[2])), (Float64(t_gap[1]+tm_length[1]), Float64(0.0)))
+        if showtickmarks[dim]
+            draw_tickmarks(tickmarks_linebuffer[dim], dim, origin .- offset, ticks, offset,
+                           t_linewidth, t_linecolor, t_linestyle,
+                           t_textcolor, t_textsize, t_rotation, t_align, t_font)
+        end
+    end
+    t_offsets = ((0.0, Float64(t_gap[2] + tm_length[2])), (Float64(t_gap[1]+tm_length[1]), Float64(0.0)))
     foreach(1:2, t_offsets, xyticks) do dim, offset, ticks
         if showticks[dim]
             draw_ticks(
@@ -520,7 +512,7 @@ function draw_axis2d(
                 t_linewidth, t_linecolor, t_linestyle,
                 t_textcolor, t_textsize, t_rotation, t_align, t_font
             )
-	    end
+        end
     end
 
     draw_frame(
@@ -538,7 +530,7 @@ function draw_axis2d(
         ti_title
     )
     finish!(textbuffer); finish!(frame_linebuffer); foreach(finish!, grid_linebuffer)
-	foreach(finish!, tickmarks_linebuffer)
+    foreach(finish!, tickmarks_linebuffer)
     return
 end
 
@@ -578,14 +570,14 @@ function plot!(scene::SceneLike, ::Type{<: Axis2D}, attributes::Attributes, args
         cplot, Point{2}, transparency = true, linestyle = cplot.frame.linestyle
     ))
     tickmarks_linebuffer = to_node((
-				    LinesegmentBuffer(
-						      cplot, Point{2}, transparency = true,
-						      linestyle=lift(first, cplot[:tickmarks, :linestyle])
-						      ),
-				    LinesegmentBuffer(
-						      cplot, Point{2}, transparency = true,
-						      linestyle = lift(last, cplot[:tickmarks, :linestyle])
-						      )
+                    LinesegmentBuffer(
+                              cplot, Point{2}, transparency = true,
+                              linestyle=lift(first, cplot[:tickmarks, :linestyle])
+                              ),
+                    LinesegmentBuffer(
+                              cplot, Point{2}, transparency = true,
+                              linestyle = lift(last, cplot[:tickmarks, :linestyle])
+                              )
     ))
     map_once(
         draw_axis2d,
