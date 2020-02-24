@@ -78,7 +78,7 @@ function plot!(plot::Poly{<: Tuple{<: AbstractVector{P}}}) where P <: AbstractVe
             push!(line, poly[1])
             push!(line, Point2f0(NaN))
         end
-        line
+        return line
     end
     lines!(
         plot, outline, visible = plot.visible,

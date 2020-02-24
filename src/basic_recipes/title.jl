@@ -10,7 +10,7 @@ if the value passed to `string` isn't actually a String.
 """
 function title(scene, tstring; align = (:center, :bottom), textsize = 30, parent = Scene(), formatter = string, kw...)
 
-    string = Node(tstring)
+    string = convert(Node, tstring)
 
     pos = lift(pixelarea(scene)) do area
         x = widths(area)[1] ./ 2
@@ -24,7 +24,7 @@ function title(scene, tstring; align = (:center, :bottom), textsize = 30, parent
         textsize = textsize;
         kw...
     )
-    hbox(scene, t; parent = parent)
+    return hbox(scene, t; parent = parent)
 end
 
 function title(string; kw...)
