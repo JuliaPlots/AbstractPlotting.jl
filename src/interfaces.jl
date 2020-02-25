@@ -42,7 +42,7 @@ $(ATTRIBUTES)
         colormap = [RGBAf0(0,0,0,1), RGBAf0(1,1,1,1)],
         colorrange = automatic,
         nan_color = RGBAf0(0,0,0,0),
-        interpolate = true
+        interpolate = true,
         fxaa = false,
     )
 end
@@ -405,7 +405,7 @@ function seperate_tuple(args::Node{<: NTuple{N, Any}}) where N
 end
 
 function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::Attributes, args) where Typ
-    input = to_node.(args)
+    input = convert.(Node, args)
     argnodes = lift(input...) do args...
         convert_arguments(PlotType, args...)
     end
@@ -558,7 +558,7 @@ function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, args...; k
 
     FinalType, argsconverted = apply_convert!(PreType, attributes, converted)
     converted_node = Node(argsconverted)
-    input_nodes =  to_node.(args)
+    input_nodes =  convert.(Node, args)
     onany(kw_signal, lift(tuple, input_nodes...)) do kwargs, args
         # do the argument conversion inside a lift
         result = convert_arguments(FinalType, args...; kwargs...)
