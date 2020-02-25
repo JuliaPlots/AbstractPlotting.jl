@@ -1,5 +1,3 @@
-using Observables: listeners, notify!, to_value
-
 # I don't want to use map anymore, it's so ambigious, especially to newcomers.
 # TODO should this become it's own function?
 function lift(

@@ -18,6 +18,7 @@ using Printf: @sprintf
 using Base: RefValue
 using Base.Iterators: repeated, drop
 import Base: getindex, setindex!, push!, append!, parent, get, get!, delete!, haskey
+using Observables: listeners, notify!, to_value
 
 # Imports from Observables which we use a lot
 using Observables: notify!, listeners
