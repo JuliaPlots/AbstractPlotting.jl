@@ -26,6 +26,11 @@ $(ATTRIBUTES)
         colorrange = automatic,
         strokewidth = 0.0,
         shading = false,
+        # we turn this false for now, since otherwise shapes look transparent
+        # since we use meshes, which are drawn into a different framebuffer because of fxaa
+        # if we use fxaa=false, they're drawn into the same
+        # TODO, I still think this is a bug, since they should still use the same depth buffer!
+        fxaa = false,
         linestyle = nothing,
         overdraw = false,
         transparency = false,
@@ -33,12 +38,7 @@ $(ATTRIBUTES)
 end
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: VecTypes}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractVector{<: VecTypes}}) = (v,)
-convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rectangle}}) = (v,)
-simplerect(rect) = SimpleRectangle(minimum(rect), widths(rect))
-function convert_arguments(::Type{<: Poly}, v::AbstractVector{<: HyperRectangle{2}})
-    # How the hell did we miss implementing GLNormalMesh for HyperRectangle?!
-    return (simplerect.(v),)
-end
+convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rectangle, HyperRectangle}}) = (v,)
 convert_arguments(::Type{<: Poly}, args...) = ([convert_arguments(Scatter, args...)[1]],)
 convert_arguments(::Type{<: Poly}, vertices::AbstractArray, indices::AbstractArray) = convert_arguments(Mesh, vertices, indices)
 
@@ -63,7 +63,7 @@ function poly_convert(polygon::AbstractVector{<: VecTypes})
     return poly_convert([convert_arguments(Scatter, polygon)[1]])
 end
 
-function poly_convert(polygons::AbstractVector{AbstractVector{<: VecTypes}})
+function poly_convert(polygons::AbstractVector{<: AbstractVector{<: VecTypes}})
     polys = Vector{Point2f0}[]
     for poly in polygons
         s = GeometryTypes.split_intersections(poly)
@@ -77,17 +77,19 @@ function to_line_segments(meshes)
     for mesh in meshes
         points = convert_arguments(PointBased(), mesh)[1]
         append!(line, points)
-        push!(line, points[end])
+        push!(line, points[1])
         push!(line, Point2f0(NaN))
     end
     return line
 end
 
 function to_line_segments(polygon::AbstractVector{<: VecTypes})
-    return polygon
+    result = Point2f0.(polygon)
+    push!(result, polygon[1])
+    return result
 end
 
-const PolyElements = Union{Circle, Rectangle, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
+const PolyElements = Union{Circle, Rectangle, HyperRectangle, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
 
 function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
     meshes = plot[1]
@@ -98,10 +100,9 @@ function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
         colormap = plot.colormap,
         colorrange = plot.colorrange,
         overdraw = plot.overdraw,
-        fxaa = false,
+        fxaa = plot.fxaa,
         transparency = plot.transparency
     )
-
     outline = lift(to_line_segments, meshes)
     lines!(
         plot, outline, visible = plot.visible,

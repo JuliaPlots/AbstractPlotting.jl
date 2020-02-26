@@ -218,6 +218,7 @@ function convert_arguments(P::PointBased, x::Rect2D)
     # TODO fix the order of decompose
     return convert_arguments(P, decompose(Point2f0, x)[[1, 2, 4, 3, 1]])
 end
+
 function convert_arguments(P::PointBased, x::SimpleRectangle)
     # TODO fix the order of decompose
     return convert_arguments(P, decompose(Point2f0, x)[[1, 2, 4, 3, 1]])
