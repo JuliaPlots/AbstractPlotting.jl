@@ -505,20 +505,28 @@ end
 
 conversion_trait(::Type{<: BarPlot}) = PointBased()
 
+function bar_rectange(xy, width, fillto)
+    x, y = xy
+    # y could be smaller than fillto...
+    ymin = min(fillto, y)
+    ymax = max(fillto, y)
+    w = abs(width)
+    return FRect(x - (w / 2f0), ymin, w, ymax - ymin)
+end
+
 function AbstractPlotting.plot!(p::BarPlot)
-    bars = lift(p[1], p.fillto, p.width) do xy, fillto, hw
+    bars = lift(p[1], p.fillto, p.width) do xy, fillto, width
         # compute half-width of bars
-        if hw === automatic
-            hw = mean(diff(first.(xy))) # TODO ignore nan?
+        if width === automatic
+            # times 0.8 for default gap
+            width = mean(diff(first.(xy))) * 0.8 # TODO ignore nan?
         end
 
-        return FRect.(first.(xy) .+ (hw ./ -2f0),
-                      Float32.(fillto), abs.(hw),
-                      last.(xy) .- Float32.(fillto))
+        return bar_rectange.(xy, width, fillto)
     end
     poly!(
-        p, bars, color = p[:color], colormap = p[:colormap], colorrange = p[:colorrange],
-        strokewidth = p[:strokewidth], strokecolor = p[:strokecolor]
+        p, bars, color = p.color, colormap = p.colormap, colorrange = p.colorrange,
+        strokewidth = p.strokewidth, strokecolor = p.strokecolor
     )
 end
 
