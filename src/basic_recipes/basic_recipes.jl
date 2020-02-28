@@ -505,7 +505,7 @@ end
 
 conversion_trait(::Type{<: BarPlot}) = PointBased()
 
-function bar_rectange(xy, width, fillto)
+function bar_rectangle(xy, width, fillto)
     x, y = xy
     # y could be smaller than fillto...
     ymin = min(fillto, y)
@@ -522,7 +522,7 @@ function AbstractPlotting.plot!(p::BarPlot)
             width = mean(diff(first.(xy))) * 0.8 # TODO ignore nan?
         end
 
-        return bar_rectange.(xy, width, fillto)
+        return bar_rectangle.(xy, width, fillto)
     end
     poly!(
         p, bars, color = p.color, colormap = p.colormap, colorrange = p.colorrange,
