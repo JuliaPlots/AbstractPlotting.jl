@@ -92,8 +92,9 @@ end
 const PolyElements = Union{Circle, Rectangle, HyperRectangle, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
 
 function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
-    meshes = plot[1]
-    mesh!(plot, lift(poly_convert, meshes);
+    geometries = plot[1]
+    meshes = lift(poly_convert, geometries)
+    mesh!(plot, meshes;
         visible = plot.visible,
         shading = plot.shading,
         color = plot.color,
@@ -103,7 +104,7 @@ function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
         fxaa = plot.fxaa,
         transparency = plot.transparency
     )
-    outline = lift(to_line_segments, meshes)
+    outline = lift(to_line_segments, geometries)
     lines!(
         plot, outline, visible = plot.visible,
         color = plot.strokecolor, linestyle = plot.linestyle,
@@ -391,7 +392,7 @@ end
 
 function plot!(plot::Annotations)
     sargs = (
-        plot[:model], plot[:font],
+        plot.model, plot.font,
         plot[1],
         getindex.(plot, (:color, :textsize, :align, :rotation))...,
     )
@@ -399,7 +400,7 @@ function plot!(plot::Annotations)
     combinedpos = [Point3f0(0)]
     colors = RGBAf0[RGBAf0(0,0,0,0)]
     scales = Vec2f0[(0,0)]
-    fonts = NativeFont[to_font("Dejavu Sans")]
+    fonts = [to_font("Dejavu Sans")]
     rotations = Quaternionf0[Quaternionf0(0,0,0,0)]
 
     tplot = text!(plot, "",
@@ -407,15 +408,11 @@ function plot!(plot::Annotations)
         position = combinedpos, color = colors, visible = plot.visible,
         textsize = scales, font = fonts, rotation = rotations
     ).plots[end]
-    onany(sargs...) do model, font, text_pos, args...
+    onany(sargs...) do model, pfonts, text_pos, args...
         io = IOBuffer();
         empty!(combinedpos); empty!(colors); empty!(scales); empty!(fonts); empty!(rotations)
-
-        broadcast_foreach(1:length(text_pos), text_pos, args...) do idx, (text, startpos), color, tsize, alignment, rotation
-            # the fact, that Font == Vector{FT_FreeType.Font} is pretty annoying for broadcasting.
-            # TODO have a better Font type!
+        broadcast_foreach(1:length(text_pos), pfonts, text_pos, args...) do idx, font, (text, startpos), color, tsize, alignment, rotation
             f = to_font(font)
-            f = isa(f, NativeFont) ? f : f[idx]
             c = to_color(color)
             rot = to_rotation(rotation)
             pos, s = layout_text(text, startpos, tsize, f, alignment, rot, model)
@@ -504,20 +501,28 @@ end
 
 conversion_trait(::Type{<: BarPlot}) = PointBased()
 
+function bar_rectangle(xy, width, fillto)
+    x, y = xy
+    # y could be smaller than fillto...
+    ymin = min(fillto, y)
+    ymax = max(fillto, y)
+    w = abs(width)
+    return FRect(x - (w / 2f0), ymin, w, ymax - ymin)
+end
+
 function AbstractPlotting.plot!(p::BarPlot)
-    pos_scale = lift(p[1], p.fillto, p.width) do xy, fillto, hw
+    bars = lift(p[1], p.fillto, p.width) do xy, fillto, width
         # compute half-width of bars
-        if hw === automatic
-            hw = mean(diff(first.(xy))) # TODO ignore nan?
+        if width === automatic
+            # times 0.8 for default gap
+            width = mean(diff(first.(xy))) * 0.8 # TODO ignore nan?
         end
-        # make fillto a vector... default fills to 0
-        positions = Vec2f0.(first.(xy), Float32.(fillto)) .+ Vec2f0.(hw ./ -2f0, 0)
-        scales = Vec2f0.(abs.(hw), last.(xy))
-        return FRect.(positions, scales)
+
+        return bar_rectangle.(xy, width, fillto)
     end
     poly!(
-        p, pos_scale, color = p[:color], colormap = p[:colormap], colorrange = p[:colorrange],
-        strokewidth = p[:strokewidth], strokecolor = p[:strokecolor]
+        p, bars, color = p.color, colormap = p.colormap, colorrange = p.colorrange,
+        strokewidth = p.strokewidth, strokecolor = p.strokecolor
     )
 end
 
