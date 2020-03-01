@@ -19,10 +19,8 @@ matrix:
 script:
   - mkdir temporary_for_project # https://github.com/JuliaLang/Pkg.jl/pull/1696
   - export JL_PKG=AbstractPlotting
-  - julia --project=temporary_for_project --color=yes -e "using Pkg; if VERSION >= v\"1.1.0-rc1\"; Pkg.build(verbose=true); else Pkg.build(); end; pkg\"dev --local .; add MakieGallery#master\""
+  - julia --project=temporary_for_project --color=yes -e "using Pkg; if VERSION >= v\"1.1.0-rc1\"; Pkg.build(verbose=true); else Pkg.build(); end; pkg\"dev --local .; add MakieGallery#master GeometryTypes#sd-refactor\""
   - julia --project=temporary_for_project --check-bounds=yes --color=yes -e "using Pkg; Pkg.test(\"${JL_PKG}\"; coverage=true)"
-
-
 
 ## uncomment the following lines to override the default test script
 #script:
