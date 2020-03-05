@@ -42,6 +42,6 @@ end
     # AbstractPlotting.jl#345
     a = Any[Int64(1), Int32(1), Int128(2)] # vector of categorical values of different types
     ilabels = AbstractPlotting.categoric_labels(a)
-    @test ilabels == ["1", "2"]
+    @test ilabels == [1, 2]
     @test AbstractPlotting.categoric_position.(a, Ref(ilabels)) == [1, 1, 2]
 end
