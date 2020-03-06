@@ -355,7 +355,14 @@ function recordframe!(io::VideoStream)
 end
 
 """
-    save(path::String, io::VideoStream; framerate = 24)
+    save(
+        path::String, io::VideoStream;
+        framerate::Int = 24,
+        bitrate_avg::Int = 2_000_000, # corresponds to -b:v
+        bitrate_max::Int = round(Int, 1.3*bitrate_avg), # corres
+        bitrate_min::Int = round(Int, 0.7*bitrate_avg),
+        bufsize::Int     = 2*bitrate_avg
+    )
 
 Flushes the video stream and converts the file to the extension found in `path`,
 which can be one of the following:
@@ -372,14 +379,14 @@ If you want a simpler interface, consider using [`record`](@ref).
 
 """
 function save(path::String, io::VideoStream;
-              framerate::Int = 24)
+              framerate::Int = 24, bitrate_avg::Int = 2_000_000, bitrate_max::Int = round(Int, 1.3*bitrate_avg), bitrate_min::Int = round(Int, 0.7*bitrate_avg), bufsize::Int = 2*bitrate_avg)
     close(io.process)
     wait(io.process)
     p, typ = splitext(path)
     if typ == ".mkv"
         cp(io.path, path, force=true)
     elseif typ == ".mp4"
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc -b:a 128k -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc -b:v $bitrate_avg -maxrate $bitrate_max -minrate $bitrate_min -bufsize $bufsize -y $path`)
     elseif typ == ".webm"
         ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libvpx-vp9 -threads 16 -b:v 2000k -c:a libvorbis -threads 16 -r $framerate -vf scale=iw:ih -y $path`)
     elseif typ == ".gif"
@@ -400,8 +407,8 @@ end
 
 
 """
-    record(func, scene, path; framerate = 24)
-    record(func, scene, path, iter; framerate = 24)
+    record(func, scene, path; framerate = 24, kwargs...)
+    record(func, scene, path, iter; framerate = 24, sleep = true, kwargs...)
 
 Records the Scene `scene` after the application of `func` on it for each element
 in `itr` (any iterator).  `func` must accept an element of `itr`.
@@ -437,55 +444,25 @@ end
 
 If you want a more tweakable interface, consider using [`VideoStream`](@ref) and
 [`save`](@ref).
-
-## Examples
-
-```julia
-scene = lines(rand(10))
-record(scene, "test.gif") do io
-    for i in 1:255
-        scene.plots[:color] = Colors.RGB(i/255, (255 - i)/255, 0) # animate scene
-        recordframe!(io)
-    end
-end
-```
-or
-```julia
-scene = lines(rand(10))
-record(scene, "test.gif", 1:255) do i
-    scene.plots[:color] = Colors.RGB(i/255, (255 - i)/255, 0) # animate scene
-end
-```
 """
-function record(func, scene, path; framerate::Int = 24)
+function record(func, scene, path; framerate::Int = 24, kwargs...)
     io = VideoStream(scene; framerate = framerate)
     func(io)
-    save(path, io; framerate = framerate)
+    save(path, io; framerate = framerate, kwargs...)
 end
 
-"""
-    record(func, scene, path, iter; framerate = 24)
 
-This is simply a shorthand to wrap a for loop in `record`.
-
-Example:
-
-```example
-    scene = lines(rand(10))
-    record(scene, "test.gif", 1:100) do i
-        scene.plots[:color] = Colors.RGB(i/255, 0, 0) # animate scene
-    end
-```
-"""
-function record(func, scene, path, iter; framerate::Int = 24)
+function record(func, scene, path, iter; framerate::Int = 24, sleep = true, kwargs...)
     io = VideoStream(scene; framerate = framerate)
     for i in iter
         t1 = time()
         func(i)
         recordframe!(io)
         diff = (1/framerate) - (time() - t1)
-        if diff > 0.0
-            sleep(diff)
+        # for user experience, see the animation as you record it
+        if sleep && diff > 0.0
+            # we have to qualify this, because of the kwarg `sleep`
+            Base.sleep(diff)
         else
             yield()
         end
