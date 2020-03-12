@@ -38,7 +38,6 @@ const Pointf0{N} = Point{N, Float32}
 export Vecf0, Pointf0
 const NativeFont = FreeTypeAbstraction.FTFont
 
-include("known_pirates.jl")
 
 include("interaction/iodevices.jl")
 
