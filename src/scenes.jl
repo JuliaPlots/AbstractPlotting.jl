@@ -1,6 +1,11 @@
 
 """
-    Scene TODO document this
+    A Scene can be understood as a (sub) window.
+    It opens up a rectangle in pixels (pixelarea(scene)) on the current screen,
+    and a camera that maps from data space to the pixel in the rectangle.
+    It also holds all graphical objects that are drawn in that area.
+    It currently also holds the display events (mouse position etc),
+    but this may change!
 
 ## Constructors
 $(SIGNATURES)
@@ -8,7 +13,7 @@ $(SIGNATURES)
 ## Fields
 $(FIELDS)
 """
-mutable struct Scene <: AbstractScene
+struct struct Scene <: AbstractScene
     "The parent of the Scene; if it is a top-level Scene, `parent == nothing`."
     parent
 

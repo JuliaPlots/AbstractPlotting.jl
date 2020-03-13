@@ -36,12 +36,12 @@ $(ATTRIBUTES)
         transparency = false,
     )
 end
+
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: VecTypes}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractVector{<: VecTypes}}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rectangle, HyperRectangle}}) = (v,)
 convert_arguments(::Type{<: Poly}, args...) = ([convert_arguments(Scatter, args...)[1]],)
 convert_arguments(::Type{<: Poly}, vertices::AbstractArray, indices::AbstractArray) = convert_arguments(Mesh, vertices, indices)
-
 
 function plot!(plot::Poly{<: Tuple{Union{AbstractMesh, GeometryPrimitive}}})
     mesh!(
@@ -55,6 +55,7 @@ function plot!(plot::Poly{<: Tuple{Union{AbstractMesh, GeometryPrimitive}}})
         linewidth = plot[:strokewidth], visible = plot[:visible], overdraw = plot[:overdraw]
     )
 end
+
 # Poly conversion
 poly_convert(geometries) = GLNormalMesh.(geometries)
 poly_convert(meshes::AbstractVector{<:AbstractMesh}) = meshes
@@ -145,7 +146,6 @@ function plot!(plot::Mesh{<: Tuple{<: AbstractVector{P}}}) where P <: AbstractMe
     mesh!(plot, attributes, bigmesh)
 end
 
-
 """
     `arrows(points, directions; kwargs...)`
     `arrows(x, y, u, v)`
@@ -195,7 +195,6 @@ arrow_head(N, marker) = marker
 arrow_head(N, marker::Automatic) = N == 2 ? '▲' : Pyramid(Point3f0(0, 0, -0.5), 1f0, 1f0)
 
 scatterfun(N) = N == 2 ? scatter! : meshscatter!
-
 
 convert_arguments(::Type{<: Arrows}, x, y, u, v) = (Point2f0.(x, y), Vec2f0.(u, v))
 function convert_arguments(::Type{<: Arrows}, x::AbstractVector, y::AbstractVector, u::AbstractMatrix, v::AbstractMatrix)
@@ -302,25 +301,6 @@ $(ATTRIBUTES)
         linewidth = 1
     )
 end
-
-# typeof(([1, 2, 3] |> vec, [1, 2, 3] |> vec)) <: Tuple{<: AbstractVector{T}, <: AbstractVector{T}} where T
-# true
-# streamlines([1, 2, 3] |> vec, [1, 2, 3] |> vec)
-# ERROR: Plotting for the arguments (::Array{Int64,1}, ::Array{Int64,1}) not defined for AbstractPlotting.streamlines. If you want to support those arguments, overload plot!(plot::AbstractPlotting.streamlines{ <: Tuple{Array{Int64,1},Array{Int64,1}}})
-
-# function plot!(plot::StreamLines) where T
-#     @extract plot (points, directions)
-#     linebuffer = T[]
-#     lines = lift(directions, points, plot[:h], plot[:n]) do ∇ˢf, origins, h, n
-#         empty!(linebuffer)
-#         for point in origins
-#             sphere_streamline(linebuffer, ∇ˢf, point, h, n)
-#         end
-#         linebuffer
-#     end
-#     linesegments!(plot, Theme(plot), lines)
-# end
-
 
 """
     Series - ?
@@ -512,7 +492,7 @@ function bar_rectangle(xy, width, fillto)
     return FRect(x - (w / 2f0), ymin, w, ymax - ymin)
 end
 
-function AbstractPlotting.plot!(p::BarPlot)
+function plot!(p::BarPlot)
     bars = lift(p[1], p.fillto, p.width) do xy, fillto, width
         # compute half-width of bars
         if width === automatic

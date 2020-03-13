@@ -1,3 +1,23 @@
+#########
+## Move attributes into certain unit spaces
+# Future:
+# Every plot / scene axis will hold a space attribute
+# with the following allowed (per axis):
+# (may not actually be a type hierarchy, just here for illustration)
+abstract type DataSpace end
+abstract type DisplaySpace end
+#...
+struct Log <: DataSpace end
+struct Polar <: DataSpace end
+struct GeoProjection <: DataSpace end
+# and more!
+#...
+struct Pixel <: DisplaySpace end
+struct DPI <: DisplaySpace end
+struct DIP <: DisplaySpace end
+
+#########
+
 using AbstractNumbers
 import AbstractNumbers: number, basetype
 
@@ -120,15 +140,6 @@ function Base.convert(::Type{<: Pixel}, scene::Scene, x::DIP)
     dots = dpi(scene) * inch
     Pixel(number(dots))
 end
-# function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::DIP)
-#     px = convert(Pixel, scene, x)
-#     convert(SceneSpace, scene, px)
-# end
-
-# function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::Point{2, <: Pixel})
-#     s = to_world(scene, to_screen(scene, number.(x)))
-#     SceneSpace.(s)
-# end
 
 function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::Vec{2, <:Pixel})
     zero = to_world(scene, to_screen(scene, Point2f0(0)))
@@ -146,3 +157,6 @@ function Base.convert(::Type{<: SceneSpace}, scene::Scene, x::Millimeter)
     pix = convert(Pixel, scene, x)
     (SceneSpace, mm)
 end
+
+to_2d_scale(x::Pixel) = Vec{2, Pixel{Float32}}(x, x)
+to_2d_scale(x::Tuple{<:Pixel, <:Pixel}) = Vec{2, Pixel{Float32}}(x, x)

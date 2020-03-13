@@ -45,8 +45,10 @@ const minimal_default = Attributes(
     camera = automatic,
     limits = automatic,
     padding = Vec3f0(0.1),
-    raw = false
+    raw = false,
 )
+
+plot_name(::AbstractPlot)
 
 const _current_default_theme = copy(minimal_default)
 

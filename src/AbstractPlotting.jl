@@ -1,6 +1,6 @@
 module AbstractPlotting
 
-using FFMPEG # get FFMPEG on any system!
++using FFMPEG # get FFMPEG on any system!
 using Observables, GeometryTypes, StaticArrays, IntervalSets, PlotUtils
 using ColorBrewer, ColorTypes, Colors, ColorSchemes
 using FixedPointNumbers, Packing, SignedDistanceFields
@@ -29,12 +29,13 @@ end
 using .ContoursHygiene
 const Contours = ContoursHygiene.Contour
 
+tstart = time()
+
 include("documentation/docstringextension.jl")
 
 include("utilities/quaternions.jl")
 include("types.jl")
 include("utilities/utilities.jl")
-include("utilities/logging.jl")
 include("utilities/texture_atlas.jl")
 include("interaction/nodes.jl")
 include("interaction/liftmacro.jl")
@@ -44,8 +45,8 @@ include("scenes.jl")
 include("theming.jl")
 include("recipes.jl")
 include("interfaces.jl")
-include("units.jl")
-include("conversions.jl")
+include("convert_arguments.jl")
+include("convert_attributes.jl")
 include("shorthands.jl")
 
 # camera types + functions
@@ -76,6 +77,8 @@ include("interaction/interactive_api.jl")
 # documentation and help functions
 include("documentation/documentation.jl")
 include("display.jl")
+
+println("includes loaded!: ", time() - tstart)
 
 # help functions and supporting functions
 export help, help_attributes, help_arguments
@@ -192,14 +195,16 @@ const config_file = "theme.jl"
 const config_path = joinpath(homedir(), ".config", "makie", config_file)
 
 function __init__()
-    pushdisplay(PlotDisplay())
-    cfg_path = config_path
-    if isfile(cfg_path)
-        theme = include(cfg_path)
-        if theme isa Attributes
-            set_theme!(theme)
-        else
-            @warn("Found config file in $(cfg_path), which doesn't return an instance of Attributes. Ignoring faulty file!")
+    @time begin
+        pushdisplay(PlotDisplay())
+        cfg_path = config_path
+        if isfile(cfg_path)
+            theme = include(cfg_path)
+            if theme isa Attributes
+                set_theme!(theme)
+            else
+                @warn("Found config file in $(cfg_path), which doesn't return an instance of Attributes. Ignoring faulty file!")
+            end
         end
     end
 end
