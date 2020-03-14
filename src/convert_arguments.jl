@@ -5,9 +5,9 @@
 #
 # The new goal is to keep keyword arguments where they end up:
 # e.g. stop doing:
-scatter(x, y, resolution = (200, 200), axis = :log)
+# scatter(x, y, resolution = (200, 200), axis = :log)
 # and instead do:
-Scene(Scatter(x, y), resolution = (200, 200), axis = :log)
+# Scene(Scatter(x, y), resolution = (200, 200), axis = :log)
 
 # again, there is no reason why we shouldn't get the previous behaviour in a higher level api!
 # As a matter of fact, since we start creating types (Scatter vs scatter)
@@ -16,65 +16,73 @@ Scene(Scatter(x, y), resolution = (200, 200), axis = :log)
 # Now, that we only need to deal with objects, that encapsulate their own
 # arguments & attributes, we can make a pritty simple conversion pipeline:
 # convert_arguments --> translate ... Name open for discussion!
-
-function translate(context::Plotting, h::StatsBase.Histogram)
-    return Barplot(h.edges, h.weights, gap=0)
-end
-
-function translate(context::Plotting, corrplot::Corplot)
-    return GridLayout(...)
-end
+#
+# @recipe Scatter begin
+#     color = :red
+# end
+#
+# @recipe Histogram begin
+#     color = :red
+# end
+#
+# function translate(context::Plotting, h::StatsBase.Histogram)
+#     return Makie.Histogram(h.edges, h.weights, gap=0)
+# end
+#
+# function translate(context::Plotting, corrplot::Corplot)
+#     return GridLayout(...)
+# end
 
 # Now you may ask, but how does this get further custom attributes?
 
-struct Plot
-    argument
-    attributes::Dict{Symbol, Any}
-end
-Plot(argument; kw...) = Plot(argument, Dict(kw))
-
-function translate(context::Plotting, kw::Plot)
-    translated = translate(context, kw.argument)
-    fill_in_themes!(translated, kw)
-    return translated
-end
+# struct Plot
+#     argument
+#     attributes::Dict{Symbol, Any}
+# end
+# Plot(argument; kw...) = Plot(argument, Dict(kw))
+#
+# function translate(context::Plotting, kw::Plot)
+#     translated = translate(context, kw.argument)
+#     fill_in_themes!(translated, kw)
+#     return translated
+# end
 
 # Et voila, this should "just work":
 Scene(Plot(histogram, color = :red))
 
 # Observables will be passed between new plots!
 # e.g.
-struct Test
-    color::Observable
-end
-
-function translate(context::Plotting, test::Test)
-    return Scatter(rand(10), rand(10), color = test.color)
-end
+# struct Test
+#     color::Observable
+# end
+#
+# function translate(context::Plotting, test::Test)
+#     return Scatter(rand(10), rand(10), color = test.color)
+# end
 
 # And you will be able to return Observables!
-struct Test2
-    type::Observable
-    data
-end
-
-function translate(context::Plotting, test::Test2)
-    map(test.type) do type
-        if type == :scatter
-            return Scatter(test.data)
-        elseif type == :lines
-            return Lines(test.data)
-        end
-    end
-end
+# struct Test2
+#     type::Observable
+#     data
+# end
+#
+# function translate(context::Plotting, test::Test2)
+#     map(test.type) do type
+#         if type == :scatter
+#             return Scatter(test.data)
+#         elseif type == :lines
+#             return Lines(test.data)
+#         end
+#     end
+# end
 
 # Of course, this will also work with observables as argument!
 # The default will be, to just lift translate for observables as argument!
-function translate(context::Plotting, observable::Observable)
-    map(observable) do value
-        return translate(context, value)
-    end
-end
+# function translate(context::Plotting, observable::Observable)
+#     map(observable) do value
+#         return translate(context, value)
+#     end
+# end
 
 # At this point, you may wonder what the context is doing.
 # First of all, it can contain things like window events, to
@@ -84,12 +92,12 @@ end
 # depending on the context.
 # E.g. the plotting context could do only high level transformations
 # while a rendering backend could split up the objects much further!
-function translate(context::GLMakie, image::Image)
-    return translate(context, Mesh(image.geometry, color = image))
-end
-function translate(context::GLMakie, mesh::Mesh)
-    # SOME Complex OpenGL VOoDOo MAGIC
-end
+# function translate(context::GLMakie, image::Image)
+#     return translate(context, Mesh(image.geometry, color = image))
+# end
+# function translate(context::GLMakie, mesh::Mesh)
+#     # SOME Complex OpenGL VOoDOo MAGIC
+# end
 
 # The nice property about this is, that it's lazy!
 # So a rendering backend can consume whatever high level objects it wants to!

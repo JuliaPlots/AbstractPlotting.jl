@@ -29,8 +29,6 @@ end
 using .ContoursHygiene
 const Contours = ContoursHygiene.Contour
 
-tstart = time()
-
 include("documentation/docstringextension.jl")
 
 include("utilities/quaternions.jl")
@@ -77,8 +75,6 @@ include("interaction/interactive_api.jl")
 # documentation and help functions
 include("documentation/documentation.jl")
 include("display.jl")
-
-println("includes loaded!: ", time() - tstart)
 
 # help functions and supporting functions
 export help, help_attributes, help_arguments
@@ -195,16 +191,14 @@ const config_file = "theme.jl"
 const config_path = joinpath(homedir(), ".config", "makie", config_file)
 
 function __init__()
-    @time begin
-        pushdisplay(PlotDisplay())
-        cfg_path = config_path
-        if isfile(cfg_path)
-            theme = include(cfg_path)
-            if theme isa Attributes
-                set_theme!(theme)
-            else
-                @warn("Found config file in $(cfg_path), which doesn't return an instance of Attributes. Ignoring faulty file!")
-            end
+    pushdisplay(PlotDisplay())
+    cfg_path = config_path
+    if isfile(cfg_path)
+        theme = include(cfg_path)
+        if theme isa Attributes
+            set_theme!(theme)
+        else
+            @warn("Found config file in $(cfg_path), which doesn't return an instance of Attributes. Ignoring faulty file!")
         end
     end
 end

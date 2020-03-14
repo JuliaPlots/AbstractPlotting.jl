@@ -1,3 +1,4 @@
+
 """
 Main structure for holding attributes, for theming plots etc!
 """
@@ -7,7 +8,7 @@ struct Attributes
     # We dont have one node per value anymore, but instead one node
     # that gets triggered on any setindex!, or whenever an input attribute node changes
     # This makes it easier to layer Observable{Attributes}()
-    on_change::Node{Pair{Symbol, Any}}
+    on_change::Observable{Pair{Symbol, Any}}
     # The supported fields, so we can throw an error, whenever fields are not supported
     supported_fields::Set{Symbol}
     # The attributes given at construction time, taking the highest priority
@@ -19,18 +20,47 @@ struct Attributes
     default_values::Dict{Symbol, Any}
 
     function Attributes(name::String, default_values::Dict{Symbol, Any}, from_user::Dict{Symbol, Any})
-        on_change = Node{Pair{Symbol, Any}}()
+        on_change = Observable{Pair{Symbol, Any}}()
         supported_fields = Set(keys(default_values))
         return new(name, on_change, supported_fields, from_user,
                    Dict{Symbol, Any}(), default_values)
     end
 end
 
+
+struct OnFieldUpdate
+    field::Symbol
+    observable::Observable
+end
+
+function (of::OnFieldUpdate)(field_value::Pair{Symbol, <: Any})
+    if field_value[1] === of.field
+        of.observable[] = field_value[2]
+    end
+    return
+end
+
+function OnFieldUpdate(attributes::Attributes, field::Symbol)
+    # We lazily store observables on field updates in the listeners
+    # If we already have it in there, we just return the one we have.
+    on_change = getfield(attributes, :on_change)
+    for listener in Observables.listeners(on_change)
+        if listener isa OnFieldUpdate && listener.field === field
+            return listener
+        end
+    end
+    # we haven't found a listener, so we make a new one!
+    result = Observable(get_value(attributes, field))
+    of = OnFieldUpdate(field, result)
+    on(of, on_change)
+    return of
+end
+
 function Base.propertynames(attributes::Attributes)
     return getfield(attributes, :supported_fields)
 end
 
-function Base.getproperty(attributes::Attributes, field::Symbol)
+function get_value(attributes::Attributes, field::Symbol)
     name = getfield(attributes, :name)
     if field in propertynames(attributes)
         # The priority is:
@@ -49,6 +79,11 @@ function Base.getproperty(attributes::Attributes, field::Symbol)
     end
 end
 
+function Base.getproperty(attributes::Attributes, field::Symbol)
+    of = OnFieldUpdate(attributes, field)
+    return of.observable
+end
+
 function Base.setproperty!(attributes::Attributes, field::Symbol, value)
     name = getfield(attributes, :name)
     if field in propertynames(attributes)
@@ -57,11 +92,12 @@ function Base.setproperty!(attributes::Attributes, field::Symbol, value)
         from_user[field] = value
         on_change = getfield(attributes, :on_change)
         # trigger change!
-        on_change[] = (field, value)
+        on_change[] = field => value
     else
         error("Field $(field) not in attributes $(name)!")
     end
 end
+
 
 
 Base.broadcastable(x::Attributes) = Ref(x)
