@@ -1,6 +1,6 @@
 module AbstractPlotting
 
-+using FFMPEG # get FFMPEG on any system!
+using FFMPEG # get FFMPEG on any system!
 using Observables, GeometryTypes, StaticArrays, IntervalSets, PlotUtils
 using ColorBrewer, ColorTypes, Colors, ColorSchemes
 using FixedPointNumbers, Packing, SignedDistanceFields
