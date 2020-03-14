@@ -358,10 +358,6 @@ end
     save(
         path::String, io::VideoStream;
         framerate::Int = 24,
-        bitrate_avg::Int = 2_000_000, # corresponds to -b:v
-        bitrate_max::Int = round(Int, 1.3*bitrate_avg), # corres
-        bitrate_min::Int = round(Int, 0.7*bitrate_avg),
-        bufsize::Int     = 2*bitrate_avg
     )
 
 Flushes the video stream and converts the file to the extension found in `path`,
@@ -379,19 +375,20 @@ If you want a simpler interface, consider using [`record`](@ref).
 
 """
 function save(path::String, io::VideoStream;
-              framerate::Int = 24, bitrate_avg::Int = 2_000_000, bitrate_max::Int = round(Int, 1.3*bitrate_avg), bitrate_min::Int = round(Int, 0.7*bitrate_avg), bufsize::Int = 2*bitrate_avg)
+              framerate::Int = 24)
     close(io.process)
     wait(io.process)
 
-    bitrate_flags = `-b:v $bitrate_avg -maxrate $bitrate_max -minrate $bitrate_min -bufsize $bufsize`
+    # TODO re-implement these, since they don't work
+    # bitrate_flags = `-b:v $bitrate_avg -maxrate $bitrate_max -minrate $bitrate_min -bufsize $bufsize`
 
     p, typ = splitext(path)
     if typ == ".mkv"
         cp(io.path, path, force=true)
     elseif typ == ".mp4"
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc $bitrate_flags -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc -y $path`)
     elseif typ == ".webm"
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libvpx-vp9 -threads 16 $bitrate_flags -c:a libvorbis -threads 16 -r $framerate -vf scale=iw:ih -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libvpx-vp9 -threads 16 -c:a libvorbis -threads 16 -r $framerate -vf scale=iw:ih -y $path`)
     elseif typ == ".gif"
         filters = "fps=$framerate,scale=iw:ih:flags=lanczos"
         palette_path = dirname(io.path)
@@ -402,7 +399,7 @@ function save(path::String, io::VideoStream;
         rm(pname, force = true)
     else
         rm(io.path)
-        error("Video type $typ not known")
+        @error("Video type $typ not known")
     end
     rm(io.path)
     return path
