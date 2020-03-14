@@ -451,8 +451,9 @@ function record(func, scene, path; framerate::Int = 24, kwargs...)
     save(path, io; framerate = framerate, kwargs...)
 end
 
+const _SLEEP_WHEN_RECORDING = Ref(true)
 
-function record(func, scene, path, iter; framerate::Int = 24, sleep = true, kwargs...)
+function record(func, scene, path, iter; framerate::Int = 24, sleep = _SLEEP_WHEN_RECORDING[], kwargs...)
     io = VideoStream(scene; framerate = framerate)
     for i in iter
         t1 = time()
