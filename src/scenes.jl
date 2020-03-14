@@ -13,7 +13,7 @@ $(SIGNATURES)
 ## Fields
 $(FIELDS)
 """
-struct struct Scene <: AbstractScene
+struct Scene <: AbstractScene
     "The parent of the Scene; if it is a top-level Scene, `parent == nothing`."
     parent
 
