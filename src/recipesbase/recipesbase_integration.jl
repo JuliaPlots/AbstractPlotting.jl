@@ -66,6 +66,9 @@ function makie_args(::Union{Type{AbstractPlotting.Scatter}, Type{AbstractPlottin
     end
 end
 
+makie_args(::Union{Type{AbstractPlotting.Surface},Type{AbstractPlotting.Heatmap}}, plotattributes) = (plotattributes[:x], plotattributes[:y], plotattributes[:z].surf)
+
+
 function translate_to_makie!(st, pa)
     if st == :path || st == :path3d
         if !isnothing(get!(pa, :line_z, nothing))
@@ -142,3 +145,7 @@ prob = ODEProblem(f,u0,tspan)
 sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
 
 RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
+
+RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :surface), (rand(10, 10),))
+
+RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :heatmap), (rand(10, 10),))
