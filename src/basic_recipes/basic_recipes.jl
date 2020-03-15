@@ -14,11 +14,11 @@ Plots polygons, which are defined by
 `coordinates` (the coordinates of the vertices) and
 `connectivity` (the edges between the vertices).
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Poly) do scene
-    Theme(;
+    Attributes(;
         color = theme(scene, :color),
         visible = theme(scene, :visible),
         strokecolor = RGBAf0(0,0,0,0),
@@ -166,11 +166,11 @@ grid.
 
 `arrows` can also work in three dimensions.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Arrows, points, directions) do scene
-    theme = Theme(
+    theme = Attributes(
         arrowhead = automatic,
         arrowtail = nothing,
         linecolor = :black,
@@ -228,7 +228,7 @@ end
 
 Draws a wireframe, either interpreted as a surface or as a mesh.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Wireframe) do scene
@@ -256,7 +256,7 @@ function plot!(plot::Wireframe{<: Tuple{<: Any, <: Any, <: AbstractMatrix}})
         faces = decompose(Face{2, GLIndex}, SimpleRectangle(0, 0, 1, 1), (M, N))
         view(points, faces)
     end
-    linesegments!(plot, Theme(plot), points_faces)
+    linesegments!(plot, Attributes(plot), points_faces)
 end
 
 
@@ -267,7 +267,7 @@ function plot!(plot::Wireframe{Tuple{T}}) where T
         points = decompose(Point3f0, g)
         view(points, indices)
     end
-    linesegments!(plot, Theme(plot), points)
+    linesegments!(plot, Attributes(plot), points)
 end
 
 
@@ -290,11 +290,11 @@ end
 TODO add function signatures
 TODO add descripton
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(StreamLines, points, directions) do scene
-    Theme(
+    Attributes(
         h = 0.01f0,
         n = 5,
         color = :black,
@@ -308,11 +308,11 @@ end
 TODO add function signatures
 TODO add description
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Series, series) do scene
-    Theme(
+    Attributes(
         seriescolors = :Set1,
         seriestype = :lines
     )
@@ -333,7 +333,7 @@ function plot!(sub::Series)
         N, M = size(A)
         for i = 1:M
             c = lift(getindex, colors, i)
-            attributes = Theme(color = c)
+            attributes = Attributes(color = c)
             a_view = view(A, :, i)
             if stype in (:lines, :scatter_lines)
                 lines!(sub, attributes, a_view)
@@ -358,7 +358,7 @@ end
 
 Plots an array of texts at each position in `positions`.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Annotations, text, position) do scene
@@ -433,11 +433,11 @@ Examples:
 `arc(Point2f0(0), 1, 0.0, π)`
 `arc(Point2f0(1, 2), 0.3. π, -π)`
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Arc, origin, radius, start_angle, stop_angle) do scene
-    Theme(;
+    Attributes(;
         default_theme(scene, Lines)...,
         resolution = 361,
     )
@@ -450,7 +450,7 @@ function plot!(p::Arc)
             origin .+ Point2f0((sin(angle), cos(angle)) .* radius)
         end
     end
-    lines!(p, Theme(p), positions)
+    lines!(p, Attributes(p), positions)
 end
 
 
@@ -465,11 +465,11 @@ end
 
 Plots a barplot; `y` defines the height.  `x` and `y` should be 1 dimensional.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(BarPlot, x, y) do scene
-    Theme(;
+    Attributes(;
         fillto = 0.0,
         color = theme(scene, :color),
         colormap = theme(scene, :colormap),
@@ -516,7 +516,7 @@ end
 Plots `lines` between sets of x and y coordinates provided,
 as well as plotting those points using `scatter`.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(ScatterLines) do scene
@@ -524,8 +524,8 @@ $(ATTRIBUTES)
 end
 
 function plot!(p::Combined{scatterlines, <:NTuple{N, Any}}) where N
-    plot!(p, Lines, Theme(p), p[1:N]...)
-    plot!(p, Scatter, Theme(p), p[1:N]...)
+    plot!(p, Lines, Attributes(p), p[1:N]...)
+    plot!(p, Scatter, Attributes(p), p[1:N]...)
 end
 
 
@@ -535,11 +535,11 @@ end
 
 Plots a band from `ylower` to `yupper` along `x`.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Band, lowerpoints, upperpoints) do scene
-    Theme(;
+    Attributes(;
         default_theme(scene, Mesh)...,
         color = RGBAf0(1.0,0,0,0.2)
     )
@@ -592,13 +592,13 @@ export fill_between!
     contour(x, y, z)
 Creates a contour plot of the plane spanning x::Vector, y::Vector, z::Matrix
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Contour) do scene
     default = default_theme(scene)
     pop!(default, :color)
-    Theme(;
+    Attributes(;
         default...,
         color = nothing,
         colormap = theme(scene, :colormap),
@@ -614,7 +614,7 @@ end
 Creates a 3D contour plot of the plane spanning x::Vector, y::Vector, z::Matrix,
 with z-elevation for each level.
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Contour3d) do scene
@@ -734,7 +734,7 @@ function plot!(plot::T) where T <: Union{Contour, Contour3d}
         plot[:interpolate] = true
         # TODO normalize linewidth for heatmap
         plot[:linewidth] = map(x-> x ./ 10f0, plot[:linewidth])
-        heatmap!(plot, Theme(plot), x, y, z)
+        heatmap!(plot, Attributes(plot), x, y, z)
     else
         zrange = lift(nan_extrema, z)
         levels = lift(plot[:levels], zrange) do levels, zrange
@@ -777,16 +777,16 @@ end
 TODO add function signatures
 TODO add descripton
 
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(VolumeSlices, x, y, z, volume) do scene
-    Theme(
+    Attributes(
         colormap = theme(scene, :colormap),
         colorrange = nothing,
         alpha = 0.1,
-        contour = Theme(),
-        heatmap = Theme(),
+        contour = Attributes(),
+        heatmap = Attributes(),
     )
 end
 
@@ -912,7 +912,7 @@ end
 ```
 """
 @recipe(TimeSeries, signal) do scene
-    Theme(
+    Attributes(
         history = 100;
         default_theme(scene, Lines)...
     )
@@ -955,7 +955,7 @@ using Makie
 v(x::Point2{T}) = Point2f0(x[2], 4*x[1])
 streamplot(v, -2..2, -2..2)
 ```
-## Theme
+## Attributes
 $(ATTRIBUTES)
 
 ## Implementation
@@ -963,7 +963,7 @@ See the function [`streamplot_impl`](@ref) for implementation details.
 """
 @recipe(StreamPlot, f, limits) do scene
     merge(
-        Theme(
+        Attributes(
             stepsize = 0.01,
             gridsize = (32, 32, 32),
             maxsteps = 500,
@@ -1131,11 +1131,11 @@ spy(x)
 # or if you want to specify the range of x and y:
 spy(0..1, 0..1, x)
 ```
-## Theme
+## Attributes
 $(ATTRIBUTES)
 """
 @recipe(Spy, x, y, z) do scene
-    Theme(
+    Attributes(
         marker = automatic,
         markersize = automatic,
         colormap = theme(scene, :colormap),

@@ -7,6 +7,7 @@ using FixedPointNumbers, Packing, SignedDistanceFields
 using Markdown, DocStringExtensions # documentation
 using Serialization # serialize events
 using StructArrays
+
 # Text related packages
 using FreeType, FreeTypeAbstraction, UnicodeFun
 using LinearAlgebra, Statistics
@@ -19,7 +20,7 @@ using Base: RefValue
 using Base.Iterators: repeated, drop
 import Base: getindex, setindex!, push!, append!, parent, get, get!, delete!, haskey
 using Observables: listeners, notify!, to_value
-
+using GeometryTypes: VecTypes
 # Imports from Observables which we use a lot
 using Observables: notify!, listeners
 
@@ -29,9 +30,20 @@ end
 using .ContoursHygiene
 const Contours = ContoursHygiene.Contour
 
+const RealVector{T} = AbstractVector{T} where T <: Number
+const Node = Observable# For now, we use Reactive.Signal as our Node type. This might change in the future
+const RGBAf0 = RGBA{Float32}
+const RGBf0 = RGB{Float32}
+const Vecf0{N} = Vec{N, Float32}
+const Pointf0{N} = Point{N, Float32}
+export Vecf0, Pointf0
+const NativeFont = FreeTypeAbstraction.FTFont
+
 include("documentation/docstringextension.jl")
 
 include("utilities/quaternions.jl")
+include("attributes.jl")
+include("dictlike.jl")
 include("types.jl")
 include("utilities/utilities.jl")
 include("utilities/texture_atlas.jl")
@@ -75,6 +87,8 @@ include("interaction/interactive_api.jl")
 # documentation and help functions
 include("documentation/documentation.jl")
 include("display.jl")
+include("units.jl")
+
 
 # help functions and supporting functions
 export help, help_attributes, help_arguments
@@ -155,8 +169,7 @@ export Vec4f0, Vec3f0, Vec2f0, Point4f0, Point3f0, Point2f0
 export Vec, Vec2, Vec3, Vec4, Point, Point2, Point3, Point4
 export (..), GLNormalUVMesh
 
-# Exports of units
-export px
+
 
 # conflicting identifiers
 using GeometryTypes: widths, positive_widths
