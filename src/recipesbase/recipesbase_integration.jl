@@ -1,6 +1,7 @@
-using RecipePipeline, Plots
-using AbstractPlotting: Scene, lines!
-import AbstractPlotting
+using RecipePipeline
+# using Plots
+# using AbstractPlotting: Scene, lines!
+# import AbstractPlotting
 
 include("attribute_tables.jl")
 
@@ -99,7 +100,7 @@ end
 # TODO this only works for scatter
 function RecipePipeline.finalize_subplot!(plt::Scene, st, plotattributes)
     if st != :scatter
-        @warn "What are you doing?"
+        @debug "I hope you know what you're doing?"
     end
 
     pt = makie_plottype(st)
@@ -128,24 +129,27 @@ function RecipePipeline.finalize_subplot!(plt::Scene, st, plotattributes)
 end
 
 
-sc = Scene()
+# Examples
 
-# AbstractPlotting.scatter!(sc, rand(10))
-RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
 
-RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
-
-using DifferentialEquations, RecipePipeline, Makie
-import Plots # we need some recipes from here
-
-f(u,p,t) = 1.01.*u
-u0 = [1/2, 1]
-tspan = (0.0,1.0)
-prob = ODEProblem(f,u0,tspan)
-sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
-
-RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
-
-RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :surface), (rand(10, 10),))
-
-RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :heatmap), (rand(10, 10),))
+# sc = Scene()
+#
+# # AbstractPlotting.scatter!(sc, rand(10))
+# RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
+#
+# RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
+#
+# using DifferentialEquations, RecipePipeline, Makie
+# import Plots # we need some recipes from here
+#
+# f(u,p,t) = 1.01.*u
+# u0 = [1/2, 1]
+# tspan = (0.0,1.0)
+# prob = ODEProblem(f,u0,tspan)
+# sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
+#
+# RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
+#
+# RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :surface), (rand(10, 10),))
+#
+# RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :heatmap), (rand(10, 10),))
