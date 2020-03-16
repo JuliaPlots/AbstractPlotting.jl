@@ -131,13 +131,15 @@ function RecipePipeline.finalize_subplot!(plt::Scene, st, plotattributes)
 
     translate_to_makie!(st, plotattributes)
 
+    # plot_fillrange!(plt, st, plotattributes)
+
     for (k, v) in pairs(plotattributes)
         isnothing(v) && delete!(plotattributes, k)
     end
 
     args = makie_args(pt, plotattributes)
 
-    @show plotattributes
+    # @show plotattributes
 
     # @infiltrate
 
@@ -176,7 +178,31 @@ end
 # sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
 #
 # RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
+
+
+# A  = [1. 0  0 -5
+#       4 -2  4 -3
+#      -4  0  0  1
+#       5 -2  2  3]
+# u0 = rand(4,2)
+# tspan = (0.0,1.0)
+# f(u,p,t) = A*u
+# prob = ODEProblem(f,u0,tspan)
+# sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
 #
+# RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
+#
+# f(du,u,p,t) = (du .= u)
+# g(du,u,p,t) = (du .= u)
+# u0 = rand(4,2)
+#
+# W = WienerProcess(0.0,0.0,0.0)
+# prob = SDEProblem(f,g,u0,(0.0,1.0),noise=W)
+# sol = solve(prob,SRIW1())
+#
+# RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(), (sol,))
+
+
 # RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :surface), (rand(10, 10),))
 #
 # RecipePipeline.recipe_pipeline!(Scene(), Dict{Symbol, Any}(:seriestype => :heatmap), (rand(10, 10),))
