@@ -77,6 +77,8 @@ include("interaction/interactive_api.jl")
 include("documentation/documentation.jl")
 include("display.jl")
 
+include("recipesbase/recipesbase_integration.jl")
+
 # help functions and supporting functions
 export help, help_attributes, help_arguments
 

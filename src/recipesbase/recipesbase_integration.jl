@@ -97,11 +97,33 @@ end
 #      The real plotting function      #
 ########################################
 
+function set_series_color!(scene, st, plotattributes)
+
+    plts = filter(scene.plots) do plot
+        !(plot isa Union{AbstractPlotting.Heatmap, AbstractPlotting.Surface, AbstractPlotting.Image, AbstractPlotting.Spy, AbstractPlotting.Axis2D, AbstractPlotting.Axis3D})
+    end
+
+    if length(plts) == 0
+        get!(plotattributes, :seriescolor, AbstractPlotting.wong_colors[2])
+        return nothing
+    elseif length(plts) == 1
+        get!(plotattributes, :seriescolor, AbstractPlotting.wong_colors[1])
+        return nothing
+    end
+
+    get!(plotattributes, :seriescolor, AbstractPlotting.wong_colors[length(plts)])
+
+    return nothing
+
+end
+
 # TODO this only works for scatter
 function RecipePipeline.finalize_subplot!(plt::Scene, st, plotattributes)
     if st != :scatter
         @debug "I hope you know what you're doing?"
     end
+
+    set_series_color!(plt, st, plotattributes)
 
     pt = makie_plottype(st)
 
@@ -114,6 +136,8 @@ function RecipePipeline.finalize_subplot!(plt::Scene, st, plotattributes)
     end
 
     args = makie_args(pt, plotattributes)
+
+    @show plotattributes
 
     # @infiltrate
 
@@ -132,12 +156,15 @@ end
 # Examples
 
 
-# sc = Scene()
-#
-# # AbstractPlotting.scatter!(sc, rand(10))
-# RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
-#
-# RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
+sc = Scene()
+
+# AbstractPlotting.scatter!(sc, rand(10))
+RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
+
+RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
+
+RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
+
 #
 # using DifferentialEquations, RecipePipeline, Makie
 # import Plots # we need some recipes from here
