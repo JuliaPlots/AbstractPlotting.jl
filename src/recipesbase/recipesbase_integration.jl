@@ -79,7 +79,7 @@ function translate_to_makie!(st, pa)
         elseif !isnothing(get!(pa, :seriescolor, nothing))
             pa[:color] = pa[:seriescolor]
         end
-        pa[:linewidth] = get(pa, :linesize, 1)
+        pa[:linewidth] = get(pa, :linesize, 5)
     elseif st == :scatter
         if !isnothing(get!(pa, :marker_z, nothing))
             pa[:color] = pa[:marker_z]
@@ -164,7 +164,7 @@ end
 # RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
 #
 # RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
-
+#
 #
 # using DifferentialEquations, RecipePipeline, Makie
 # import Plots # we need some recipes from here
