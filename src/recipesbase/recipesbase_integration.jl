@@ -88,6 +88,7 @@ function translate_to_makie!(st, pa)
         elseif !isnothing(get!(pa, :seriescolor, nothing))
             pa[:color] = pa[:seriescolor]
         end
+        pa[:markersize] = get(pa, :markersize, 5)
     else
         # some default transformations
     end
