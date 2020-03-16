@@ -1,4 +1,4 @@
-using RecipePipeline
+using RecipePipeline, Plots
 # using Plots
 # using AbstractPlotting: Scene, lines!
 # import AbstractPlotting
