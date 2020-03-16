@@ -156,14 +156,14 @@ end
 # Examples
 
 
-sc = Scene()
-
-# AbstractPlotting.scatter!(sc, rand(10))
-RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
-
-RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
-
-RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
+# sc = Scene()
+#
+# # AbstractPlotting.scatter!(sc, rand(10))
+# RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
+#
+# RecipePipeline.recipe_pipeline!(sc, Dict(:color => :blue, :seriestype => :path), (1:10, rand(10, 1)))
+#
+# RecipePipeline.recipe_pipeline!(sc, Dict(:seriestype => :scatter), (1:10, rand(10, 2)))
 
 #
 # using DifferentialEquations, RecipePipeline, Makie
