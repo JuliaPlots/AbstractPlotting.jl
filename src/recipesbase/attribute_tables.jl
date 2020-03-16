@@ -1,4 +1,4 @@
-const makie_linetype = KW(
+const makie_linetype = Dict{Symbol, Any}(
     :auto => nothing,
     :solid => nothing,
     :dash => :dash,
