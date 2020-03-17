@@ -6,24 +6,17 @@ default_theme(scene, T) = Attributes()
 
 function default_theme(scene)
     light = Vec3f0[Vec3f0(1.0,1.0,1.0), Vec3f0(0.1,0.1,0.1), Vec3f0(0.9,0.9,0.9), Vec3f0(20,20,20)]
-    Attributes(
-        color = theme(scene, :color),
-        visible = theme(scene, :visible),
-        linewidth = 1,
+    return Attributes(
         light = light,
         transformation = automatic,
         model = automatic,
-        alpha = 1.0,
+        visible = true,
         transparency = false,
         overdraw = false,
+        nan_color = RGBAf0(0,0,0,0),
     )
 end
 
-
-#this defines which attributes in a theme should be removed if another attribute is defined by the user,
-#to avoid conflicts later through the pipeline
-
-mutual_exclusive_attributes(::Type{<:AbstractPlot}) = Dict()
 """
     image(x, y, image)
     image(image)
@@ -36,8 +29,7 @@ $(ATTRIBUTES)
 @recipe(Image, x, y, image) do scene
     Attributes(;
         default_theme(scene)...,
-        colormap = [RGBAf0(0,0,0,1), RGBAf0(1,1,1,1)],
-        colorrange = automatic,
+        color = sampler([:black, :white])
         nan_color = RGBAf0(0,0,0,0),
         interpolate = true,
         fxaa = false,
@@ -58,13 +50,11 @@ $(ATTRIBUTES)
 @recipe(Heatmap, x, y, values) do scene
     Attributes(;
         default_theme(scene)...,
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
+        color = sampler(:viridis)
         linewidth = 0.0,
         levels = 1,
-        fxaa = true,
-        nan_color = RGBAf0(0,0,0,0),
         interpolate = false
+        fxaa = true,
     )
 end
 
@@ -84,21 +74,9 @@ $(ATTRIBUTES)
 @recipe(Volume, x, y, z, volume) do scene
     Attributes(;
         default_theme(scene)...,
+        algorithm = (:mpi, isovalue=0.5, isorange=0.05),
+        color = sampler(:viridis),
         fxaa = true,
-        algorithm = :iso,
-        absorption = 1f0,
-        isovalue = 0.5f0,
-        isorange = 0.05f0,
-        color = nothing,
-        colormap = theme(scene, :colormap),
-        colorrange = (0, 1),
-    )
-end
-
-function mutual_exclusive_attributes(::Type{<:Volume})
-    Dict(
-        :colorrange => :color,
-        :colormap   => :color,
     )
 end
 
@@ -114,9 +92,9 @@ $(ATTRIBUTES)
 @recipe(Surface, x, y, z) do scene
     Attributes(;
         default_theme(scene)...,
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
+        color = sampler(:viridis),
         shading = true,
+        interpolate = true,
         fxaa = true,
     )
 end
@@ -138,9 +116,8 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         linewidth = 1.0,
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
-        linestyle = theme(scene, :linestyle),
+        color = :black,
+        linestyle = nothing,
         fxaa = false
     )
 end
@@ -174,11 +151,10 @@ $(ATTRIBUTES)
 @recipe(Mesh, mesh) do scene
     Attributes(;
         default_theme(scene)...,
-        fxaa = true,
+        color = :black,
         interpolate = false,
         shading = true,
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
+        fxaa = true,
     )
 end
 
@@ -195,20 +171,23 @@ $(ATTRIBUTES)
 @recipe(Scatter, positions) do scene
     Attributes(;
         default_theme(scene)...,
-        marker = theme(scene, :marker),
-        markersize = theme(scene, :markersize),
+        color = :black,
+        marker = :circle,
+        markersize = 2,
+        markerspace = dpi,
+
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
         glowcolor = RGBA(0, 0, 0, 0),
         glowwidth = 0.0,
+
         rotations = Billboard(),
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
         marker_offset = automatic,
-        fxaa = false,
         transform_marker = false, # Applies the plots transformation to marker
         uv_offset_width = Vec4f0(0),
         distancefield = nothing,
+
+        fxaa = false,
     )
 end
 
@@ -226,13 +205,13 @@ $(ATTRIBUTES)
 @recipe(MeshScatter, positions) do scene
     Attributes(;
         default_theme(scene)...,
+        color = :black,
         marker = Sphere(Point3f0(0), 1f0),
-        markersize = theme(scene, :markersize),
+        markersize = 0.1,
         rotations = Quaternionf0(0, 0, 0, 1),
-        colormap = theme(scene, :colormap),
-        colorrange = automatic,
+        markerspace = relative,
+        shading = true,
         fxaa = true,
-        shading = true
     )
 end
 
@@ -265,79 +244,6 @@ const atomic_function_symbols = (
 
 const atomic_functions = getfield.(Ref(AbstractPlotting), atomic_function_symbols)
 const Atomic{Arg} = Union{map(x-> Combined{x, Arg}, atomic_functions)...}
-
-function color_and_colormap!(plot, intensity = plot[:color])
-    if isa(intensity[], AbstractArray{<: Number})
-        haskey(plot, :colormap) || error("Plot $T needs to have a colormap to allow the attribute color to be an array of numbers")
-        replace_automatic!(plot, :colorrange) do
-            lift(extrema_nan, intensity)
-        end
-        true
-    else
-        delete!(plot, :colorrange)
-        false
-    end
-end
-
-
-"""
-    `calculated_attributes!(plot::AbstractPlot)`
-
-Fill in values that can only be calculated when we have all other attributes filled
-"""
-calculated_attributes!(plot::T) where T = calculated_attributes!(T, plot)
-
-"""
-    `calculated_attributes!(trait::Type{<: AbstractPlot}, plot)`
-trait version of calculated_attributes
-"""
-calculated_attributes!(trait, plot) = nothing
-
-function calculated_attributes!(::Type{<: Mesh}, plot)
-    need_cmap = color_and_colormap!(plot)
-    need_cmap || delete!(plot, :colormap)
-    return
-end
-
-function calculated_attributes!(::Type{<: Union{Heatmap, Image}}, plot)
-    plot[:color] = plot[3]
-    color_and_colormap!(plot)
-end
-function calculated_attributes!(::Type{<: Surface}, plot)
-    colors = plot[3]
-    if haskey(plot, :color)
-        color = plot[:color][]
-        if isa(color, AbstractMatrix{<: Number}) && !(color === to_value(colors))
-            colors = plot[:color]
-        end
-    end
-    color_and_colormap!(plot, colors)
-end
-function calculated_attributes!(::Type{<: MeshScatter}, plot)
-    color_and_colormap!(plot)
-end
-
-
-function calculated_attributes!(::Type{<: Scatter}, plot)
-    # calculate base case
-    color_and_colormap!(plot)
-    replace_automatic!(plot, :marker_offset) do
-        # default to middle
-        lift(x-> to_2d_scale(x .* (-0.5f0)), plot[:markersize])
-    end
-end
-
-function calculated_attributes!(::Type{<: Union{Lines, LineSegments}}, plot)
-    color_and_colormap!(plot)
-    pos = plot[1][]
-    # extend one color per linesegment to be one (the same) color per vertex
-    # taken from @edljk  in PR #77
-    if haskey(plot, :color) && isa(plot[:color][], AbstractVector) && iseven(length(pos)) && (length(pos) ÷ 2) == length(plot[:color][])
-        plot[:color] = lift(plot[:color]) do cols
-            map(i-> cols[(i + 1) ÷ 2], 1:(length(cols) * 2))
-        end
-    end
-end
 
 
 function (PT::Type{<: Combined})(parent, transformation, attributes, input_args, converted)
