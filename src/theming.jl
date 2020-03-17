@@ -9,7 +9,7 @@ if Sys.iswindows()
     end
 elseif Sys.isapple()
     function _primary_resolution()
-        s = read(pipeline(`system_profiler SPDisplaysDataType`, `grep Resolution`)) |> String
+        s = read(pipeline(`system_profiler SPDisplaysDataType`, `grep Resolution`), String)
         sarr = split(s)
         return parse.(Int, (sarr[2], sarr[4]))
     end
