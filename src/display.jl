@@ -206,12 +206,12 @@ Resolution can be specified, via `save("path", scene, resolution = (1000, 1000))
 """
 function FileIO.save(
         f::FileIO.File{F}, scene::Scene;
-        resolution = size(scene)
+        resolution = size(scene), kwargs...
     ) where F
 
     resolution !== size(scene) && resize!(scene, resolution)
     open(FileIO.filename(f), "w") do s
-        show(IOContext(s, :full_fidelity => true), format2mime(F), scene)
+        show(IOContext(s, merge((full_fidelity = true,), kwargs), format2mime(F), scene)
     end
 end
 
