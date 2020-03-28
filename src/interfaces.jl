@@ -278,6 +278,7 @@ function color_and_colormap!(plot, intensity = plot[:color])
         replace_automatic!(plot, :colorrange) do
             lift(extrema_nan, intensity)
         end
+        plot.color[] = interpolated_getindex.(Ref(plot.colormap[]), intensity[], (plot.colorrange[],))
         true
     else
         delete!(plot, :colorrange)
