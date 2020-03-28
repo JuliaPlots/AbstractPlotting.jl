@@ -3,9 +3,6 @@ using MakieGallery
 using Test
 using GLMakie
 
-# Download reference images from master
-MakieGallery.current_ref_version[] = "master"
-
 const MINIMAL = get(ENV, "ABSTRACTPLOTTING_MINIMAL", "false")
 
 # does this machine have a OPENGL?
