@@ -211,7 +211,7 @@ function FileIO.save(
 
     resolution !== size(scene) && resize!(scene, resolution)
     open(FileIO.filename(f), "w") do s
-        show(IOContext(s, merge((full_fidelity = true,), kwargs), format2mime(F), scene)
+        show(IOContext(s, merge((full_fidelity = true,), kwargs)), format2mime(F), scene)
     end
 end
 
