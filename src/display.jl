@@ -355,10 +355,7 @@ function recordframe!(io::VideoStream)
 end
 
 """
-    save(
-        path::String, io::VideoStream;
-        framerate::Int = 24,
-    )
+    save(path::String, io::VideoStream; framerate::Int = 24)
 
 Flushes the video stream and converts the file to the extension found in `path`,
 which can be one of the following:
