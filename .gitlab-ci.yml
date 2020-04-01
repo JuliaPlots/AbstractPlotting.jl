@@ -3,6 +3,7 @@ variables:
     MODERNGL_DEBUGGING: "true"
     JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
     ABSTRACTPLOTTING_MINIMAL: "false"
+    MAKIE_SLEEP_WHEN_RECORDING: "true"
 
 test:
     image: "juliagpu/julia:v1.3-${CI_IMAGE_TAG}"
