@@ -447,13 +447,13 @@ end
 If you want a more tweakable interface, consider using [`VideoStream`](@ref) and
 [`save`](@ref).
 """
-function record(func, scene, path; framerate::Int = 24, kwargs...)
+function record(func, scene, path; framerate::Int = 24)
     io = VideoStream(scene; framerate = framerate)
     func(io)
-    save(path, io; framerate = framerate, kwargs...)
+    save(path, io; framerate = framerate)
 end
 
-function record(func, scene, path, iter; framerate::Int = 24, sleep = get(ENV, "MAKIE_SLEEP_WHEN_RECORDING", "true") == "true")
+function record(func, scene, path, iter; framerate::Int = 24, sleep = true)
     io = VideoStream(scene; framerate = framerate)
     for i in iter
         t1 = time()
