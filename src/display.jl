@@ -399,7 +399,7 @@ function save(path::String, io::VideoStream;
         rm(pname, force = true)
     else
         rm(io.path)
-        @error("Video type $typ not known")
+        error("Video type $typ not known")
     end
     rm(io.path)
     return path
