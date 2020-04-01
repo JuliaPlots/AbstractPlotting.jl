@@ -407,8 +407,8 @@ end
 
 
 """
-    record(func, scene, path; framerate = 24, kwargs...)
-    record(func, scene, path, iter; framerate = 24, sleep = true, kwargs...)
+    record(func, scene, path; framerate = 24)
+    record(func, scene, path, iter; framerate = 24, sleep = true)
 
 Records the Scene `scene` after the application of `func` on it for each element
 in `itr` (any iterator).  `func` must accept an element of `itr`.
@@ -422,6 +422,11 @@ extension.  Allowable extensions are:
 
 `.mp4` and `.mk4` are marginally bigger and `.gif`s are up to
 6 times bigger with the same quality!
+
+The `sleep` keyword argument controls the rate at which frames are generated.
+When false, frames are generated and recorded as fast as the backend can generate
+them; when true, there is an artificial wait such that the animation plays on the
+screen in real time as it is being recorded.
 
 Typical usage patterns would look like:
 
@@ -451,9 +456,7 @@ function record(func, scene, path; framerate::Int = 24, kwargs...)
     save(path, io; framerate = framerate, kwargs...)
 end
 
-const _SLEEP_WHEN_RECORDING = Ref(true)
-
-function record(func, scene, path, iter; framerate::Int = 24, sleep = _SLEEP_WHEN_RECORDING[], kwargs...)
+function record(func, scene, path, iter; framerate::Int = 24, sleep = get(ENV, "MAKIE_SLEEP_WHEN_RECORDING", "true") == "true")
     io = VideoStream(scene; framerate = framerate)
     for i in iter
         t1 = time()
