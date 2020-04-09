@@ -288,43 +288,6 @@ function sphere_streamline(linebuffer, ∇ˢf, pt, h, n)
 end
 
 """
-    StreamLines
-
-TODO add function signatures
-TODO add descripton
-
-## Theme
-$(ATTRIBUTES)
-"""
-@recipe(StreamLines, points, directions) do scene
-    Theme(
-        h = 0.01f0,
-        n = 5,
-        color = :black,
-        linewidth = 1
-    )
-end
-
-# typeof(([1, 2, 3] |> vec, [1, 2, 3] |> vec)) <: Tuple{<: AbstractVector{T}, <: AbstractVector{T}} where T
-# true
-# streamlines([1, 2, 3] |> vec, [1, 2, 3] |> vec)
-# ERROR: Plotting for the arguments (::Array{Int64,1}, ::Array{Int64,1}) not defined for AbstractPlotting.streamlines. If you want to support those arguments, overload plot!(plot::AbstractPlotting.streamlines{ <: Tuple{Array{Int64,1},Array{Int64,1}}})
-
-# function plot!(plot::StreamLines) where T
-#     @extract plot (points, directions)
-#     linebuffer = T[]
-#     lines = lift(directions, points, plot[:h], plot[:n]) do ∇ˢf, origins, h, n
-#         empty!(linebuffer)
-#         for point in origins
-#             sphere_streamline(linebuffer, ∇ˢf, point, h, n)
-#         end
-#         linebuffer
-#     end
-#     linesegments!(plot, Theme(plot), lines)
-# end
-
-
-"""
     Series - ?
 
 TODO add function signatures
