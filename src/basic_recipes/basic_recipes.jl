@@ -636,12 +636,21 @@ function contourlines(::Type{<: Contour3d}, contours, cols)
 end
 
 
+"Convert an input to a set of contour levels, represented by an `AbstractVector{<: Number}`."
+to_levels(x::T, cnorm) where T = throw(ArgumentError("There is no known way to convert an input of type $T to a vector of contour levels!"))
+
 to_levels(x::AbstractVector{<: Number}, cnorm) = x
+
 function to_levels(n::Integer, cnorm)
     zmin, zmax = cnorm
     dz = (zmax - zmin) / (n + 1)
     range(zmin + dz; step = dz, length = n)
 end
+
+to_levels(f::Function, cnorm) = f(cnorm...)
+
+to_levels(attrs::AbstractDict, cnorm) = PlotUtils.optimize_ticks(cnorm...; attrs...)
+
 conversion_trait(::Type{<: Contour3d}) = SurfaceLike()
 conversion_trait(::Type{<: Contour}) = SurfaceLike()
 conversion_trait(::Type{<: Contour{<: Tuple{X, Y, Z, Vol}}}) where {X, Y, Z, Vol} = VolumeLike()
@@ -722,18 +731,11 @@ function plot!(plot::T) where T <: Union{Contour, Contour3d}
         heatmap!(plot, Theme(plot), x, y, z)
     else
         zrange = lift(nan_extrema, z)
-        levels = lift(plot[:levels], zrange) do levels, zrange
-            if levels isa AbstractVector{<: Number}
-                return levels
-            elseif levels isa Integer
-                to_levels(levels, zrange)
-            else
-                error("Level needs to be Vector of iso values, or a single integer to for a number of automatic levels")
-            end
-        end
+        levels = lift(to_levels, plot[:levels], zrange)
         replace_automatic!(plot, :colorrange) do
             lift(nan_extrema, levels)
         end
+
         args = @extract plot (color, colormap, colorrange, alpha)
         level_colors = lift(color_per_level, args..., levels)
         result = lift(x, y, z, levels, level_colors) do x, y, z, levels, level_colors
