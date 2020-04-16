@@ -49,7 +49,7 @@ function glyph_positions(str::AbstractString, font, fontscale, halign, valign; l
     # when drawing. We reset them every time which is hacky but seems to work
     FreeTypeAbstraction.FreeType.FT_Set_Pixel_Sizes(font, 64, 64)
     FreeTypeAbstraction.FreeType.FT_Set_Transform(font, C_NULL, C_NULL)
-    
+
 
     # make lineheight a multiple of font's M height
     lineheight = inkheight(FreeTypeAbstraction.internal_get_extent(font, 'M')) * lineheight_factor
@@ -88,7 +88,7 @@ function glyph_positions(str::AbstractString, font, fontscale, halign, valign; l
     ys_aligned = ys .- first_max_ascent .+ (1 - valign) .* overall_height
 
     # we are still operating in freetype units, let's convert to the chosen scale by dividing with 64
-    glyphorigins = [Vec2.(xsgroup, y)  ./ 64 .* fontscale for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
+    return [Vec2.(xsgroup, y)  ./ 64 .* fontscale for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
 end
 
 
@@ -107,7 +107,7 @@ function inkboundingbox(ext::FontExtent)
     r = rightinkbound(ext)
     b = bottominkbound(ext)
     t = topinkbound(ext)
-    FRect2D((l, b), (r - l, t - b))
+    return FRect2D((l, b), (r - l, t - b))
 end
 
 
@@ -116,7 +116,7 @@ function text_bb(str, font, size)
         str, Point2f0(0), size,
         font, Vec2f0(0), Quaternionf0(0,0,0,1), Mat4f0(I)
     )
-    union(FRect3D(positions),  FRect3D(positions .+ to_ndim.(Point3f0, scale, 0)))
+    return union(FRect3D(positions),  FRect3D(positions .+ to_ndim.(Point3f0, scale, 0)))
 end
 
 """
@@ -139,7 +139,7 @@ function move_from_touch(
         negdir = ifelse(cmaxi[i] > pmaxi[i], (pmaxi[i] - cmaxi[i]), zero(T)) #always minus
         ifelse(posdir > abs(negdir), posdir, negdir) # move in the bigger direction
     end
-    Vec{N, T}(move)
+    return Vec{N, T}(move)
 end
 
 """
@@ -154,7 +154,7 @@ function dont_touch(
         parent::GeometryPrimitive{N}, child::GeometryPrimitive{N},
         pad::Vec{N}
     ) where N
-    child + move_from_touch(parent, child, pad)
+    return child + move_from_touch(parent, child, pad)
 end
 
 """
@@ -165,11 +165,10 @@ Returns a stretch `N` dimensional fit factor.
 """
 function fit_factor_stretch(rect, lims::NTuple{N, Any}) where N
     w = widths(rect)
-    stretches = ntuple(Val(N)) do i
+    return ntuple(Val(N)) do i
         from, to = lims[i]
         w[i] / abs(to - from)
     end
-    stretches
 end
 
 """
@@ -180,7 +179,7 @@ Returns float scaling and the full strech as given by [`fit_factor_stretch`](@re
 """
 function fit_factor(rect, lims::NTuple{N, Any}) where N
     stretches = fit_factor_stretch(rect, lims)
-    minimum(stretches), stretches
+    return minimum(stretches), stretches
 end
 
 
@@ -191,7 +190,7 @@ Calculates the ratio one needs to stretch `lims` in order to get the same aspect
 """
 function fit_ratio(rect, lims)
     s, stretches = fit_factor(rect, lims)
-    stretches ./ s
+    return stretches ./ s
 end
 
 
@@ -221,7 +220,7 @@ grid(x::Transformable...; kw_args...) = grid([x...]; kw_args...)
 function grid(plots::Vector{<: Transformable}; kw_args...)
     N = length(plots)
     grid = close2square(N)
-    grid(reshape(plots, grid))
+    return grid(reshape(plots, grid))
 end
 
 function grid(plots::Matrix{<: Transformable}; kw_args...)
@@ -244,7 +243,7 @@ function grid(plots::Matrix{<: Transformable}; kw_args...)
         end
     end
     center!(pscene)
-    pscene
+    return pscene
 end
 
 
@@ -406,21 +405,8 @@ function layout_sizes(scenes, size, dim)
             end
         end
     end
-    # final_pix_size = pix_size
-    #
-    # if max_pix_size < pix_size
-    #     for i in scenes2d
-    #         sizes[i] = (sizes[i] / pix_size) * max_pix_size
-    #     end
-    #     final_pix_size = max_pix_size
-    # end
-    # nonpixel_size = (this_size - final_pix_size) / (N - npixies)
-    # for i in 1:N
-    #     if !(i in scenes2d)
-    #         sizes[i] = nonpixel_size
-    #     end
-    # end
-    sizes
+
+    return sizes
 end
 
 function vbox!(plots::Vector{T}; kw_args...) where T <: AbstractPlot

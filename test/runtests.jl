@@ -1,7 +1,7 @@
 using AbstractPlotting
+using GLMakie
 using MakieGallery
 using Test
-using GLMakie
 using StaticArrays, GeometryBasics
 
 @testset "Minimal AbstractPlotting tests" begin
