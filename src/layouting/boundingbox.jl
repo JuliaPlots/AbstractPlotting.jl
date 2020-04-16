@@ -99,11 +99,10 @@ function boundingbox(
         text::String, position, textsize;
         font = "default", align = (:left, :bottom), rotation = 0.0
     )
-    boundingbox(
+    return boundingbox(
         text, position, textsize,
         to_font(font), to_align(align), to_rotation(rotation)
     )
-
 end
 
 # function boundingbox(

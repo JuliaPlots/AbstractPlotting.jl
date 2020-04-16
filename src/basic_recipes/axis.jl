@@ -36,14 +36,13 @@ $(ATTRIBUTES)
         showgrid = true,
         showticks = true,
         showtickmarks = true,
-        padding = 0.1,
+        padding = 0.0,
 
         ticks = Theme(
-
             ranges_labels = (automatic, automatic),
             formatter = Formatters.plain,
 
-            gap = 3,
+            gap = 1,
             title_gap = 3,
 
             linewidth = (1, 1),
@@ -56,9 +55,10 @@ $(ATTRIBUTES)
             align = ((:center, :top), (:right, :center)),
             font = lift(dim2, theme(scene, :font)),
         ),
+
         tickmarks = Theme(
-            length = (3.0, 3.0),
-            linewidth = (1,1),
+            length = (1.0, 1.0),
+            linewidth = (1, 1),
             linecolor = ((:black, 0.4), (:black, 0.2)),
             linestyle = (nothing, nothing)
         ),
@@ -249,7 +249,7 @@ default_labels(x::AbstractVector{<: AbstractString}, ranges, formatter::Function
 default_labels(x::AbstractVector{<: AbstractString}, ranges::AbstractVector, formatter::Function) = x
 
 function convert_arguments(::Type{<: Axis2D}, limits::Rect)
-    e = (minimum(limits), maximum(limits))
+    e = extrema(limits)
     (((e[1][1], e[2][1]), (e[1][2], e[2][2])),)
 end
 
@@ -332,7 +332,7 @@ function draw_frame(
 
     mini = minimum.(limits)
     maxi = maximum.(limits)
-    rect = HyperRectangle(Vec(mini), Vec(maxi .- mini))
+    rect = Rect(Vec(mini), Vec(maxi .- mini))
     origin = Vec{N}(0.0)
     if (origin in rect) && axis_position == :origin
         for i = 1:N
@@ -383,6 +383,7 @@ function draw_titles(
         textcolor, textsize, rotation, align, font,
         title
     )
+
     tickspace_x = maximum(map(yticks) do tick
         str = last(tick)
         tick_bb = text_bb(str, to_font(tickfont[2]), tick_size[2])
@@ -411,7 +412,6 @@ function draw_titles(
             )
         end
     end
-
     if title !== nothing
         # TODO give title own text attributes
         push!(
@@ -591,13 +591,6 @@ function labelposition(ranges, dim, dir, tgap, origin::StaticVector{N}) where N
 
     origin .+ (halfaxis .+ (normalize(dir) * tgap))
 end
-
-
-function GeometryTypes.widths(x::AbstractRange)
-    mini, maxi = Float32.(extrema(x))
-    maxi - mini
-end
-
 
 _widths(x::Tuple{<: Number, <: Number}) = x[2] - x[1]
 _widths(x) = Float32(maximum(x) - minimum(x))

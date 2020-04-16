@@ -40,7 +40,7 @@ end
 
 function TextureAtlas(initial_size = TEXTURE_RESOLUTION[])
     return TextureAtlas(
-        RectanglePacker(SimpleRectangle(0, 0, initial_size...)),
+        RectanglePacker(Rect2D(0, 0, initial_size...)),
         Dict{Any, Int}(),
         1,
         zeros(Float16, initial_size...),
@@ -190,8 +190,8 @@ function insert_glyph!(atlas::TextureAtlas, glyph::Char, font::NativeFont)
     return get!(atlas.mapping, (glyph, font)) do
         uv, extent, width_nopadd, pad = render(atlas, glyph, font)
         tex_size = Vec2f0(size(atlas.data))
-        uv_start = Vec2f0(uv.x, uv.y)
-        uv_width = Vec2f0(uv.w, uv.h)
+        uv_start = Vec2f0(minimum(uv))
+        uv_width = Vec2f0(widths(uv))
         real_start = uv_start .+ pad .- 1 # include padding
         # padd one additional pixel
         relative_start = real_start ./ tex_size # use normalized texture coordinates
@@ -248,7 +248,7 @@ function render(atlas::TextureAtlas, glyph::Char, font, downsample = 5, pad = 8)
     sd = sdistancefield(bitmap, downsample, downsample*pad)
     sd = sd ./ downsample;
     extent = (extent ./ Vec2f0(downsample))
-    rect = SimpleRectangle(0, 0, size(sd)...)
+    rect = Rect2D(0, 0, size(sd)...)
     uv = push!(atlas.rectangle_packer, rect) #find out where to place the rectangle
     uv == nothing && error("texture atlas is too small. Resizing not implemented yet. Please file an issue at GLVisualize if you encounter this") #TODO resize surface
     atlas.data[uv.area] = sd
@@ -290,12 +290,23 @@ function calc_position(glyphs, start_pos, scales, fonts, atlas)
     positions = zeros(Point2f0, length(glyphs))
     last_pos  = Point2f0(start_pos)
     s, f = iter_or_array(scales), iter_or_array(fonts)
-    c1 = first(glyphs)
-    for (i, (c2, scale, font)) in enumerate(zip(glyphs, s, f))
-        c2 == '\r' && continue # stupid windows!
-        b = glyph_bearing!(atlas, c2, font, scale)
-        positions[i] = last_pos .+ b
-        last_pos = calc_position(last_pos, start_pos, atlas, c2, font, scale)
+    iter = enumerate(zip(glyphs, s, f))
+    next = iterate(iter)
+    if next !== nothing
+        (i, (char, scale, font)), state = next
+        first_bearing = glyph_bearing!(atlas, char, font, scale)
+        while next !== nothing
+            (i, (char, scale, font)), state = next
+            next = iterate(iter, state)
+            char == '\r' && continue # stupid windows!
+            # we draw the glyph at the last position we calculated
+            bearing = glyph_bearing!(atlas, char, font, scale)
+            # we substract the first bearing, since we want to start at
+            # startposition without any additional offset!
+            positions[i] = last_pos .+ bearing .- first_bearing
+            # then we add the advance for the next glyph to start
+            last_pos = calc_position(last_pos, start_pos, atlas, char, font, scale)
+        end
     end
     return positions
 end

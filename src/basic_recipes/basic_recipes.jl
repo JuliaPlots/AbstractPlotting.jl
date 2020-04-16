@@ -2,11 +2,12 @@
     `poly(vertices, indices; kwargs...)`
     `poly(points; kwargs...)`
     `poly(shape; kwargs...)`
+    `poly(mesh; kwargs...)`
 
 Plots a polygon based on the arguments given.
 When vertices and indices are given, it functions similarly to `mesh`.
 When points are given, it draws one polygon that connects all the points in order.
-When a shape is given (essentially anything decomposable by `GeometryTypes`), it will plot `decompose(shape)`.
+When a shape is given (essentially anything decomposable by `GeometryBasics`), it will plot `decompose(shape)`.
 
     poly(coordinates, connectivity; kwargs...)
 
@@ -24,7 +25,7 @@ $(ATTRIBUTES)
         strokecolor = RGBAf0(0,0,0,0),
         colormap = theme(scene, :colormap),
         colorrange = automatic,
-        strokewidth = 0.0,
+        strokewidth = 1.0,
         shading = false,
         # we turn this false for now, since otherwise shapes look transparent
         # since we use meshes, which are drawn into a different framebuffer because of fxaa
@@ -36,12 +37,12 @@ $(ATTRIBUTES)
         transparency = false,
     )
 end
+convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractMesh}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: VecTypes}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractVector{<: VecTypes}}) = (v,)
-convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rectangle, HyperRectangle}}) = (v,)
+convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rect}}) = (v,)
 convert_arguments(::Type{<: Poly}, args...) = ([convert_arguments(Scatter, args...)[1]],)
 convert_arguments(::Type{<: Poly}, vertices::AbstractArray, indices::AbstractArray) = convert_arguments(Mesh, vertices, indices)
-
 
 function plot!(plot::Poly{<: Tuple{Union{AbstractMesh, GeometryPrimitive}}})
     mesh!(
@@ -55,8 +56,9 @@ function plot!(plot::Poly{<: Tuple{Union{AbstractMesh, GeometryPrimitive}}})
         linewidth = plot[:strokewidth], visible = plot[:visible], overdraw = plot[:overdraw]
     )
 end
+
 # Poly conversion
-poly_convert(geometries) = GLNormalMesh.(geometries)
+poly_convert(geometries) = triangle_mesh.(geometries)
 poly_convert(meshes::AbstractVector{<:AbstractMesh}) = meshes
 
 function poly_convert(polygon::AbstractVector{<: VecTypes})
@@ -66,10 +68,10 @@ end
 function poly_convert(polygons::AbstractVector{<: AbstractVector{<: VecTypes}})
     polys = Vector{Point2f0}[]
     for poly in polygons
-        s = GeometryTypes.split_intersections(poly)
+        s = GeometryBasics.split_intersections(poly)
         append!(polys, s)
     end
-    return GLNormalMesh.(polys)
+    return triangle_mesh.(polys)
 end
 
 function to_line_segments(meshes)
@@ -92,7 +94,7 @@ function to_line_segments(polygon::AbstractVector{<: VecTypes})
     return result
 end
 
-const PolyElements = Union{Circle, Rectangle, HyperRectangle, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
+const PolyElements = Union{Circle, Rect, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
 
 function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
     geometries = plot[1]
@@ -126,20 +128,30 @@ function plot!(plot::Mesh{<: Tuple{<: AbstractVector{P}}}) where P <: AbstractMe
 
     bigmesh = if color_node[] isa AbstractVector && length(color_node[]) == length(meshes[])
         # One color per mesh
+        real_colors = Observable(RGBAf0[])
+        attributes[:color] = real_colors
         lift(meshes, color_node, attributes.colormap, attributes.colorrange) do meshes, colors, cmap, crange
             # Color are reals, so we need to transform it to colors first
-            real_colors = if colors isa AbstractVector{<:Number}
+            single_colors = if colors isa AbstractVector{<:Number}
                 interpolated_getindex.((to_colormap(cmap),), colors, (crange,))
             else
                 to_color.(colors)
             end
-            meshes = GeometryTypes.add_attribute.(GLNormalMesh.(meshes), real_colors)
+            # Map one single color per mesh to each vertex
+            for (mesh, color) in zip(meshes, single_colors)
+                append!(real_colors[], Iterators.repeated(RGBAf0(color), length(coordinates(mesh))))
+            end
+            real_colors[] = real_colors[]
             return merge(meshes)
         end
     else
         attributes[:color] = color_node
         lift(meshes) do meshes
-            return merge(GLPlainMesh.(meshes))
+            if meshes isa AbstractVector{<: AbstractPoint}
+                return triangle_mesh(meshes)
+            else
+                return merge(triangle_mesh.(meshes))
+            end
         end
     end
     mesh!(plot, attributes, bigmesh)
@@ -254,8 +266,8 @@ function plot!(plot::Wireframe{<: Tuple{<: Any, <: Any, <: AbstractMatrix}})
         points = vec(Point3f0.(xvector(x, M), yvector(y, N), z))
         # Connect the vetices with faces, as one would use for a 2D Rectangle
         # grid with M,N grid points
-        faces = decompose(Face{2, GLIndex}, SimpleRectangle(0, 0, 1, 1), (M, N))
-        view(points, faces)
+        faces = decompose(LineFace{GLIndex}, Rect2D(0, 0, 1, 1), (M, N))
+        connect(points, faces)
     end
     linesegments!(plot, Theme(plot), points_faces)
 end
@@ -264,9 +276,9 @@ end
 function plot!(plot::Wireframe{Tuple{T}}) where T
     points = lift(plot[1]) do g
         # get the point representation of the geometry
-        indices = decompose(Face{2, GLIndex}, g)
+        indices = decompose(LineFace{GLIndex}, g)
         points = decompose(Point3f0, g)
-        view(points, indices)
+        return connect(points, indices)
     end
     linesegments!(plot, Theme(plot), points)
 end
@@ -320,7 +332,6 @@ end
 #     end
 #     linesegments!(plot, Theme(plot), lines)
 # end
-
 
 """
     Series - ?
@@ -561,7 +572,8 @@ $(ATTRIBUTES)
 @recipe(Band, lowerpoints, upperpoints) do scene
     Theme(;
         default_theme(scene, Mesh)...,
-        color = RGBAf0(1.0,0,0,0.2)
+        colorrange = automatic,
+        color = RGBAf0(0.0,0,0,0.2)
     )
 end
 
@@ -570,7 +582,7 @@ convert_arguments(::Type{<: Band}, x, ylower, yupper) = (Point2f0.(x, ylower), P
 function band_connect(n)
     ns = 1:n-1
     ns2 = n+1:2n-1
-    [GLTriangle.(ns, ns .+ 1, ns2); GLTriangle.(ns .+ 1, ns2 .+ 1, ns2)]
+    [GLTriangleFace.(ns, ns .+ 1, ns2); GLTriangleFace.(ns .+ 1, ns2 .+ 1, ns2)]
 end
 
 function plot!(plot::Band)
@@ -625,6 +637,7 @@ $(ATTRIBUTES)
         colorrange = AbstractPlotting.automatic,
         levels = 5,
         linewidth = 1.0,
+        alpha = 1.0,
         fillrange = false,
     )
 end
@@ -640,7 +653,6 @@ $(ATTRIBUTES)
 @recipe(Contour3d) do scene
     default_theme(scene, Contour)
 end
-
 
 function contourlines(::Type{<: Contour}, contours, cols)
     result = Point2f0[]
@@ -670,18 +682,18 @@ function contourlines(::Type{<: Contour3d}, contours, cols)
     result, colors
 end
 
-
 to_levels(x::AbstractVector{<: Number}, cnorm) = x
+
 function to_levels(n::Integer, cnorm)
     zmin, zmax = cnorm
     dz = (zmax - zmin) / (n + 1)
     range(zmin + dz; step = dz, length = n)
 end
+
 conversion_trait(::Type{<: Contour3d}) = SurfaceLike()
 conversion_trait(::Type{<: Contour}) = SurfaceLike()
 conversion_trait(::Type{<: Contour{<: Tuple{X, Y, Z, Vol}}}) where {X, Y, Z, Vol} = VolumeLike()
 conversion_trait(::Type{<: Contour{<: Tuple{<: AbstractArray{T, 3}}}}) where T = VolumeLike()
-
 
 function plot!(plot::Contour{<: Tuple{X, Y, Z, Vol}}) where {X, Y, Z, Vol}
     x, y, z, volume = plot[1:4]
