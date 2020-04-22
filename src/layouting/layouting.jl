@@ -168,11 +168,13 @@ end
 
 
 function text_bb(str, font, size)
-    positions, scale = layout_text(
+    positions, = layout_text(
         str, Point2f0(0), size,
         font, Vec2f0(0), Quaternionf0(0,0,0,1), Mat4f0(I)
     )
-    union(FRect3D(positions),  FRect3D(positions .+ to_ndim.(Point3f0, scale, 0)))
+
+    FRect3D(positions)
+
 end
 
 """
