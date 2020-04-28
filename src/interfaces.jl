@@ -71,7 +71,6 @@ $(ATTRIBUTES)
         linewidth = 0.0,
         interpolate = false,
         levels = 1,
-        interpolate = false
         fxaa = true,
     )
 end

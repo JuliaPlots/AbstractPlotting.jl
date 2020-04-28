@@ -1,5 +1,5 @@
 using Colors, ColorVectorSpace, StaticArrays
-using GeometryTypes, Interpolations
+using GeometryBasics, Interpolations
 
 
 @inline function edge_function(a, b, c)

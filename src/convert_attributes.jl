@@ -35,13 +35,13 @@ convert_attribute(s::SceneLike, x, key::Key, ::Key) = convert_attribute(s, x, ke
 convert_attribute(s::SceneLike, x, key::Key) = convert_attribute(x, key)
 convert_attribute(x, key::Key) = x
 
+
 struct Palette{N}
    colors::SArray{Tuple{N},RGBA{Float32},1,N}
    i::Ref{UInt8}
    Palette(colors) = new{length(colors)}(SVector{length(colors)}(to_color.(colors)), zero(UInt8))
 end
-
-Palette(name::Union{String, Symbol}, n=8) = Palette(to_colormap(name, n))
+Palette(name::Union{String, Symbol}, n = 8) = Palette(to_colormap(name, n))
 
 function convert_attribute(p::Palette{N}, ::key"color") where {N}
     p.i[] = p.i[] == N ? one(UInt8) : p.i[] + one(UInt8)
@@ -52,7 +52,7 @@ convert_attribute(c::Colorant, ::key"color") = convert(RGBA{Float32}, c)
 convert_attribute(c::Symbol, k::key"color") = convert_attribute(string(c), k)
 function convert_attribute(c::String, ::key"color")
     c in all_gradient_names && return to_colormap(c)
-    return parse(RGBA{Float32}, c)
+    parse(RGBA{Float32}, c)
 end
 
 # Do we really need all colors to be RGBAf0?!
@@ -90,7 +90,6 @@ convert_attribute(x::Nothing, ::key"linestyle") = x
 
 """
     `AbstractVector{<:AbstractFloat}` for denoting sequences of fill/nofill. e.g.
-
 [0.5, 0.8, 1.2] will result in 0.5 filled, 0.3 unfilled, 0.4 filled. 1.0 unit is one linewidth!
 """
 convert_attribute(A::AbstractVector, ::key"linestyle") = A
@@ -99,7 +98,9 @@ convert_attribute(A::AbstractVector, ::key"linestyle") = A
     A `Symbol` equal to `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
 """
 function convert_attribute(ls::Symbol, ::key"linestyle")
-    return if ls == :dash
+    return if ls == :solid
+        nothing
+    elseif ls == :dash
         [0.0, 1.0, 2.0, 3.0, 4.0]
     elseif ls == :dot
         tick, gap = 1/2, 1/4
@@ -113,7 +114,7 @@ function convert_attribute(ls::Symbol, ::key"linestyle")
         ptick, pgap = 1/2, 1/4
         [0.0, dtick, dtick+dgap, dtick+dgap+ptick, dtick+dgap+ptick+pgap, dtick+dgap+ptick+pgap+ptick,  dtick+dgap+ptick+pgap+ptick+pgap]
     else
-        error("Unkown line style: $ls. Available: :dash, :dot, :dashdot, :dashdotdot or a sequence of numbers enumerating the next transparent/opaque region")
+        error("Unkown line style: $ls. Available: :solid, :dash, :dot, :dashdot, :dashdotdot, or a sequence of numbers enumerating the next transparent/opaque region.")
     end
 end
 
@@ -138,7 +139,6 @@ const _font_cache = Dict{String, NativeFont}()
 
 """
     font conversion
-
 a string naming a font, e.g. helvetica
 """
 function convert_attribute(x::Union{Symbol, String}, k::key"font")
@@ -160,6 +160,8 @@ function convert_attribute(x::Union{Symbol, String}, k::key"font")
 end
 convert_attribute(x::Vector{String}, k::key"font") = convert_attribute.(x, k)
 convert_attribute(x::NativeFont, k::key"font") = x
+
+
 
 """
     rotation accepts:
@@ -206,14 +208,16 @@ const colorbrewer_8color_names = String.([
     :Set2
 ])
 
-# throw an error i
-const plotutils_names = PlotUtils.clibraries() .|> PlotUtils.cgradients |> x -> vcat(x...) .|> String
+const plotutils_names = String.(union(
+    keys(PlotUtils.ColorSchemes.colorschemes),
+    keys(PlotUtils.COLORSCHEME_ALIASES),
+    keys(PlotUtils.MISC_COLORSCHEMES)
+))
 
 const all_gradient_names = Set(vcat(plotutils_names, colorbrewer_8color_names))
 
 """
     available_gradients()
-
 Prints all available gradient names.
 """
 function available_gradients()
@@ -240,7 +244,6 @@ end
 
 """
     to_colormap(b, x)
-
 An `AbstractVector{T}` with any object that [`to_color`](@ref) accepts.
 """
 convert_attribute(cm::AbstractVector, ::key"colormap", n::Int=length(cm)) = to_colormap(to_color.(cm), n)
@@ -257,35 +260,45 @@ function convert_attribute(cs::Union{Tuple, Pair}, ::key"colormap", n::Int=2)
     return to_colormap([to_color.(cs)...], n)
 end
 
+function convert_attribute(cs::Tuple{<: Union{Symbol, AbstractString}, Real}, ::key"colormap", n::Int=30)
+    return RGBAf0.(to_colormap(cs[1]), cs[2]) # We need to rework this to conform to the backend interface.
+end
+
+function convert_attribute(cs::NamedTuple{(:colormap, :alpha, :n), Tuple{Union{Symbol, AbstractString}, Real, Int}}, ::key"colormap")
+    return RGBAf0.(to_colormap(cs.colormap, cs.n), cs.alpha)
+end
+
 to_colormap(x, n::Integer) = convert_attribute(x, key"colormap"(), n)
 
 """
 A Symbol/String naming the gradient. For more on what names are available please see: `available_gradients()`.
 For now, we support gradients from `PlotUtils` natively.
 """
-function convert_attribute(cs::Union{String, Symbol}, ::key"colormap", n::Integer=20)
+function convert_attribute(cs::Union{String, Symbol}, ::key"colormap", n::Integer=40)
     cs_string = string(cs)
     if cs_string in all_gradient_names
         if cs_string in colorbrewer_8color_names # special handling for 8 color only
             return to_colormap(ColorBrewer.palette(cs_string, 8), n)
         else                                    # cs_string must be in plotutils_names
-            return RGBf0.(PlotUtils.cvec(Symbol(cs), n))
+            return to_colormap(PlotUtils.get_colorscheme(:viridis).colors, n)
         end
     else
         error("There is no color gradient named: $cs")
     end
 end
 
-function AbstractPlotting.convert_attribute(cg::PlotUtils.ColorGradient, ::key"colormap", n::Integer=length(cg.values))
+function AbstractPlotting.convert_attribute(cg::PlotUtils.ContinuousColorGradient, ::key"colormap", n::Integer=length(cg.values))
     # PlotUtils does not always give [0, 1] range, so we adapt to what it has
-    return getindex.(Ref(cg), LinRange(first(cg.values), last(cg.values), n)) # workaround until PlotUtils tags a release
-    # TODO change this once PlotUtils supports collections of indices
+    return getindex.(Ref(cg), LinRange(first(cg.values), last(cg.values), n))
 end
 
+function AbstractPlotting.convert_attribute(cg::PlotUtils.CategoricalColorGradient, ::key"colormap", n::Integer = length(cg.colors) * 20)
+    # PlotUtils does not always give [0, 1] range, so we adapt to what it has
+    return vcat(fill.(cg.colors.colors, Ref(n ÷ length(cg.colors)))...)
+end
 
 """
     to_volume_algorithm(b, x)
-
 Enum values: `IsoValue` `Absorption` `MaximumIntensityProjection` `AbsorptionRGBA` `IndexedAbsorptionRGBA`
 """
 function convert_attribute(value, ::key"algorithm")
@@ -311,11 +324,12 @@ function convert_attribute(value::Union{Symbol, String}, k::key"algorithm")
         :absorptionrgba => AbsorptionRGBA,
         :indexedabsorption => IndexedAbsorptionRGBA,
     )
-    algorithm = get(vals, Symbol(value)) do
+    convert_attribute(get(vals, Symbol(value)) do
         error("$value not a valid volume algorithm. Needs to be in $(keys(vals))")
-    end
-    return convert_attribute(algorithm, k)
+    end, k)
 end
+
+
 
 const _marker_map = Dict(
     :rect => '■',
@@ -343,7 +357,6 @@ const _marker_map = Dict(
 
 """
     available_marker_symbols()
-
 Displays all available marker symbols.
 """
 function available_marker_symbols()
@@ -353,32 +366,13 @@ function available_marker_symbols()
     end
 end
 
-
-
-"""
-    to_spritemarker(b, x::Circle)
-
-`GeometryTypes.Circle(Point2(...), radius)`
-"""
 to_spritemarker(x::Circle) = x
-
-"""
-    to_spritemarker(b, ::Type{Circle})
-
-`Type{GeometryTypes.Circle}`
-"""
 to_spritemarker(::Type{<: Circle}) = Circle(Point2f0(0), 1f0)
-"""
-    to_spritemarker(b, ::Type{Rectangle})
+to_spritemarker(::Type{<: Rect}) = Rect(Vec2f0(0), Vec2f0(1))
+to_spritemarker(x::Rect) = x
 
-`Type{GeometryTypes.Rectangle}`
-"""
-to_spritemarker(::Type{<: Rectangle}) = HyperRectangle(Vec2f0(0), Vec2f0(1))
-to_spritemarker(::Type{<: Rect}) = HyperRectangle(Vec2f0(0), Vec2f0(1))
-to_spritemarker(x::HyperRectangle) = x
 """
     to_spritemarker(b, marker::Char)
-
 Any `Char`, including unicode
 """
 to_spritemarker(marker::Char) = marker
@@ -404,7 +398,6 @@ function to_spritemarker(marker::Symbol)
         return '●'
     end
 end
-
 
 to_spritemarker(marker::String) = marker
 to_spritemarker(marker::AbstractVector{Char}) = String(marker)
