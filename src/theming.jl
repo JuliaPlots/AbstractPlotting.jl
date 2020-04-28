@@ -94,8 +94,8 @@ const minimal_default = Attributes(
     axis_type = automatic,
     camera = automatic,
     limits = automatic,
-    padding = Vec3f0(0.1),
-    raw = false,
+    padding = Vec3f0(0.05),
+    raw = false
 )
 
 const _current_default_theme = copy(minimal_default)

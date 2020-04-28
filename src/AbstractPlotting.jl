@@ -1,7 +1,8 @@
 module AbstractPlotting
 
+using Random
 using FFMPEG # get FFMPEG on any system!
-using Observables, GeometryTypes, StaticArrays, IntervalSets, PlotUtils
+using Observables, GeometryBasics, StaticArrays, IntervalSets, PlotUtils
 using ColorBrewer, ColorTypes, Colors, ColorSchemes
 using FixedPointNumbers, Packing, SignedDistanceFields
 using Markdown, DocStringExtensions # documentation
@@ -49,6 +50,8 @@ include("utilities/utilities.jl")
 include("utilities/texture_atlas.jl")
 include("interaction/nodes.jl")
 include("interaction/liftmacro.jl")
+
+include("colorsampler.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
@@ -171,8 +174,6 @@ export (..), GLNormalUVMesh
 
 
 
-# conflicting identifiers
-using GeometryTypes: widths, positive_widths
 export widths, decompose
 
 # building blocks for series recipes
@@ -185,9 +186,8 @@ export Stepper, step!, replay_events, record_events, RecordEvents, record, Video
 export VideoStream, recordframe!, record
 export save
 
-# colormap stuff from PlotUtils, and showlibrary, showgradients
-export clibraries, cgradients, clibrary, showlibrary, showgradients
-
+# colormap stuff from PlotUtils, and showgradients
+export cgrad, available_gradients, showgradients
 
 # default icon for Makie
 function icon()

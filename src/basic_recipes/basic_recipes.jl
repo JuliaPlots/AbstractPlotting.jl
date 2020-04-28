@@ -2,11 +2,12 @@
     `poly(vertices, indices; kwargs...)`
     `poly(points; kwargs...)`
     `poly(shape; kwargs...)`
+    `poly(mesh; kwargs...)`
 
 Plots a polygon based on the arguments given.
 When vertices and indices are given, it functions similarly to `mesh`.
 When points are given, it draws one polygon that connects all the points in order.
-When a shape is given (essentially anything decomposable by `GeometryTypes`), it will plot `decompose(shape)`.
+When a shape is given (essentially anything decomposable by `GeometryBasics`), it will plot `decompose(shape)`.
 
     poly(coordinates, connectivity; kwargs...)
 
@@ -24,7 +25,7 @@ $(ATTRIBUTES)
         strokecolor = RGBAf0(0,0,0,0),
         colormap = theme(scene, :colormap),
         colorrange = automatic,
-        strokewidth = 0.0,
+        strokewidth = 1.0,
         shading = false,
         # we turn this false for now, since otherwise shapes look transparent
         # since we use meshes, which are drawn into a different framebuffer because of fxaa
@@ -37,9 +38,10 @@ $(ATTRIBUTES)
     )
 end
 
+convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractMesh}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: VecTypes}) = (v,)
 convert_arguments(::Type{<: Poly}, v::AbstractVector{<: AbstractVector{<: VecTypes}}) = (v,)
-convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rectangle, HyperRectangle}}) = (v,)
+convert_arguments(::Type{<: Poly}, v::AbstractVector{<: Union{Circle, Rect}}) = (v,)
 convert_arguments(::Type{<: Poly}, args...) = ([convert_arguments(Scatter, args...)[1]],)
 convert_arguments(::Type{<: Poly}, vertices::AbstractArray, indices::AbstractArray) = convert_arguments(Mesh, vertices, indices)
 
@@ -57,7 +59,7 @@ function plot!(plot::Poly{<: Tuple{Union{AbstractMesh, GeometryPrimitive}}})
 end
 
 # Poly conversion
-poly_convert(geometries) = GLNormalMesh.(geometries)
+poly_convert(geometries) = triangle_mesh.(geometries)
 poly_convert(meshes::AbstractVector{<:AbstractMesh}) = meshes
 
 function poly_convert(polygon::AbstractVector{<: VecTypes})
@@ -67,10 +69,10 @@ end
 function poly_convert(polygons::AbstractVector{<: AbstractVector{<: VecTypes}})
     polys = Vector{Point2f0}[]
     for poly in polygons
-        s = GeometryTypes.split_intersections(poly)
+        s = GeometryBasics.split_intersections(poly)
         append!(polys, s)
     end
-    return GLNormalMesh.(polys)
+    return triangle_mesh.(polys)
 end
 
 function to_line_segments(meshes)
@@ -93,7 +95,7 @@ function to_line_segments(polygon::AbstractVector{<: VecTypes})
     return result
 end
 
-const PolyElements = Union{Circle, Rectangle, HyperRectangle, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
+const PolyElements = Union{Circle, Rect, AbstractMesh, VecTypes, AbstractVector{<:VecTypes}}
 
 function plot!(plot::Poly{<: Tuple{<: AbstractVector{<: PolyElements}}})
     geometries = plot[1]
@@ -127,20 +129,30 @@ function plot!(plot::Mesh{<: Tuple{<: AbstractVector{P}}}) where P <: AbstractMe
 
     bigmesh = if color_node[] isa AbstractVector && length(color_node[]) == length(meshes[])
         # One color per mesh
+        real_colors = Observable(RGBAf0[])
+        attributes[:color] = real_colors
         lift(meshes, color_node, attributes.colormap, attributes.colorrange) do meshes, colors, cmap, crange
             # Color are reals, so we need to transform it to colors first
-            real_colors = if colors isa AbstractVector{<:Number}
+            single_colors = if colors isa AbstractVector{<:Number}
                 interpolated_getindex.((to_colormap(cmap),), colors, (crange,))
             else
                 to_color.(colors)
             end
-            meshes = GeometryTypes.add_attribute.(GLNormalMesh.(meshes), real_colors)
+            # Map one single color per mesh to each vertex
+            for (mesh, color) in zip(meshes, single_colors)
+                append!(real_colors[], Iterators.repeated(RGBAf0(color), length(coordinates(mesh))))
+            end
+            real_colors[] = real_colors[]
             return merge(meshes)
         end
     else
         attributes[:color] = color_node
         lift(meshes) do meshes
-            return merge(GLPlainMesh.(meshes))
+            if meshes isa AbstractVector{<: AbstractPoint}
+                return triangle_mesh(meshes)
+            else
+                return merge(GeometryBasics.mesh.(meshes))
+            end
         end
     end
     mesh!(plot, attributes, bigmesh)
@@ -253,8 +265,8 @@ function plot!(plot::Wireframe{<: Tuple{<: Any, <: Any, <: AbstractMatrix}})
         points = vec(Point3f0.(xvector(x, M), yvector(y, N), z))
         # Connect the vetices with faces, as one would use for a 2D Rectangle
         # grid with M,N grid points
-        faces = decompose(Face{2, GLIndex}, SimpleRectangle(0, 0, 1, 1), (M, N))
-        view(points, faces)
+        faces = decompose(LineFace{GLIndex}, Rect2D(0, 0, 1, 1), (M, N))
+        connect(points, faces)
     end
     linesegments!(plot, Attributes(plot), points_faces)
 end
@@ -263,13 +275,12 @@ end
 function plot!(plot::Wireframe{Tuple{T}}) where T
     points = lift(plot[1]) do g
         # get the point representation of the geometry
-        indices = decompose(Face{2, GLIndex}, g)
+        indices = decompose(LineFace{GLIndex}, g)
         points = decompose(Point3f0, g)
-        view(points, indices)
+        return connect(points, indices)
     end
     linesegments!(plot, Attributes(plot), points)
 end
-
 
 function sphere_streamline(linebuffer, ∇ˢf, pt, h, n)
     push!(linebuffer, pt)
@@ -317,7 +328,9 @@ $(ATTRIBUTES)
         seriestype = :lines
     )
 end
+
 convert_arguments(::Type{<: Series}, A::AbstractMatrix{<: Number}) = (A,)
+
 function plot!(sub::Series)
     A = sub[1]
     colors = map_once(sub[:seriescolors], A) do colors, A
@@ -377,42 +390,40 @@ function plot!(plot::Annotations)
     sargs = (
         plot.model, plot.font,
         plot[1],
-        getindex.(plot, (:color, :textsize, :align, :rotation))...,
+        getindex.(plot, (:color, :textsize, :align, :rotation, :justification, :lineheight))...,
     )
     atlas = get_texture_atlas()
     combinedpos = [Point3f0(0)]
     colors = RGBAf0[RGBAf0(0,0,0,0)]
-    scales = Vec2f0[(0,0)]
-    fonts = [to_font("Dejavu Sans")]
+    textsize = Float32[0]
+    fonts = [defaultfont()]
     rotations = Quaternionf0[Quaternionf0(0,0,0,0)]
 
-    tplot = text!(plot, "",
+    tplot = text!(plot, " ",
         align = Vec2f0(0), model = Mat4f0(I),
         position = combinedpos, color = colors, visible = plot.visible,
-        textsize = scales, font = fonts, rotation = rotations
+        textsize = textsize, font = fonts, rotation = rotations
     ).plots[end]
+
     onany(sargs...) do model, pfonts, text_pos, args...
         io = IOBuffer();
-        empty!(combinedpos); empty!(colors); empty!(scales); empty!(fonts); empty!(rotations)
-        broadcast_foreach(1:length(text_pos), to_font(pfonts), text_pos, args...) do idx, f, (text, startpos), color, tsize, alignment, rotation
+        empty!(combinedpos); empty!(colors); empty!(textsize); empty!(fonts); empty!(rotations)
+        broadcast_foreach(1:length(text_pos), to_font(pfonts), text_pos, args...) do idx, f,
+                (text, startpos), color, tsize, alignment, rotation, justification, lineheight
             c = to_color(color)
             rot = to_rotation(rotation)
-            pos, s = layout_text(text, startpos, tsize, f, alignment, rot, model)
+            pos = layout_text(text, startpos, tsize, f, alignment, rot, model, justification, lineheight)
             print(io, text)
             n = length(pos)
             append!(combinedpos, pos)
-            append!(scales, s)
+            append!(textsize, repeated(tsize, n))
             append!(colors, repeated(c, n))
-            append!(fonts, repeated(f, n))
+            append!(fonts, one_attribute_per_char(f, text))
             append!(rotations, repeated(rot, n))
         end
         str = String(take!(io))
         # update string the signals
         tplot[1] = str
-        tplot[:scales] = scales
-        tplot[:color] = colors
-        tplot[:rotation] = rotations
-        # fonts shouldn't need an update, since it will get udpated when listening on string
         return
     end
     # update one time in the beginning, since otherwise the above won't run
@@ -447,7 +458,7 @@ function plot!(p::Arc)
     args = getindex.(p, (:origin, :radius, :start_angle, :stop_angle, :resolution))
     positions = lift(args...) do origin, radius, start_angle, stop_angle, resolution
         map(range(start_angle, stop=stop_angle, length=resolution)) do angle
-            origin .+ Point2f0((sin(angle), cos(angle)) .* radius)
+            origin .+ Point2f0((cos(angle), sin(angle)) .* radius)
         end
     end
     lines!(p, Attributes(p), positions)
@@ -508,8 +519,6 @@ function plot!(p::BarPlot)
     )
 end
 
-
-
 """
     scatterlines(xs, ys, [zs]; kwargs...)
 
@@ -541,7 +550,8 @@ $(ATTRIBUTES)
 @recipe(Band, lowerpoints, upperpoints) do scene
     Attributes(;
         default_theme(scene, Mesh)...,
-        color = RGBAf0(1.0,0,0,0.2)
+        colorrange = automatic,
+        color = RGBAf0(0.0,0,0,0.2)
     )
 end
 
@@ -550,7 +560,7 @@ convert_arguments(::Type{<: Band}, x, ylower, yupper) = (Point2f0.(x, ylower), P
 function band_connect(n)
     ns = 1:n-1
     ns2 = n+1:2n-1
-    [GLTriangle.(ns, ns .+ 1, ns2); GLTriangle.(ns .+ 1, ns2 .+ 1, ns2)]
+    [GLTriangleFace.(ns, ns .+ 1, ns2); GLTriangleFace.(ns .+ 1, ns2 .+ 1, ns2)]
 end
 
 function plot!(plot::Band)
@@ -605,6 +615,7 @@ $(ATTRIBUTES)
         colorrange = AbstractPlotting.automatic,
         levels = 5,
         linewidth = 1.0,
+        alpha = 1.0,
         fillrange = false,
     )
 end
@@ -620,7 +631,6 @@ $(ATTRIBUTES)
 @recipe(Contour3d) do scene
     default_theme(scene, Contour)
 end
-
 
 function contourlines(::Type{<: Contour}, contours, cols)
     result = Point2f0[]
@@ -650,18 +660,18 @@ function contourlines(::Type{<: Contour3d}, contours, cols)
     result, colors
 end
 
-
 to_levels(x::AbstractVector{<: Number}, cnorm) = x
+
 function to_levels(n::Integer, cnorm)
     zmin, zmax = cnorm
     dz = (zmax - zmin) / (n + 1)
     range(zmin + dz; step = dz, length = n)
 end
+
 conversion_trait(::Type{<: Contour3d}) = SurfaceLike()
 conversion_trait(::Type{<: Contour}) = SurfaceLike()
 conversion_trait(::Type{<: Contour{<: Tuple{X, Y, Z, Vol}}}) where {X, Y, Z, Vol} = VolumeLike()
 conversion_trait(::Type{<: Contour{<: Tuple{<: AbstractArray{T, 3}}}}) where T = VolumeLike()
-
 
 function plot!(plot::Contour{<: Tuple{X, Y, Z, Vol}}) where {X, Y, Z, Vol}
     x, y, z, volume = plot[1:4]

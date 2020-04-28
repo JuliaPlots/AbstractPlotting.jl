@@ -5,17 +5,34 @@ Attributes(x::AbstractPlot) = x.attributes
 default_theme(scene, T) = Attributes()
 
 function default_theme(scene)
-    light = Vec3f0[Vec3f0(1.0,1.0,1.0), Vec3f0(0.1,0.1,0.1), Vec3f0(0.9,0.9,0.9), Vec3f0(20,20,20)]
-    return Attributes(
-        light = light,
+    Attributes(
+        color = theme(scene, :color),
+        linewidth = 1,
         transformation = automatic,
         model = automatic,
         visible = true,
         transparency = false,
         overdraw = false,
+        ambient = Vec3f0(0.55),
+        diffuse = Vec3f0(0.4),
+        specular = Vec3f0(0.2),
+        shininess = 32f0,
+        lightposition = :eyeposition,
         nan_color = RGBAf0(0,0,0,0),
     )
 end
+
+"""
+    `calculated_attributes!(trait::Type{<: AbstractPlot}, plot)`
+trait version of calculated_attributes
+"""
+calculated_attributes!(trait, plot) = nothing
+
+"""
+    `calculated_attributes!(plot::AbstractPlot)`
+Fill in values that can only be calculated when we have all other attributes filled
+"""
+calculated_attributes!(plot::T) where T = calculated_attributes!(T, plot)
 
 """
     image(x, y, image)
@@ -29,8 +46,8 @@ $(ATTRIBUTES)
 @recipe(Image, x, y, image) do scene
     Attributes(;
         default_theme(scene)...,
-        color = sampler([:black, :white])
         nan_color = RGBAf0(0,0,0,0),
+        colormap = [:black, :white],
         interpolate = true,
         fxaa = false,
     )
@@ -50,8 +67,9 @@ $(ATTRIBUTES)
 @recipe(Heatmap, x, y, values) do scene
     Attributes(;
         default_theme(scene)...,
-        color = sampler(:viridis)
+        colormap = :viridis,
         linewidth = 0.0,
+        interpolate = false,
         levels = 1,
         interpolate = false
         fxaa = true,
@@ -74,8 +92,12 @@ $(ATTRIBUTES)
 @recipe(Volume, x, y, z, volume) do scene
     Attributes(;
         default_theme(scene)...,
-        algorithm = (:mpi, isovalue=0.5, isorange=0.05),
-        color = sampler(:viridis),
+        algorithm = :mip,
+        isovalue = 0.5,
+        isorange = 0.05,
+        color = nothing,
+        colormap = :viridis,
+        colorrange = (0, 1),
         fxaa = true,
     )
 end
@@ -92,7 +114,8 @@ $(ATTRIBUTES)
 @recipe(Surface, x, y, z) do scene
     Attributes(;
         default_theme(scene)...,
-        color = sampler(:viridis),
+        color = nothing,
+        colormap = :viridis,
         shading = true,
         interpolate = true,
         fxaa = true,
@@ -117,6 +140,7 @@ $(ATTRIBUTES)
         default_theme(scene)...,
         linewidth = 1.0,
         color = :black,
+        colormap = :viridis,
         linestyle = nothing,
         fxaa = false
     )
@@ -152,6 +176,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = :black,
+        colormap = :viridis,
         interpolate = false,
         shading = true,
         fxaa = true,
@@ -172,9 +197,9 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = :black,
-        marker = :circle,
-        markersize = 2,
-        markerspace = dpi,
+        colormap = :viridis,
+        marker = Circle,
+        markersize = 0.1,
 
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
@@ -206,10 +231,12 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = :black,
+        colormap = :viridis,
+        colorrange = automatic,
         marker = Sphere(Point3f0(0), 1f0),
         markersize = 0.1,
         rotations = Quaternionf0(0, 0, 0, 1),
-        markerspace = relative,
+        # markerspace = relative,
         shading = true,
         fxaa = true,
     )
@@ -233,7 +260,69 @@ $(ATTRIBUTES)
         rotation = 0.0,
         textsize = 20,
         position = Point2f0(0),
+        justification = 0.5,
+        lineheight = 1.0
     )
+end
+
+function color_and_colormap!(plot, intensity = plot[:color])
+    if isa(intensity[], AbstractArray{<: Number})
+        haskey(plot, :colormap) || error("Plot $(typeof(plot)) needs to have a colormap to allow the attribute color to be an array of numbers")
+        replace_automatic!(plot, :colorrange) do
+            lift(extrema_nan, intensity)
+        end
+        return true
+    else
+        delete!(plot, :colorrange)
+        return false
+    end
+end
+
+
+function calculated_attributes!(::Type{<: Mesh}, plot)
+    need_cmap = color_and_colormap!(plot)
+    need_cmap || delete!(plot, :colormap)
+    return
+end
+
+function calculated_attributes!(::Type{<: Union{Heatmap, Image}}, plot)
+    plot[:color] = plot[3]
+    color_and_colormap!(plot)
+end
+function calculated_attributes!(::Type{<: Surface}, plot)
+    colors = plot[3]
+    if haskey(plot, :color)
+        color = plot[:color][]
+        if isa(color, AbstractMatrix{<: Number}) && !(color === to_value(colors))
+            colors = plot[:color]
+        end
+    end
+    color_and_colormap!(plot, colors)
+end
+function calculated_attributes!(::Type{<: MeshScatter}, plot)
+    color_and_colormap!(plot)
+end
+
+
+function calculated_attributes!(::Type{<: Scatter}, plot)
+    # calculate base case
+    color_and_colormap!(plot)
+    replace_automatic!(plot, :marker_offset) do
+        # default to middle
+        lift(x-> to_2d_scale(x .* (-0.5f0)), plot[:markersize])
+    end
+end
+
+function calculated_attributes!(::Type{<: Union{Lines, LineSegments}}, plot)
+    color_and_colormap!(plot)
+    pos = plot[1][]
+    # extend one color per linesegment to be one (the same) color per vertex
+    # taken from @edljk  in PR #77
+    if haskey(plot, :color) && isa(plot[:color][], AbstractVector) && iseven(length(pos)) && (length(pos) ÷ 2) == length(plot[:color][])
+        plot[:color] = lift(plot[:color]) do cols
+            map(i-> cols[(i + 1) ÷ 2], 1:(length(cols) * 2))
+        end
+    end
 end
 
 const atomic_function_symbols = (
@@ -541,15 +630,7 @@ function plot!(scene::SceneLike, ::Type{PlotType}, attributes::Attributes, input
             scene.attributes[k] = plot_object[k]
         end
     end
-    for (at1, at2) in mutual_exclusive_attributes(PlotType)
-        #nothing here to get around defaults in GLVisualize
-        haskey(attributes, at1) && haskey(attributes, at2) && error("$at1 conflicts with $at2, please specify only one.")
-        if haskey(attributes, at1) && haskey(plot_object.attributes, at2)
-            plot_object.attributes[at2] = nothing
-        elseif haskey(attributes, at2) && haskey(plot_object.attributes, at1)
-            plot_object.attributes[at1] = nothing
-        end
-    end
+
     # call user defined recipe overload to fill the plot type
     plot!(plot_object)
 

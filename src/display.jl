@@ -74,9 +74,24 @@ for M in (MIME"text/plain", MIME)
         # set update to true, without triggering an event
         # this just indicates, that now we may update on e.g. resize
         update!(scene)
+        
+        # Here, we deal with the Juno plotsize.  
+        # Since SVGs are in units of pt, which is 1/72 in,
+        # and pixels (which Juno reports its plotsize as)
+        # are 1/96 in, we need to rescale the scene,
+        # whose units are in pt, into the expected size in px.
+        # This means we have to scale by a factor of 72/96.
         res = get(io, :juno_plotsize, nothing)
-        res !== nothing && resize!(scene, res...)
-        screen = backend_show(current_backend[], io, m, scene)
+        if !isnothing(res)
+            if m isa MIME"image/svg+xml"
+                res = round.(Int, res .* 0.75)
+            end
+            resize!(scene, res...)
+        end
+
+        ioc = IOContext(io, :full_fidelity => true, :pt_per_unit => get(io, :pt_per_unit, 1.0), :px_per_unit => get(io, :px_per_unit, 1.0))
+
+        screen = backend_show(current_backend[], ioc, m, scene)
 
         # E.g. text/plain doesn't have a display
         screen isa AbstractScreen && push_screen!(scene, screen)
@@ -183,29 +198,69 @@ function Stepper(scene::Scene, path::String; format = :jpg)
     Stepper(scene, path, format, 1)
 end
 
-format2mime(::Type{FileIO.format"PNG"}) = MIME"image/png"()
-format2mime(::Type{FileIO.format"SVG"}) = MIME"image/svg+xml"()
-format2mime(::Type{FileIO.format"JPEG"}) = MIME"image/jpeg"()
+format2mime(::Type{FileIO.format"PNG"})  = MIME("image/png")
+format2mime(::Type{FileIO.format"SVG"})  = MIME("image/svg+xml")
+format2mime(::Type{FileIO.format"JPEG"}) = MIME("image/jpeg")
+format2mime(::Type{FileIO.format"TIFF"}) = MIME("image/tiff")
+format2mime(::Type{FileIO.format"BMP"}) = MIME("image/bmp")
+format2mime(::Type{FileIO.format"PDF"})  = MIME("application/pdf")
+format2mime(::Type{FileIO.format"TEX"})  = MIME("application/x-tex")
+format2mime(::Type{FileIO.format"EPS"})  = MIME("application/postscript")
+format2mime(::Type{FileIO.format"HTML"}) = MIME("text/html")
 
+filetype(::FileIO.File{F}) where F = F
 # Allow format to be overridden with first argument
-"""
-    FileIO.save(filename, scene; resolution = size(scene))
 
-Saves a `Scene` to file!
-Allowable formats depend on the backend;
-- `GLMakie` allows `.png`, `.jpeg`, and `.bmp`.
-- `CairoMakie` allows `.svg`, `pdf`, and `.jpeg`.
-- `WGLMakie` allows `.png`.
-Resolution can be specified, via `save("path", scene, resolution = (1000, 1000))`!
+
+"""
+    FileIO.save(filename, scene; resolution = size(scene), pt_per_unit = 1.0, px_per_unit = 1.0)
+
+Save a `Scene` with the specified filename and format.
+
+# Supported Formats
+
+- `GLMakie`: `.png`, `.jpeg`, and `.bmp`
+- `CairoMakie`: `.svg`, `.pdf`, `.png`, and `.jpeg`
+- `WGLMakie`: `.png`
+
+# Supported Keyword Arguments
+
+## All Backends
+
+- `resolution`: `(width::Int, height::Int)` of the scene in dimensionless units (equivalent to `px` for GLMakie and WGLMakie).
+
+## CairoMakie
+
+- `pt_per_unit`: The size of one scene unit in `pt` when exporting to a vector format.
+- `px_per_unit`: The size of one scene unit in `px` when exporting to a bitmap format. This provides a mechanism to export the same scene with higher or lower resolution.
 """
 function FileIO.save(
-        f::FileIO.File{F}, scene::Scene;
-        resolution = size(scene)
-    ) where F
+        f::FileIO.File, scene::Scene;
+        resolution = size(scene),
+        pt_per_unit = 1.0,
+        px_per_unit = 1.0,
+    )
 
     resolution !== size(scene) && resize!(scene, resolution)
-    open(FileIO.filename(f), "w") do s
-        show(IOContext(s, :full_fidelity => true), format2mime(F), scene)
+
+    # Delete previous file if it exists and query only the file string for type.
+    # We overwrite existing files anyway, so this doesn't change the behavior.
+    # But otherwise we could get a filetype :UNKNOWN from a corrupt existing file
+    # (from an error during save, e.g.), therefore we don't want to rely on the
+    # type readout from an existing file.
+    filename = FileIO.filename(f)
+    isfile(filename) && rm(filename)
+    # query the filetype only from the file extension
+    F = filetype(FileIO.query(filename))
+
+    kwarg_pairs = pairs((full_fidelity = true, pt_per_unit = pt_per_unit,
+        px_per_unit = px_per_unit))
+
+    open(filename, "w") do s
+        show(
+            IOContext(s, kwarg_pairs...),
+            format2mime(F),
+            scene)
     end
 end
 
@@ -349,7 +404,7 @@ function recordframe!(io::VideoStream)
 end
 
 """
-    save(path::String, io::VideoStream; framerate = 24)
+    save(path::String, io::VideoStream; framerate = 24, compression = 20)
 
 Flushes the video stream and converts the file to the extension found in `path`,
 which can be one of the following:
@@ -361,28 +416,31 @@ which can be one of the following:
 `.mp4` and `.mk4` are marginally bigger and `.gif`s are up to
 6 times bigger with the same quality!
 
+The `compression` argument controls the compression ratio; `51` is the
+highest compression, and `0` is the lowest (lossless).
+
 See the docs of [`VideoStream`](@ref) for how to create a VideoStream.
 If you want a simpler interface, consider using [`record`](@ref).
 
 """
 function save(path::String, io::VideoStream;
-              framerate::Int = 24)
+              framerate::Int = 24, compression = 20)
     close(io.process)
     wait(io.process)
     p, typ = splitext(path)
     if typ == ".mkv"
         cp(io.path, path, force=true)
     elseif typ == ".mp4"
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc -b:a 128k -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -crf $compression -c:v libx264 -preset slow -r $framerate -pix_fmt yuv420p -c:a libvo_aacenc -b:a 128k -y $path`)
     elseif typ == ".webm"
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -c:v libvpx-vp9 -threads 16 -b:v 2000k -c:a libvorbis -threads 16 -r $framerate -vf scale=iw:ih -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -crf $compression -c:v libvpx-vp9 -threads 16 -b:v 2000k -c:a libvorbis -threads 16 -r $framerate -vf scale=iw:ih -y $path`)
     elseif typ == ".gif"
         filters = "fps=$framerate,scale=iw:ih:flags=lanczos"
         palette_path = dirname(io.path)
         pname = joinpath(palette_path, "palette.bmp")
         isfile(pname) && rm(pname, force = true)
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -vf "$filters,palettegen" -y $pname`)
-        ffmpeg_exe(`-loglevel quiet -i $(io.path) -i $pname -lavfi "$filters [x]; [x][1:v] paletteuse" -y $path`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -crf $compression -vf "$filters,palettegen" -y $pname`)
+        ffmpeg_exe(`-loglevel quiet -i $(io.path) -crf $compression -i $pname -lavfi "$filters [x]; [x][1:v] paletteuse" -y $path`)
         rm(pname, force = true)
     else
         rm(io.path)
@@ -394,8 +452,11 @@ end
 
 
 """
-    record(func, scene, path; framerate = 24)
-    record(func, scene, path, iter; framerate = 24)
+    record(func, scene, path; framerate = 24, compression = 20)
+    record(func, scene, path, iter;
+            framerate = 24, compression = 20, sleep = true)
+
+The first signature provides `func` with a VideoStream, which it should call `recordframe!(io)` on when recording a frame.
 
 Records the Scene `scene` after the application of `func` on it for each element
 in `itr` (any iterator).  `func` must accept an element of `itr`.
@@ -409,6 +470,17 @@ extension.  Allowable extensions are:
 
 `.mp4` and `.mk4` are marginally bigger and `.gif`s are up to
 6 times bigger with the same quality!
+
+The `compression` argument controls the compression ratio; `51` is the
+highest compression, and `0` is the lowest (lossless).
+
+When `sleep` is set to `true` (the default), AbstractPlotting will
+display the animation in real-time by sleeping in between frames.
+Thus, a 24-frame, 24-fps recording would take one second to record.
+
+When it is set to `false`, frames are rendered as fast as the backend
+can render them.  Thus, a 24-frame, 24-fps recording would usually
+take much less than one second in GLMakie.
 
 Typical usage patterns would look like:
 
@@ -432,7 +504,8 @@ end
 If you want a more tweakable interface, consider using [`VideoStream`](@ref) and
 [`save`](@ref).
 
-## Examples
+## Extended help
+### Examples
 
 ```julia
 scene = lines(rand(10))
@@ -451,40 +524,27 @@ record(scene, "test.gif", 1:255) do i
 end
 ```
 """
-function record(func, scene, path; framerate::Int = 24)
+function record(func, scene, path; framerate::Int = 24, compression = 20)
     io = VideoStream(scene; framerate = framerate)
     func(io)
-    save(path, io; framerate = framerate)
+    save(path, io; framerate = framerate, compression = compression)
 end
 
-"""
-    record(func, scene, path, iter; framerate = 24)
-
-This is simply a shorthand to wrap a for loop in `record`.
-
-Example:
-
-```example
-    scene = lines(rand(10))
-    record(scene, "test.gif", 1:100) do i
-        scene.plots[:color] = Colors.RGB(i/255, 0, 0) # animate scene
-    end
-```
-"""
-function record(func, scene, path, iter; framerate::Int = 24)
+function record(func, scene, path, iter; framerate::Int = 24, compression = 20, sleep = true)
     io = VideoStream(scene; framerate = framerate)
     for i in iter
         t1 = time()
         func(i)
         recordframe!(io)
+        @debug "Recording" progress=i/length(iter)
         diff = (1/framerate) - (time() - t1)
-        if diff > 0.0
-            sleep(diff)
+        if sleep && diff > 0.0
+            Base.sleep(diff)
         else
             yield()
         end
     end
-    save(path, io, framerate = framerate)
+    save(path, io, framerate = framerate, compression = compression)
 end
 
 
