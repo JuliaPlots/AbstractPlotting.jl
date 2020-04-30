@@ -12,7 +12,7 @@ test:
           - .julia/artifacts
     before_script:
         - apt-get -qq update
-        - apt-get install -y cmake xorg-dev mesa-utils xvfb # glfw
+        - apt-get install -y cmake xorg-dev mesa-utils xvfb libgl1 freeglut3-dev # glfw
     script:
       - mkdir -p $JULIA_DEPOT_PATH # Pkg.jl#325
       - xvfb-run -s '-screen 0 1024x768x24' julia --project -e 'using Pkg; pkg"build; add MakieGallery#master"; Pkg.test(; coverage=true)'
