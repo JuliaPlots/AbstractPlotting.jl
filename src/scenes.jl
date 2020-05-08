@@ -121,8 +121,8 @@ end
 
 function Scene(;clear = true, transform_func=identity, scene_attributes...)
     events = Events()
-    theme = current_default_theme(; scene_attributes...)
-    attributes = copy(theme)
+    theme = deepcopy(current_default_theme(; scene_attributes...))
+    attributes = theme
     px_area = lift(attributes.resolution) do res
         IRect(0, 0, res)
     end
@@ -159,7 +159,7 @@ function Scene(
         cam = scene.camera,
         camera_controls = scene.camera_controls,
         transformation = Transformation(scene),
-        theme = copy(theme(scene)),
+        theme = deepcopy(theme(scene)),
         current_screens = scene.current_screens,
         kw_args...
     )

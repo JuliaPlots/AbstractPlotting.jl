@@ -9,7 +9,7 @@ default_theme(scene, T) = Attributes()
 
 function default_theme(scene)
     Theme(
-        color = theme(scene, :color),
+        color = copy(theme(scene, :color)),
         linewidth = 1,
         transformation = automatic,
         model = automatic,
