@@ -91,7 +91,10 @@ export AbstractScene, SceneLike, Scene, AbstractScreen
 export AbstractPlot, Combined, Atomic, Axis
 
 # Theming, working with Plots
-export Attributes, Theme, attributes, default_theme, theme, set_theme!
+export Attributes, Theme, attributes, default_theme, theme,
+export set_theme!, reset_theme!, with_theme
+
+# Shorthands
 export title
 export xlims!, ylims!, zlims!
 export xlabel!, ylabel!, zlabel!
@@ -178,7 +181,7 @@ export VideoStream, recordframe!, record
 export save
 
 # colormap stuff from PlotUtils, and showgradients
-export cgrad, available_gradients, showgradients
+export cgrad, available_gradients, showgradients, Palette
 
 # default icon for Makie
 function icon()
