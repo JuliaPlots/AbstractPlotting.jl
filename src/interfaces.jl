@@ -147,8 +147,8 @@ $(ATTRIBUTES)
         color = :black,
         colormap = :viridis,
         linestyle = nothing,
-        fxaa = false,
         default_theme(scene)...,
+        fxaa = false,
     )
 end
 
@@ -216,9 +216,8 @@ $(ATTRIBUTES)
         transform_marker = false, # Applies the plots transformation to marker
         uv_offset_width = Vec4f0(0),
         distancefield = nothing,
-
-        fxaa = false,
         default_theme(scene)...,
+        fxaa = false,
     )
 end
 
@@ -261,13 +260,14 @@ $(ATTRIBUTES)
         font = theme(scene, :font),
         strokecolor = (:black, 0.0),
         strokewidth = 0,
-        align = (:left, :bottom),
-        rotation = 0.0,
         textsize = 20,
-        position = Point2f0(0),
         justification = 0.5,
         lineheight = 1.0,
         default_theme(scene)...,
+        align = (:left, :bottom),
+        rotation = 0.0,
+        position = Point2f0(0),
+        color = :black,
     )
 end
 

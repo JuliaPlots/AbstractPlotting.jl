@@ -65,7 +65,8 @@ function set_theme!(; kw_args...)
 end
 
 function set_theme!(new_theme::Attributes)
-    new_theme = merge!(new_theme, minimal_default)
+    new_theme = merge(_current_default_theme, new_theme)
+    empty!(_current_default_theme)
     merge!(_current_default_theme, new_theme)
     return
 end

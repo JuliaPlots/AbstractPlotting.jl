@@ -197,7 +197,7 @@ lerp(a::T, b::T, val::AbstractFloat) where {T} = (a .+ (val * (b .- a)))
 function merge_attributes!(input::Attributes, theme::Attributes)
     for (key, value) in theme
         if !haskey(input, key)
-            input[key] = copy(value)
+            input[key] = deepcopy(value)
         else
             current_value = input[key]
             if value isa Attributes && current_value isa Attributes
@@ -205,11 +205,11 @@ function merge_attributes!(input::Attributes, theme::Attributes)
                 merge_attributes!(current_value, value)
             elseif value isa Attributes || current_value isa Attributes
                 error("""
-                Type missmatch while merging plot attributes with theme for key: $(key).
+                Type mismatch while merging plot attributes with theme for key: $(key).
                 Found $(value) in theme, while attributes contains: $(current_value)
                 """)
             else
-                # we're good! input already has a value, can ignore theme
+                # input[key] = deepcopy(value)
             end
         end
     end
