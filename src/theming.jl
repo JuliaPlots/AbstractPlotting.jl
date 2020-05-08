@@ -55,11 +55,29 @@ function current_default_theme(; kw_args...)
 end
 
 function set_theme!(new_theme::Attributes)
-    empty!(_current_default_theme)
     new_theme = merge!(new_theme, minimal_default)
     merge!(_current_default_theme, new_theme)
     return
 end
 function set_theme!(;kw_args...)
     set_theme!(Attributes(; kw_args...))
+end
+
+function reset_theme!()
+    empty!(_current_default_theme)
+    merge!(_current_default_theme, minimal_default)
+    return
+end
+
+function with_theme(f, attrs::Attributes)
+    old_theme = deepcopy(current_default_theme())
+    set_theme!(attrs)
+    try
+        f()
+    catch e
+        rethrow()
+    finally
+        reset_theme!()
+        set_theme!(old_theme)
+    end
 end
