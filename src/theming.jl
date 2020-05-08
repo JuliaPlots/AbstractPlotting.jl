@@ -54,21 +54,41 @@ function current_default_theme(; kw_args...)
     return merge!(Attributes(kw_args), _current_default_theme)
 end
 
+"""
+    set_theme!(; attributes...)
+
+Merges the passed `attributes` into the current default
+theme.  To restore to a clean state, run `reset_theme!()`.
+"""
+function set_theme!(; kw_args...)
+    set_theme!(Attributes(; kw_args...))
+end
+
 function set_theme!(new_theme::Attributes)
     new_theme = merge!(new_theme, minimal_default)
     merge!(_current_default_theme, new_theme)
     return
 end
-function set_theme!(;kw_args...)
-    set_theme!(Attributes(; kw_args...))
-end
 
+"""
+    reset_theme!()
+
+Reset the current default theme to
+`AbstractPlotting.minimal_default`.
+"""
 function reset_theme!()
     empty!(_current_default_theme)
     merge!(_current_default_theme, minimal_default)
     return
 end
 
+"""
+    with_theme(f::Function; attributes...)
+
+Executes `f` with `attributes` merged in
+to the current default theme, and then
+restores the old state.
+"""
 function with_theme(f, attrs::Attributes)
     old_theme = deepcopy(current_default_theme())
     set_theme!(attrs)
@@ -81,3 +101,5 @@ function with_theme(f, attrs::Attributes)
         set_theme!(old_theme)
     end
 end
+
+with_theme(f; attrs...) = with_theme(f, Attributes(attrs))
