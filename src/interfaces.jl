@@ -48,8 +48,8 @@ $(ATTRIBUTES)
 """
 @recipe(Image, x, y, image) do scene
     Theme(;
-        default_theme(scene)...,
         colormap = [:black, :white],
+        default_theme(scene)...,
         interpolate = true,
         fxaa = false,
         lowclip = nothing,
@@ -70,14 +70,14 @@ $(ATTRIBUTES)
 """
 @recipe(Heatmap, x, y, values) do scene
     Theme(;
-        default_theme(scene)...,
         colormap = :viridis,
         linewidth = 0.0,
+        lowclip = nothing,
+        highclip = nothing,
+        default_theme(scene)...,
         interpolate = false,
         levels = 1,
         fxaa = true,
-        lowclip = nothing,
-        highclip = nothing,
     )
 end
 
@@ -96,12 +96,12 @@ $(ATTRIBUTES)
 """
 @recipe(Volume, x, y, z, volume) do scene
     Theme(;
-        default_theme(scene)...,
         algorithm = :mip,
+        colormap = :viridis,
+        default_theme(scene)...,
         isovalue = 0.5,
         isorange = 0.05,
         color = nothing,
-        colormap = :viridis,
         colorrange = (0, 1),
         fxaa = true,
     )
@@ -118,13 +118,13 @@ $(ATTRIBUTES)
 """
 @recipe(Surface, x, y, z) do scene
     Theme(;
-        default_theme(scene)...,
-        color = nothing,
         colormap = :viridis,
         shading = true,
-        fxaa = true,
         lowclip = nothing,
         highclip = nothing,
+        default_theme(scene)...,
+        color = nothing,
+        fxaa = true,
     )
 end
 
@@ -143,12 +143,12 @@ $(ATTRIBUTES)
 """
 @recipe(Lines, positions) do scene
     Theme(;
-        default_theme(scene)...,
         linewidth = 1.0,
         color = :black,
         colormap = :viridis,
         linestyle = nothing,
-        fxaa = false
+        fxaa = false,
+        default_theme(scene)...,
     )
 end
 
@@ -180,11 +180,11 @@ $(ATTRIBUTES)
 """
 @recipe(Mesh, mesh) do scene
     Theme(;
-        default_theme(scene)...,
         color = :black,
         colormap = :viridis,
-        interpolate = false,
         shading = true,
+        default_theme(scene)...,
+        interpolate = false,
         fxaa = true,
     )
 end
@@ -201,7 +201,6 @@ $(ATTRIBUTES)
 """
 @recipe(Scatter, positions) do scene
     Theme(;
-        default_theme(scene)...,
         color = :black,
         colormap = :viridis,
         marker = Circle,
@@ -219,6 +218,7 @@ $(ATTRIBUTES)
         distancefield = nothing,
 
         fxaa = false,
+        default_theme(scene)...,
     )
 end
 
@@ -235,7 +235,6 @@ $(ATTRIBUTES)
 """
 @recipe(MeshScatter, positions) do scene
     Theme(;
-        default_theme(scene)...,
         color = :black,
         colormap = :viridis,
         colorrange = automatic,
@@ -245,6 +244,7 @@ $(ATTRIBUTES)
         # markerspace = relative,
         shading = true,
         fxaa = true,
+        default_theme(scene)...,
     )
 end
 
@@ -258,7 +258,6 @@ $(ATTRIBUTES)
 """
 @recipe(Text, text) do scene
     Theme(;
-        default_theme(scene)...,
         font = theme(scene, :font),
         strokecolor = (:black, 0.0),
         strokewidth = 0,
@@ -268,6 +267,7 @@ $(ATTRIBUTES)
         position = Point2f0(0),
         justification = 0.5,
         lineheight = 1.0
+        default_theme(scene)...,
     )
 end
 
