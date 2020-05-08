@@ -91,7 +91,7 @@ export AbstractScene, SceneLike, Scene, AbstractScreen
 export AbstractPlot, Combined, Atomic, Axis
 
 # Theming, working with Plots
-export Attributes, Theme, attributes, default_theme, theme,
+export Attributes, Theme, attributes, default_theme, theme
 export set_theme!, reset_theme!, with_theme
 
 # Shorthands
