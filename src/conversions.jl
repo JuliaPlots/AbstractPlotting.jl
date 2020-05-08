@@ -566,6 +566,7 @@ end
 Palette(name::Union{String, Symbol}, n = 8) = Palette(to_colormap(name, n))
 
 function convert_attribute(p::Palette{N}, ::key"color") where {N}
+    @info "Hit palette!" n
     p.i[] = p.i[] == N ? one(UInt8) : p.i[] + one(UInt8)
     p.colors[p.i[]]
 end
