@@ -29,7 +29,7 @@ function attribute_per_char(string, attribute)
 end
 
 function layout_text(
-        string::AbstractString, startpos::VecTypes{N, T}, textsize::Union{AbstractVector, Number},
+        string::AbstractString, textsize::Union{AbstractVector, Number},
         font, align, rotation, model, justification, lineheight
     ) where {N, T}
 
@@ -39,8 +39,8 @@ function layout_text(
     rot = to_rotation(rotation)
 
     atlas = get_texture_atlas()
-    mpos = model * Vec4f0(to_ndim(Vec3f0, startpos, 0f0)..., 1f0)
-    pos = to_ndim(Point3f0, mpos, 0)
+    # mpos = model * Vec4f0(to_ndim(Vec3f0, startpos, 0f0)..., 1f0)
+    # pos = to_ndim(Point3f0, mpos, 0)
 
     fontperchar = attribute_per_char(string, ft_font)
     textsizeperchar = attribute_per_char(string, rscale)
@@ -54,7 +54,7 @@ function layout_text(
             p = to_ndim(Point3f0, gp, 0) #./ Point3f0(4, 4, 1)
             # rotate around the alignment point (this is now at [0, 0, 0])
             p_rotated = rot * p
-            push!(positions, pos .+ p_rotated) # TODO why division by 4 necessary?
+            push!(positions, p_rotated)
         end
         # between groups, push a random point for newline, it doesn't matter
         # what it is

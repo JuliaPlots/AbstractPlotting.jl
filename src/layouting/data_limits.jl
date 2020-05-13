@@ -110,7 +110,18 @@ function text_limits(x::AbstractVector)
 end
 
 function atomic_limits(x::Text{<: Tuple{Arg1}}) where Arg1
-    return boundingbox(x)
+    if x.space[] == :data
+        return boundingbox(x)
+    elseif x.space[] == :screen
+        if x.position[] isa Union{StaticArrays.StaticArray, Tuple{Real, Real}, GeometryBasics.Point}
+            bb = FRect2D(x.position[]..., 0, 0)
+        else
+            bb = FRect2D(x.position[][1]..., 0, 0)
+            for p in x.position[][2:end]
+                bb = union(bb, FRect2D(p..., 0, 0))
+            end
+        end
+    end
 end
 
 function data_limits(x::Annotations)

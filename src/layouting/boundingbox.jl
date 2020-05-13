@@ -163,8 +163,9 @@ function boundingbox(
     # this is kind of a doubling, maybe it could be avoided if at creation all
     # positions would be populated in the text object, but that seems convoluted
     if position isa VecTypes
-        position = layout_text(text, position, textsize, font, align,
+        glyph_offsets = layout_text(text, textsize, font, align,
             rotation, model, justification, lineheight)
+        position = [go .+ to_ndim(Point3f0, position, 0) for go in glyph_offsets]
     end
 
     bbox = Ref(FRect3D())            # use ref to avoid julia#15276
