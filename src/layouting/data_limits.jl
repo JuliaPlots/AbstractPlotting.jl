@@ -123,7 +123,7 @@ function atomic_limits(x::Text{<: Tuple{Arg1}}) where Arg1
             end
         else
             if x.position[] isa Union{StaticArrays.StaticArray, Tuple{Real, Real}, GeometryBasics.Point}
-                bb = FRect3D(x.position[])
+                bb = frect3d(x.position[])
             else
                 bb = frect3d(x.position[][1])
                 for p in x.position[][2:end]
