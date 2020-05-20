@@ -109,18 +109,30 @@ function text_limits(x::AbstractVector)
     return FRect3D(x)
 end
 
+frect3d(p::Point2) = FRect3D(Point3f0(p..., 0), Point3f0(0, 0, 0))
+frect3d(p::Point3) = FRect3D(Point3f0(p...), Point3f0(0, 0, 0))
+
 function atomic_limits(x::Text{<: Tuple{Arg1}}) where Arg1
     if x.space[] == :data
         return boundingbox(x)
     elseif x.space[] == :screen
-        if x.position[] isa Union{StaticArrays.StaticArray, Tuple{Real, Real}, GeometryBasics.Point}
-            bb = FRect2D(x.position[]..., 0, 0)
-        else
-            bb = FRect2D(x.position[][1]..., 0, 0)
+        if x[1][] isa AbstractArray
+            bb = frect3d(x.position[][1])
             for p in x.position[][2:end]
-                bb = union(bb, FRect2D(p..., 0, 0))
+                bb = union(bb, frect3d(p))
+            end
+        else
+            if x.position[] isa Union{StaticArrays.StaticArray, Tuple{Real, Real}, GeometryBasics.Point}
+                bb = FRect3D(x.position[])
+            else
+                bb = frect3d(x.position[][1])
+                for p in x.position[][2:end]
+                    bb = union(bb, frect3d(p))
+                end
+                bb
             end
         end
+        bb
     end
 end
 

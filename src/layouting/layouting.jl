@@ -28,6 +28,7 @@ function attribute_per_char(string, attribute)
     error("A vector of attributes with $(length(attribute)) elements was given but this fits neither the length of '$string' ($(length(string))) nor the number of words ($(n_words))")
 end
 
+
 function layout_text(
         string::AbstractString, textsize::Union{AbstractVector, Number},
         font, align, rotation, model, justification, lineheight
@@ -45,25 +46,32 @@ function layout_text(
     fontperchar = attribute_per_char(string, ft_font)
     textsizeperchar = attribute_per_char(string, rscale)
 
-    glyphpos = glyph_positions(string, fontperchar, textsizeperchar, offset_vec[1],
+    glyphpos, height_insensitive_bbs = glyph_positions(string, fontperchar, textsizeperchar, offset_vec[1],
         offset_vec[2], lineheight, justification)
 
     positions = Point3f0[]
-    for (i, group) in enumerate(glyphpos)
-        for gp in group
-            p = to_ndim(Point3f0, gp, 0) #./ Point3f0(4, 4, 1)
+    bbs = FRect2D[]
+
+    for (i, (group, hi_bbs)) in enumerate(zip(glyphpos, height_insensitive_bbs))
+        for (gp, hi_bb) in zip(group, hi_bbs)
+            p = to_ndim(Point3f0, gp, 0)
             # rotate around the alignment point (this is now at [0, 0, 0])
             p_rotated = rot * p
             push!(positions, p_rotated)
+            push!(bbs, hi_bb)
         end
-        # between groups, push a random point for newline, it doesn't matter
-        # what it is
+
+        # between groups, push a zero point for newline, this should be ignored later
+        # and serves only as a placeholder to make iteration over the string easier
         if i < length(glyphpos)
             push!(positions, Point3f0(0, 0, 0))
+            # just take a random extent, just as a filler
+            # easier than constructing one
+            push!(bbs, hi_bbs[1])
         end
     end
 
-    return positions
+    return positions, bbs
 end
 
 function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification)
@@ -134,18 +142,16 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
 
     ys_aligned = ys .- first_line_ascender .+ (1 - valign) .* overall_height
 
-    # we are still operating in freetype units, let's convert to the chosen scale by dividing with 64
-    return [Vec2.(xsgroup, y) for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
-end
+    height_insensitive_bbs = map(cfs_groups, extents) do group, extent
+        map(group, extent) do (char, font, scale), ext
+            unscaled_hi_bb = height_insensitive_boundingbox(get_extent(font, char), font)
+            FRect2D(AbstractPlotting.origin(unscaled_hi_bb) * scale, widths(unscaled_hi_bb) * scale)
+        end
+    end
 
-function text_bb(str, font, size)
-    positions = layout_text(
-        str, Point2f0(0), size,
-        font, Vec2f0(0), Quaternionf0(0,0,0,1), Mat4f0(I), 0.5, 1.0
-    )
 
-    scale = widths.(first.(FreeTypeAbstraction.metrics_bb.(collect(str), font, size)))
-    return union(FRect3D(positions),  FRect3D(positions .+ to_ndim.(Point3f0, scale, 0)))
+    charorigins = [Vec2.(xsgroup, y) for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
+    return charorigins, height_insensitive_bbs
 end
 
 function alignment2num(x::Symbol)

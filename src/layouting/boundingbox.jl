@@ -9,10 +9,10 @@ raw_boundingbox(x::Atomic) = data_limits(x)
 rootparent(x) = rootparent(parent(x))
 rootparent(x::Scene) = x
 
-function raw_boundingbox(x::Annotations)
-    bb = raw_boundingbox(x.plots)
-    inv(modelmatrix(rootparent(x))) * bb
-end
+# function raw_boundingbox(x::Annotations)
+#     bb = raw_boundingbox(x.plots)
+#     inv(modelmatrix(rootparent(x))) * bb
+# end
 
 raw_boundingbox(x::Combined) = raw_boundingbox(x.plots)
 boundingbox(x) = raw_boundingbox(x)
@@ -80,39 +80,104 @@ function project_widths(matrix, vec)
     return pr - zero
 end
 
-function boundingbox(x::Text, text::String)
-    position = to_value(x[:position])
-    @get_attribute x (textsize, font, align, rotation, justification, lineheight)
-    pm = inv(transformationmatrix(parent(x))[])
-    bb = boundingbox(text, position, textsize, font, align, rotation,
-                     modelmatrix(x), justification, lineheight)
-    # Annoyingly we combine different spaces in the textlayout
-    # The start position is in modelspace (multiplied by modelmatrix, which also
-    # contains the scaling from any parent scene)
-    # But than, from that startposition, we substract the align - which is in
-    # unscaled space... Also the boundingbox we get returned is unscaled
-    # and the fonts are actually getting drawn unscaled... Buhut,
-    # the boundingbox will get scaled when drawing, so we need to apply the
-    # inverse transformation.
-    pm = inv(transformationmatrix(parent(x))[])
-    wh = widths(bb)
-    whp = project_widths(pm, wh)
-    aoffset = wh .* to_ndim(Vec3f0, align, 0f0)
-    aoffsetp = whp .* to_ndim(Vec3f0, align, 0f0)
-    return FRect3D(minimum(bb) .+ aoffset .- aoffsetp, whp)
+function boundingbox(x::Text, text::String, position::VecTypes)
+    # position = to_value(x[:position])
+    # @get_attribute x (textsize, font, align, rotation, justification, lineheight)
+    # pm = inv(transformationmatrix(parent(x))[])
+    # bb = boundingbox(text, position, textsize, font, align, rotation,
+    #                  modelmatrix(x), justification, lineheight)
+    # # Annoyingly we combine different spaces in the textlayout
+    # # The start position is in modelspace (multiplied by modelmatrix, which also
+    # # contains the scaling from any parent scene)
+    # # But than, from that startposition, we substract the align - which is in
+    # # unscaled space... Also the boundingbox we get returned is unscaled
+    # # and the fonts are actually getting drawn unscaled... Buhut,
+    # # the boundingbox will get scaled when drawing, so we need to apply the
+    # # inverse transformation.
+    # pm = inv(transformationmatrix(parent(x))[])
+    # wh = widths(bb)
+    # whp = project_widths(pm, wh)
+    # aoffset = wh .* to_ndim(Vec3f0, align, 0f0)
+    # aoffsetp = whp .* to_ndim(Vec3f0, align, 0f0)
+    # return FRect3D(minimum(bb) .+ aoffset .- aoffsetp, whp)
+
+    glyphorigins, glyphbbs = x._glyphlayout[]
+    pos = to_ndim(Point3f0, x.position[], 0)
+
+    bb = FRect3D()
+    for (char, charo, glyphbb) in zip(x[1][], glyphorigins, glyphbbs)
+        # ignore line breaks
+        char in ('\r', '\n') && continue
+
+        # TODO: Correct BBox
+        charbb = FRect3D(glyphbb) + charo + pos
+        if !isfinite(bb)
+            bb = charbb
+        else
+            bb = union(bb, charbb)
+        end
+    end
+    bb
 end
 
-boundingbox(x::Text) = boundingbox(x, to_value(x[1]))
+function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
 
-function boundingbox(
-        text::String, position, textsize;
-        font = "default", align = (:left, :bottom), rotation = 0.0
-    )
-    return boundingbox(
-        text, position, textsize,
-        to_font(font), to_align(align), to_rotation(rotation)
-    )
+    glyphlayout = x._glyphlayout[]
+    bb = FRect3D()
+    for (t, pos, (charorigins, glyphbbs)) in zip(texts, positions, glyphlayout)
+        for (char, charo, glyphbb) in zip(t, charorigins, glyphbbs)
+            # ignore line breaks
+            char in ('\r', '\n') && continue
+
+            charbb = FRect3D(glyphbb) + charo + pos
+            if !isfinite(bb)
+                bb = charbb
+            else
+                bb = union(bb, charbb)
+            end
+        end
+    end
+    bb
 end
+
+
+
+function boundingbox(x::Text)
+
+    # TODO: this is only necessary because of the "text in text" recipe weirdness
+    if !isempty(x.plots)
+        # the "real" text is inside the outer text
+        x = x.plots[1]
+    end
+
+    boundingbox(x, to_value(x[1]), to_value(x[:position]))
+end
+
+
+#     if x.space[] == :data
+#         if x[1][] isa AbstractArray
+#             bb = FRect3D()
+#             for 
+#         else
+#             boundingbox(x, to_value(x[1]))
+#         end
+#     elseif x.space[] == :screen
+#         data_limits(x)
+#     end
+# end
+        
+
+# boundingbox(x::Text) = boundingbox(x, to_value(x[1]))
+
+# function boundingbox(
+#         text::String, position, textsize;
+#         font = "default", align = (:left, :bottom), rotation = 0.0
+#     )
+#     return boundingbox(
+#         text, position, textsize,
+#         to_font(font), to_align(align), to_rotation(rotation)
+#     )
+# end
 
 """
 Calculate an approximation of a tight rectangle around a 2D rectangle rotated by `angle` radians.
