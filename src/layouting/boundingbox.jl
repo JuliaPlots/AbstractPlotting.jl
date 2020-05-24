@@ -104,38 +104,51 @@ function boundingbox(x::Text, text::String, position::VecTypes)
     glyphorigins, glyphbbs = x._glyphlayout[]
     pos = to_ndim(Point3f0, x.position[], 0)
 
-    bb = FRect3D()
-    for (char, charo, glyphbb) in zip(x[1][], glyphorigins, glyphbbs)
-        # ignore line breaks
-        char in ('\r', '\n') && continue
+    if x.space[] == :data
 
-        # TODO: Correct BBox
-        charbb = FRect3D(glyphbb) + charo + pos
-        if !isfinite(bb)
-            bb = charbb
-        else
-            bb = union(bb, charbb)
-        end
-    end
-    bb
-end
-
-function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
-
-    glyphlayout = x._glyphlayout[]
-    bb = FRect3D()
-    for (t, pos, (charorigins, glyphbbs)) in zip(texts, positions, glyphlayout)
-        for (char, charo, glyphbb) in zip(t, charorigins, glyphbbs)
+        bb = FRect3D()
+        for (char, charo, glyphbb) in zip(x[1][], glyphorigins, glyphbbs)
             # ignore line breaks
             char in ('\r', '\n') && continue
-            charbb = FRect3D(glyphbb) + charo + to_ndim(Point3f0, pos, 0)
+
+            # TODO: Correct BBox
+            charbb = FRect3D(glyphbb) + charo + pos
             if !isfinite(bb)
                 bb = charbb
             else
                 bb = union(bb, charbb)
             end
         end
+
+    elseif x.space[] == :screen
+        bb = data_limits(x)
     end
+
+    bb
+end
+
+function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
+
+    glyphlayout = x._glyphlayout[]
+
+    if x.space[] == :data
+        bb = FRect3D()
+        for (t, pos, (charorigins, glyphbbs)) in zip(texts, positions, glyphlayout)
+            for (char, charo, glyphbb) in zip(t, charorigins, glyphbbs)
+                # ignore line breaks
+                char in ('\r', '\n') && continue
+                charbb = FRect3D(glyphbb) + charo + to_ndim(Point3f0, pos, 0)
+                if !isfinite(bb)
+                    bb = charbb
+                else
+                    bb = union(bb, charbb)
+                end
+            end
+        end
+    elseif x.space[] == :screen
+        bb = data_limits(x)
+    end
+
     bb
 end
 
