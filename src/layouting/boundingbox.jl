@@ -128,8 +128,7 @@ function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
         for (char, charo, glyphbb) in zip(t, charorigins, glyphbbs)
             # ignore line breaks
             char in ('\r', '\n') && continue
-
-            charbb = FRect3D(glyphbb) + charo + pos
+            charbb = FRect3D(glyphbb) + charo + to_ndim(Point3f0, pos, 0)
             if !isfinite(bb)
                 bb = charbb
             else
