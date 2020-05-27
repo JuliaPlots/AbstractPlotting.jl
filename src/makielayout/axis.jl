@@ -359,287 +359,289 @@ end
 
 using AbstractPlotting: @extract
 
-attrs = axis_attributes().attributes
-p = Scene(camera=cam2d!, scale_plot=false)
-decorations = Dict{Symbol, Any}()
-@extract attrs (
-    title, titlefont, titlesize, titlegap, titlevisible, titlealign,
-    xlabel, ylabel, xlabelcolor, ylabelcolor, xlabelsize, ylabelsize,
-    xlabelvisible, ylabelvisible, xlabelpadding, ylabelpadding,
-    xticklabelsize, xticklabelcolor, yticklabelsize, xticklabelsvisible, yticklabelsvisible,
-    xticksize, yticksize, xticksvisible, yticksvisible,
-    xticklabelspace, yticklabelspace, yticklabelcolor, xticklabelpad, yticklabelpad,
-    xticklabelrotation, yticklabelrotation, xticklabelalign, yticklabelalign,
-    xtickalign, ytickalign, xtickwidth, ytickwidth, xtickcolor, ytickcolor,
-    xpanlock, ypanlock, xzoomlock, yzoomlock,
-    spinewidth, xtrimspine, ytrimspine,
-    xgridvisible, ygridvisible, xgridwidth, ygridwidth, xgridcolor, ygridcolor,
-    xgridstyle, ygridstyle,
-    aspect, halign, valign, xticks, yticks, xtickformat, ytickformat, panbutton,
-    xpankey, ypankey, xzoomkey, yzoomkey,
-    xaxisposition, yaxisposition,
-    bottomspinevisible, leftspinevisible, topspinevisible, rightspinevisible,
-    bottomspinecolor, leftspinecolor, topspinecolor, rightspinecolor,
-    backgroundcolor,
-    xlabelfont, ylabelfont, xticklabelfont, yticklabelfont,
-    flip_ylabel, xreversed, yreversed,
-)
 
-limits = Node(FRect(0, 0, 1000, 1000))
+function axis2d(parent, bbox; kw...)
+    attrs = merge(axis_attributes().attributes, Attributes(kw))
+    
+    parent = Scene(camera=cam2d!, scale_plot=false)
 
-scenearea = limits
+    decorations = Dict{Symbol, Any}()
+    @extract attrs (
+        title, titlefont, titlesize, titlegap, titlevisible, titlealign,
+        xlabel, ylabel, xlabelcolor, ylabelcolor, xlabelsize, ylabelsize,
+        xlabelvisible, ylabelvisible, xlabelpadding, ylabelpadding,
+        xticklabelsize, xticklabelcolor, yticklabelsize, xticklabelsvisible, yticklabelsvisible,
+        xticksize, yticksize, xticksvisible, yticksvisible,
+        xticklabelspace, yticklabelspace, yticklabelcolor, xticklabelpad, yticklabelpad,
+        xticklabelrotation, yticklabelrotation, xticklabelalign, yticklabelalign,
+        xtickalign, ytickalign, xtickwidth, ytickwidth, xtickcolor, ytickcolor,
+        xpanlock, ypanlock, xzoomlock, yzoomlock,
+        spinewidth, xtrimspine, ytrimspine,
+        xgridvisible, ygridvisible, xgridwidth, ygridwidth, xgridcolor, ygridcolor,
+        xgridstyle, ygridstyle,
+        aspect, halign, valign, xticks, yticks, xtickformat, ytickformat, panbutton,
+        xpankey, ypankey, xzoomkey, yzoomkey,
+        xaxisposition, yaxisposition,
+        bottomspinevisible, leftspinevisible, topspinevisible, rightspinevisible,
+        bottomspinecolor, leftspinecolor, topspinecolor, rightspinecolor,
+        backgroundcolor,
+        xlabelfont, ylabelfont, xticklabelfont, yticklabelfont,
+        flip_ylabel, xreversed, yreversed,
+    )
 
-scene = Scene(p, scenearea, raw = true)
+    limits = Node(FRect(0, 0, 1000, 1000))
 
-background = poly!(p, scenearea, color = backgroundcolor, strokewidth = 0, raw = true)[end]
-translate!(background, 0, 0, -100)
-decorations[:background] = background
+    scenearea = limits
 
-block_limit_linking = Node(false)
+    scene = Scene(parent, scenearea, raw = true)
 
-xaxislinks = []
-yaxislinks = []
-protrusions = Node(GridLayoutBase.RectSides{Float32}(0,0,0,0))
-campixel!(scene)
+    background = poly!(parent, scenearea, color = backgroundcolor, strokewidth = 0, raw = true)[end]
+    translate!(background, 0, 0, -100)
+    decorations[:background] = background
 
-xgridnode = Node(Point2f0[])
-xgridlines = linesegments!(
-    parent, xgridnode, linewidth = xgridwidth, show_axis = false, visible = xgridvisible,
-    color = xgridcolor, linestyle = xgridstyle,
-)[end]
-# put gridlines behind the zero plane so they don't overlay plots
-translate!(xgridlines, 0, 0, -10)
-decorations[:xgridlines] = xgridlines
+    block_limit_linking = Node(false)
 
-ygridnode = Node(Point2f0[])
-ygridlines = linesegments!(
-    parent, ygridnode, linewidth = ygridwidth, show_axis = false, visible = ygridvisible,
-    color = ygridcolor, linestyle = ygridstyle,
-)[end]
-# put gridlines behind the zero plane so they don't overlay plots
-translate!(ygridlines, 0, 0, -10)
-decorations[:ygridlines] = ygridlines
+    xaxislinks = []
+    yaxislinks = []
+    protrusions = Node(GridLayoutBase.RectSides{Float32}(0,0,0,0))
+    campixel!(scene)
 
-onany(limits, xreversed, yreversed) do lims, xrev, yrev
+    xgridnode = Node(Point2f0[])
+    xgridlines = linesegments!(
+        parent, xgridnode, linewidth = xgridwidth, show_axis = false, visible = xgridvisible,
+        color = xgridcolor, linestyle = xgridstyle,
+    )[end]
+    # put gridlines behind the zero plane so they don't overlay plots
+    translate!(xgridlines, 0, 0, -10)
+    decorations[:xgridlines] = xgridlines
 
-    nearclip = -10_000f0
-    farclip = 10_000f0
+    ygridnode = Node(Point2f0[])
+    ygridlines = linesegments!(
+        parent, ygridnode, linewidth = ygridwidth, show_axis = false, visible = ygridvisible,
+        color = ygridcolor, linestyle = ygridstyle,
+    )[end]
+    # put gridlines behind the zero plane so they don't overlay plots
+    translate!(ygridlines, 0, 0, -10)
+    decorations[:ygridlines] = ygridlines
 
-    left, bottom = minimum(lims)
-    right, top = maximum(lims)
+    onany(limits, xreversed, yreversed) do lims, xrev, yrev
 
-    leftright = xrev ? (right, left) : (left, right)
-    bottomtop = yrev ? (top, bottom) : (bottom, top)
+        nearclip = -10_000f0
+        farclip = 10_000f0
 
-    projection = AbstractPlotting.orthographicprojection(
-        leftright..., bottomtop..., nearclip, farclip)
-    camera(scene).projection[] = projection
-    camera(scene).projectionview[] = projection
-end
+        left, bottom = minimum(lims)
+        right, top = maximum(lims)
 
-latest_tlimits = Ref(limits[])
-isupdating = Ref(false)
-missedupdate = Ref(false)
+        leftright = xrev ? (right, left) : (left, right)
+        bottomtop = yrev ? (top, bottom) : (bottom, top)
 
-xaxis_endpoints = lift(xaxisposition, scene.px_area) do xaxisposition, area
-    if xaxisposition == :bottom
-        bottomline(FRect2D(area))
-    elseif xaxisposition == :top
-        topline(FRect2D(area))
-    else
-        error("Invalid xaxisposition $xaxisposition")
-    end
-end
-
-yaxis_endpoints = lift(yaxisposition, scene.px_area) do yaxisposition, area
-    if yaxisposition == :left
-        leftline(FRect2D(area))
-    elseif yaxisposition == :right
-        rightline(FRect2D(area))
-    else
-        error("Invalid xaxisposition $xaxisposition")
-    end
-end
-
-xaxis_flipped = lift(x->x == :top, xaxisposition)
-yaxis_flipped = lift(x->x == :right, yaxisposition)
-
-xspinevisible = lift(xaxis_flipped, bottomspinevisible, topspinevisible) do xflip, bv, tv
-    xflip ? tv : bv
-end
-xoppositespinevisible = lift(xaxis_flipped, bottomspinevisible, topspinevisible) do xflip, bv, tv
-    xflip ? bv : tv
-end
-yspinevisible = lift(yaxis_flipped, leftspinevisible, rightspinevisible) do yflip, lv, rv
-    yflip ? rv : lv
-end
-yoppositespinevisible = lift(yaxis_flipped, leftspinevisible, rightspinevisible) do yflip, lv, rv
-    yflip ? lv : rv
-end
-xspinecolor = lift(xaxis_flipped, bottomspinecolor, topspinecolor) do xflip, bc, tc
-    xflip ? tc : bc
-end
-xoppositespinecolor = lift(xaxis_flipped, bottomspinecolor, topspinecolor) do xflip, bc, tc
-    xflip ? bc : tc
-end
-yspinecolor = lift(yaxis_flipped, leftspinecolor, rightspinecolor) do yflip, lc, rc
-    yflip ? rc : lc
-end
-yoppositespinecolor = lift(yaxis_flipped, leftspinecolor, rightspinecolor) do yflip, lc, rc
-    yflip ? lc : rc
-end
-
-xaxis = LineAxis(p, endpoints = xaxis_endpoints, limits = lift(xlimits, limits),
-    flipped = xaxis_flipped, ticklabelrotation = xticklabelrotation,
-    ticklabelalign = xticklabelalign, labelsize = xlabelsize,
-    labelpadding = xlabelpadding, ticklabelpad = xticklabelpad, labelvisible = xlabelvisible,
-    label = xlabel, labelfont = xlabelfont, ticklabelfont = xticklabelfont, ticklabelcolor = xticklabelcolor, labelcolor = xlabelcolor, tickalign = xtickalign,
-    ticklabelspace = xticklabelspace, ticks = xticks, tickformat = xtickformat, ticklabelsvisible = xticklabelsvisible,
-    ticksvisible = xticksvisible, spinevisible = xspinevisible, spinecolor = xspinecolor, spinewidth = spinewidth,
-    ticklabelsize = xticklabelsize, trimspine = xtrimspine, ticksize = xticksize,
-    reversed = xreversed, tickwidth = xtickwidth)
-decorations[:xaxis] = xaxis
-
-yaxis = LineAxis(p, endpoints = yaxis_endpoints, limits = lift(ylimits, limits),
-    flipped = yaxis_flipped, ticklabelrotation = yticklabelrotation,
-    ticklabelalign = yticklabelalign, labelsize = ylabelsize,
-    labelpadding = ylabelpadding, ticklabelpad = yticklabelpad, labelvisible = ylabelvisible,
-    label = ylabel, labelfont = ylabelfont, ticklabelfont = yticklabelfont, ticklabelcolor = yticklabelcolor, labelcolor = ylabelcolor, tickalign = ytickalign,
-    ticklabelspace = yticklabelspace, ticks = yticks, tickformat = ytickformat, ticklabelsvisible = yticklabelsvisible,
-    ticksvisible = yticksvisible, spinevisible = yspinevisible, spinecolor = yspinecolor, spinewidth = spinewidth,
-    trimspine = ytrimspine, ticklabelsize = yticklabelsize, ticksize = yticksize, flip_vertical_label = flip_ylabel, reversed = yreversed, tickwidth = ytickwidth)
-decorations[:yaxis] = yaxis
-
-xoppositelinepoints = lift(scene.px_area, spinewidth, xaxisposition) do r, sw, xaxpos
-    if xaxpos == :top
-        y = bottom(r) - 0.5f0 * sw
-        p1 = Point2(left(r) - sw, y)
-        p2 = Point2(right(r) + sw, y)
-        [p1, p2]
-    else
-        y = top(r) + 0.5f0 * sw
-        p1 = Point2(left(r) - sw, y)
-        p2 = Point2(right(r) + sw, y)
-        [p1, p2]
-    end
-end
-
-yoppositelinepoints = lift(scene.px_area, spinewidth, yaxisposition) do r, sw, yaxpos
-    if yaxpos == :right
-        x = left(r) - 0.5f0 * sw
-        p1 = Point2(x, bottom(r) - sw)
-        p2 = Point2(x, top(r) + sw)
-        [p1, p2]
-    else
-        x = right(r) + 0.5f0 * sw
-        p1 = Point2(x, bottom(r) - sw)
-        p2 = Point2(x, top(r) + sw)
-        [p1, p2]
-    end
-end
-
-xoppositeline = lines!(parent, xoppositelinepoints, linewidth = spinewidth,
-    visible = xoppositespinevisible, color = xoppositespinecolor)[end]
-decorations[:xoppositeline] = xoppositeline
-yoppositeline = lines!(parent, yoppositelinepoints, linewidth = spinewidth,
-    visible = yoppositespinevisible, color = yoppositespinecolor)[end]
-decorations[:yoppositeline] = yoppositeline
-
-on(xaxis.tickpositions) do tickpos
-    pxheight = height(scene.px_area[])
-    offset = xaxisposition[] == :bottom ? pxheight : -pxheight
-    opposite_tickpos = tickpos .+ Ref(Point2f0(0, offset))
-    xgridnode[] = interleave_vectors(tickpos, opposite_tickpos)
-end
-
-on(yaxis.tickpositions) do tickpos
-    pxwidth = width(scene.px_area[])
-    offset = yaxisposition[] == :left ? pxwidth : -pxwidth
-    opposite_tickpos = tickpos .+ Ref(Point2f0(offset, 0))
-    ygridnode[] = interleave_vectors(tickpos, opposite_tickpos)
-end
-
-titlepos = lift(scene.px_area, titlegap, titlealign, xaxisposition, xaxis.protrusion) do a,
-        titlegap, align, xaxisposition, xaxisprotrusion
-
-    x = if align == :center
-        a.origin[1] + a.widths[1] / 2
-    elseif align == :left
-        a.origin[1]
-    elseif align == :right
-        a.origin[1] + a.widths[1]
-    else
-        error("Title align $align not supported.")
+        projection = AbstractPlotting.orthographicprojection(
+            leftright..., bottomtop..., nearclip, farclip)
+        camera(scene).projection[] = projection
+        camera(scene).projectionview[] = projection
     end
 
-    yoffset = top(a) + titlegap + (xaxisposition == :top ? xaxisprotrusion : 0f0)
+    latest_tlimits = Ref(limits[])
+    isupdating = Ref(false)
+    missedupdate = Ref(false)
 
-    Point2(x, yoffset)
-end
+    xaxis_endpoints = lift(xaxisposition, scene.px_area) do xaxisposition, area
+        if xaxisposition == :bottom
+            bottomline(FRect2D(area))
+        elseif xaxisposition == :top
+            topline(FRect2D(area))
+        else
+            error("Invalid xaxisposition $xaxisposition")
+        end
+    end
 
-titlealignnode = lift(titlealign) do align
-    (align, :bottom)
-end
+    yaxis_endpoints = lift(yaxisposition, scene.px_area) do yaxisposition, area
+        if yaxisposition == :left
+            leftline(FRect2D(area))
+        elseif yaxisposition == :right
+            rightline(FRect2D(area))
+        else
+            error("Invalid xaxisposition $xaxisposition")
+        end
+    end
 
-titlet = text!(
-    p, title,
-    position = titlepos,
-    visible = titlevisible,
-    textsize = titlesize,
-    align = titlealignnode,
-    font = titlefont,
-    show_axis=false)[end]
-decorations[:title] = titlet
+    xaxis_flipped = lift(x->x == :top, xaxisposition)
+    yaxis_flipped = lift(x->x == :right, yaxisposition)
 
-function compute_protrusions(title, titlesize, titlegap, titlevisible, spinewidth,
+    xspinevisible = lift(xaxis_flipped, bottomspinevisible, topspinevisible) do xflip, bv, tv
+        xflip ? tv : bv
+    end
+    xoppositespinevisible = lift(xaxis_flipped, bottomspinevisible, topspinevisible) do xflip, bv, tv
+        xflip ? bv : tv
+    end
+    yspinevisible = lift(yaxis_flipped, leftspinevisible, rightspinevisible) do yflip, lv, rv
+        yflip ? rv : lv
+    end
+    yoppositespinevisible = lift(yaxis_flipped, leftspinevisible, rightspinevisible) do yflip, lv, rv
+        yflip ? lv : rv
+    end
+    xspinecolor = lift(xaxis_flipped, bottomspinecolor, topspinecolor) do xflip, bc, tc
+        xflip ? tc : bc
+    end
+    xoppositespinecolor = lift(xaxis_flipped, bottomspinecolor, topspinecolor) do xflip, bc, tc
+        xflip ? bc : tc
+    end
+    yspinecolor = lift(yaxis_flipped, leftspinecolor, rightspinecolor) do yflip, lc, rc
+        yflip ? rc : lc
+    end
+    yoppositespinecolor = lift(yaxis_flipped, leftspinecolor, rightspinecolor) do yflip, lc, rc
+        yflip ? lc : rc
+    end
+
+    xaxis = LineAxis(parent, endpoints = xaxis_endpoints, limits = lift(xlimits, limits),
+        flipped = xaxis_flipped, ticklabelrotation = xticklabelrotation,
+        ticklabelalign = xticklabelalign, labelsize = xlabelsize,
+        labelpadding = xlabelpadding, ticklabelpad = xticklabelpad, labelvisible = xlabelvisible,
+        label = xlabel, labelfont = xlabelfont, ticklabelfont = xticklabelfont, ticklabelcolor = xticklabelcolor, labelcolor = xlabelcolor, tickalign = xtickalign,
+        ticklabelspace = xticklabelspace, ticks = xticks, tickformat = xtickformat, ticklabelsvisible = xticklabelsvisible,
+        ticksvisible = xticksvisible, spinevisible = xspinevisible, spinecolor = xspinecolor, spinewidth = spinewidth,
+        ticklabelsize = xticklabelsize, trimspine = xtrimspine, ticksize = xticksize,
+        reversed = xreversed, tickwidth = xtickwidth)
+    decorations[:xaxis] = xaxis
+
+    yaxis = LineAxis(parent, endpoints = yaxis_endpoints, limits = lift(ylimits, limits),
+        flipped = yaxis_flipped, ticklabelrotation = yticklabelrotation,
+        ticklabelalign = yticklabelalign, labelsize = ylabelsize,
+        labelpadding = ylabelpadding, ticklabelpad = yticklabelpad, labelvisible = ylabelvisible,
+        label = ylabel, labelfont = ylabelfont, ticklabelfont = yticklabelfont, ticklabelcolor = yticklabelcolor, labelcolor = ylabelcolor, tickalign = ytickalign,
+        ticklabelspace = yticklabelspace, ticks = yticks, tickformat = ytickformat, ticklabelsvisible = yticklabelsvisible,
+        ticksvisible = yticksvisible, spinevisible = yspinevisible, spinecolor = yspinecolor, spinewidth = spinewidth,
+        trimspine = ytrimspine, ticklabelsize = yticklabelsize, ticksize = yticksize, flip_vertical_label = flip_ylabel, reversed = yreversed, tickwidth = ytickwidth)
+    decorations[:yaxis] = yaxis
+
+    xoppositelinepoints = lift(scene.px_area, spinewidth, xaxisposition) do r, sw, xaxpos
+        if xaxpos == :top
+            y = bottom(r) - 0.5f0 * sw
+            p1 = Point2(left(r) - sw, y)
+            p2 = Point2(right(r) + sw, y)
+            [p1, p2]
+        else
+            y = top(r) + 0.5f0 * sw
+            p1 = Point2(left(r) - sw, y)
+            p2 = Point2(right(r) + sw, y)
+            [p1, p2]
+        end
+    end
+
+    yoppositelinepoints = lift(scene.px_area, spinewidth, yaxisposition) do r, sw, yaxpos
+        if yaxpos == :right
+            x = left(r) - 0.5f0 * sw
+            p1 = Point2(x, bottom(r) - sw)
+            p2 = Point2(x, top(r) + sw)
+            [p1, p2]
+        else
+            x = right(r) + 0.5f0 * sw
+            p1 = Point2(x, bottom(r) - sw)
+            p2 = Point2(x, top(r) + sw)
+            [p1, p2]
+        end
+    end
+
+    xoppositeline = lines!(parent, xoppositelinepoints, linewidth = spinewidth,
+        visible = xoppositespinevisible, color = xoppositespinecolor)[end]
+    decorations[:xoppositeline] = xoppositeline
+    yoppositeline = lines!(parent, yoppositelinepoints, linewidth = spinewidth,
+        visible = yoppositespinevisible, color = yoppositespinecolor)[end]
+    decorations[:yoppositeline] = yoppositeline
+
+    on(xaxis.tickpositions) do tickpos
+        pxheight = height(scene.px_area[])
+        offset = xaxisposition[] == :bottom ? pxheight : -pxheight
+        opposite_tickpos = tickpos .+ Ref(Point2f0(0, offset))
+        xgridnode[] = interleave_vectors(tickpos, opposite_tickpos)
+    end
+
+    on(yaxis.tickpositions) do tickpos
+        pxwidth = width(scene.px_area[])
+        offset = yaxisposition[] == :left ? pxwidth : -pxwidth
+        opposite_tickpos = tickpos .+ Ref(Point2f0(offset, 0))
+        ygridnode[] = interleave_vectors(tickpos, opposite_tickpos)
+    end
+
+    titlepos = lift(scene.px_area, titlegap, titlealign, xaxisposition, xaxis.protrusion) do a,
+            titlegap, align, xaxisposition, xaxisprotrusion
+
+        x = if align == :center
+            a.origin[1] + a.widths[1] / 2
+        elseif align == :left
+            a.origin[1]
+        elseif align == :right
+            a.origin[1] + a.widths[1]
+        else
+            error("Title align $align not supported.")
+        end
+
+        yoffset = top(a) + titlegap + (xaxisposition == :top ? xaxisprotrusion : 0f0)
+
+        Point2(x, yoffset)
+    end
+
+    titlealignnode = lift(titlealign) do align
+        (align, :bottom)
+    end
+
+    titlet = text!(
+        parent, title,
+        position = titlepos,
+        visible = titlevisible,
+        textsize = titlesize,
+        align = titlealignnode,
+        font = titlefont,
+        show_axis=false)[end]
+    decorations[:title] = titlet
+
+    function compute_protrusions(title, titlesize, titlegap, titlevisible, spinewidth,
+                topspinevisible, bottomspinevisible, leftspinevisible, rightspinevisible,
+                xaxisprotrusion, yaxisprotrusion, xaxisposition, yaxisposition)
+
+        left, right, bottom, top = 0f0, 0f0, 0f0, 0f0
+
+        if xaxisposition == :bottom
+            topspinevisible && (top = spinewidth)
+            bottom = xaxisprotrusion
+        else
+            bottomspinevisible && (bottom = spinewidth)
+            top = xaxisprotrusion
+        end
+
+        titlespace = if !titlevisible || iswhitespace(title)
+            0f0
+        else
+            boundingbox(titlet).widths[2] + titlegap
+        end
+        top += titlespace
+
+        if yaxisposition == :left
+            rightspinevisible && (right = spinewidth)
+            left = yaxisprotrusion
+        else
+            leftspinevisible && (left = spinewidth)
+            right = yaxisprotrusion
+        end
+
+        GridLayoutBase.RectSides{Float32}(left, right, bottom, top)
+    end
+
+    onany(title, titlesize, titlegap, titlevisible, spinewidth,
             topspinevisible, bottomspinevisible, leftspinevisible, rightspinevisible,
-            xaxisprotrusion, yaxisprotrusion, xaxisposition, yaxisposition)
-
-    left, right, bottom, top = 0f0, 0f0, 0f0, 0f0
-
-    if xaxisposition == :bottom
-        topspinevisible && (top = spinewidth)
-        bottom = xaxisprotrusion
-    else
-        bottomspinevisible && (bottom = spinewidth)
-        top = xaxisprotrusion
+            xaxis.protrusion, yaxis.protrusion, xaxisposition, yaxisposition) do args...
+        protrusions[] = compute_protrusions(args...)
     end
 
-    titlespace = if !titlevisible || iswhitespace(title)
-        0f0
-    else
-        boundingbox(titlet).widths[2] + titlegap
-    end
-    top += titlespace
+    # trigger first protrusions with one of the observables
+    title[] = title[]
 
-    if yaxisposition == :left
-        rightspinevisible && (right = spinewidth)
-        left = yaxisprotrusion
-    else
-        leftspinevisible && (left = spinewidth)
-        right = yaxisprotrusion
-    end
+    # trigger a layout update whenever the protrusions change
+    # on(protrusions) do prot
+    #     needs_update[] = true
+    # end
 
-    GridLayoutBase.RectSides{Float32}(left, right, bottom, top)
+    # trigger bboxnode so the axis layouts itself even if not connected to a
+    # layout
+    return parent
 end
-
-onany(title, titlesize, titlegap, titlevisible, spinewidth,
-        topspinevisible, bottomspinevisible, leftspinevisible, rightspinevisible,
-        xaxis.protrusion, yaxis.protrusion, xaxisposition, yaxisposition) do args...
-    protrusions[] = compute_protrusions(args...)
-end
-
-# trigger first protrusions with one of the observables
-title[] = title[]
-
-# trigger a layout update whenever the protrusions change
-# on(protrusions) do prot
-#     needs_update[] = true
-# end
-
-# trigger bboxnode so the axis layouts itself even if not connected to a
-# layout
-
-scene
-
-p
