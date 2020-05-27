@@ -1,5 +1,9 @@
 using AbstractPlotting
 using AbstractPlotting: automatic
+using GridLayoutBase
+using GridLayoutBase: Inside
+using Observables: onany
+using Observables
 
 """
 Take a sequence of variable definitions with docstrings above each and turn
@@ -358,14 +362,65 @@ function axis_attributes()
 end
 
 using AbstractPlotting: @extract
+const Optional{T} = Union{Nothing, T}
+
+struct AxisAspect
+    aspect::Float32
+end
+
+struct DataAspect end
+
+function sceneareanode!(finalbbox, limits, aspect)
+
+    scenearea = Node(IRect(0, 0, 100, 100))
+
+    onany(finalbbox, limits, aspect) do bbox, limits, aspect
+
+        w = width(bbox)
+        h = height(bbox)
+        # as = mw / mh
+        as = w / h
+        mw, mh = w, h
 
 
-function axis2d(parent, bbox; kw...)
+        if aspect isa AxisAspect
+            aspect = aspect.aspect
+        elseif aspect isa DataAspect
+            aspect = limits.widths[1] / limits.widths[2]
+        end
+
+        if !isnothing(aspect)
+            if as >= aspect
+                # too wide
+                mw *= aspect / as
+            else
+                # too high
+                mh *= as / aspect
+            end
+        end
+
+        restw = w - mw
+        resth = h - mh
+
+        # l = left(bbox) + alignment[1] * restw
+        # b = bottom(bbox) + alignment[2] * resth
+        l = left(bbox) + 0.5f0 * restw
+        b = bottom(bbox) + 0.5f0 * resth
+
+        newbbox = BBox(l, l + mw, b, b + mh)
+
+        # only update scene if pixel positions change
+        new_scenearea = IRect2D(newbbox)
+        if new_scenearea != scenearea[]
+            scenearea[] = new_scenearea
+        end
+    end
+
+    scenearea
+end
+
+function laxis2d(parent; bbox=nothing, kw...)
     attrs = merge(axis_attributes().attributes, Attributes(kw))
-    
-    parent = Scene(camera=cam2d!, scale_plot=false)
-
-    decorations = Dict{Symbol, Any}()
     @extract attrs (
         title, titlefont, titlesize, titlegap, titlevisible, titlealign,
         xlabel, ylabel, xlabelcolor, ylabelcolor, xlabelsize, ylabelsize,
@@ -388,14 +443,21 @@ function axis2d(parent, bbox; kw...)
         xlabelfont, ylabelfont, xticklabelfont, yticklabelfont,
         flip_ylabel, xreversed, yreversed,
     )
+    decorations = Dict{Symbol, Any}()
 
-    limits = Node(FRect(0, 0, 1000, 1000))
+    protrusions = Node(GridLayoutBase.RectSides{Float32}(0,0,0,0))
+    layoutobservables = LayoutObservables(Nothing, attrs.width, attrs.height,
+        attrs.tellwidth, attrs.tellheight, halign, valign, attrs.alignmode;
+        suggestedbbox = bbox, protrusions = protrusions)
 
-    scenearea = limits
+    limits = Node(FRect(0, 0, 100, 100))
+    scenearea = sceneareanode!(layoutobservables.computedbbox, limits, aspect)
 
-    scene = Scene(parent, scenearea, raw = true)
+    scene = Scene(parent, scenearea; raw=true)
+    campixel!(scene)
 
-    background = poly!(parent, scenearea, color = backgroundcolor, strokewidth = 0, raw = true)[end]
+    background = mesh!(parent, scenearea; color=backgroundcolor, raw=true, shading=false)[end]
+
     translate!(background, 0, 0, -100)
     decorations[:background] = background
 
@@ -403,8 +465,8 @@ function axis2d(parent, bbox; kw...)
 
     xaxislinks = []
     yaxislinks = []
+
     protrusions = Node(GridLayoutBase.RectSides{Float32}(0,0,0,0))
-    campixel!(scene)
 
     xgridnode = Node(Point2f0[])
     xgridlines = linesegments!(
@@ -635,7 +697,7 @@ function axis2d(parent, bbox; kw...)
 
     # trigger first protrusions with one of the observables
     title[] = title[]
-
+    layoutobservables.suggestedbbox[] = layoutobservables.suggestedbbox[]
     # trigger a layout update whenever the protrusions change
     # on(protrusions) do prot
     #     needs_update[] = true
@@ -645,3 +707,7 @@ function axis2d(parent, bbox; kw...)
     # layout
     return parent
 end
+
+using GLMakie
+scene = Scene(; camera=campixel!)
+laxis2d(scene, bbox=FRect2D(60, 60, 300, 300))

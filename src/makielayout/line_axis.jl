@@ -1,12 +1,17 @@
 using Showoff
-scene = Scene(camera=cam2d!, scale_plot=false)
 
-LineAxis(scene)
-scene
-linesegments!(scene, boundingbox(scene), raw=true);
+bottomleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), bottom(bbox))
+topleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), top(bbox))
+bottomright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), bottom(bbox))
+topright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), top(bbox))
+
+topline(bbox::FRect2D) = (topleft(bbox), topright(bbox))
+bottomline(bbox::FRect2D) = (bottomleft(bbox), bottomright(bbox))
+leftline(bbox::FRect2D) = (bottomleft(bbox), topleft(bbox))
+rightline(bbox::FRect2D) = (bottomright(bbox), topright(bbox))
 
 function line_axis_attributes()
-    Attributes(
+    return Attributes(
         endpoints = (Point2f0(0, 0), Point2f0(100, 0)),
         trimspine = false,
         limits = (0, 540),
@@ -38,16 +43,6 @@ function line_axis_attributes()
         ticklabelfont = "Dejavue Sans",
         spinevisible = true
     )
-bottomleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), bottom(bbox))
-topleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), top(bbox))
-bottomright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), bottom(bbox))
-topright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), top(bbox))
-
-topline(bbox::FRect2D) = (topleft(bbox), topright(bbox))
-bottomline(bbox::FRect2D) = (bottomleft(bbox), bottomright(bbox))
-leftline(bbox::FRect2D) = (bottomleft(bbox), topleft(bbox))
-rightline(bbox::FRect2D) = (bottomright(bbox), topright(bbox))
-
 end
 
 function LineAxis(parent::Scene; kwargs...)
