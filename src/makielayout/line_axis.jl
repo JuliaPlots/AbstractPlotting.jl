@@ -1,14 +1,4 @@
-using Showoff
 
-bottomleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), bottom(bbox))
-topleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), top(bbox))
-bottomright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), bottom(bbox))
-topright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), top(bbox))
-
-topline(bbox::FRect2D) = (topleft(bbox), topright(bbox))
-bottomline(bbox::FRect2D) = (bottomleft(bbox), bottomright(bbox))
-leftline(bbox::FRect2D) = (bottomleft(bbox), topleft(bbox))
-rightline(bbox::FRect2D) = (bottomright(bbox), topright(bbox))
 
 function line_axis_attributes()
     return Attributes(
@@ -591,7 +581,6 @@ function locateticks(vmin, vmax, width_px, ideal_tick_distance::Float32, _intege
     locateticks(vmin, vmax, n_ideal, _integer, _min_n_ticks)
 end
 
-
 function interleave_vectors(vec1::Vector{T}, vec2::Vector{T}) where T
     n = length(vec1)
     @assert n == length(vec2)
@@ -602,42 +591,5 @@ function interleave_vectors(vec1::Vector{T}, vec2::Vector{T}) where T
         vec[k + 1] = vec1[i]
         vec[k + 2] = vec2[i]
     end
-    vec
+    return vec
 end
-
-
-left(rect::Rect{2}) = minimum(rect)[1]
-right(rect::Rect{2}) = maximum(rect)[1]
-bottom(rect::Rect{2}) = minimum(rect)[2]
-top(rect::Rect{2}) = maximum(rect)[2]
-
-
-bottomleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), bottom(bbox))
-topleft(bbox::Rect2D{T}) where T = Point2{T}(left(bbox), top(bbox))
-bottomright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), bottom(bbox))
-topright(bbox::Rect2D{T}) where T = Point2{T}(right(bbox), top(bbox))
-
-topline(bbox::FRect2D) = (topleft(bbox), topright(bbox))
-bottomline(bbox::FRect2D) = (bottomleft(bbox), bottomright(bbox))
-leftline(bbox::FRect2D) = (bottomleft(bbox), topleft(bbox))
-rightline(bbox::FRect2D) = (bottomright(bbox), topright(bbox))
-
-
-function shrinkbymargin(rect, margin)
-    IRect((rect.origin .+ margin), (rect.widths .- 2 .* margin))
-end
-
-function AbstractPlotting.limits(r::Rect{N, T}) where {N, T}
-    ows = r.origin .+ r.widths
-    ntuple(i -> (r.origin[i], ows[i]), N)
-    # tuple(zip(r.origin, ows)...)
-end
-
-function AbstractPlotting.limits(r::Rect{N, T}, dim::Int) where {N, T}
-    o = r.origin[dim]
-    w = r.widths[dim]
-    (o, o + w)
-end
-
-xlimits(r::Rect{2}) = AbstractPlotting.limits(r, 1)
-ylimits(r::Rect{2}) = AbstractPlotting.limits(r, 2)
