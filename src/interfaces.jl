@@ -203,7 +203,7 @@ $(ATTRIBUTES)
         color = :black,
         colormap = :viridis,
         marker = Circle,
-        markersize = 0.1,
+        markersize = 60,
 
         strokecolor = RGBA(0, 0, 0, 0),
         strokewidth = 0.0,
