@@ -149,8 +149,9 @@ The `kwargs...` are propagated into `lines!` which plots the selected rectangle.
 function select_rectangle(scene; kwargs...)
     key = Mouse.left
     waspressed = Node(false)
-    rect = Node(FRect(0, 0, 1, 1)) # plotted rectangle
-    rect_ret = Node(FRect(0, 0, 1, 1)) # returned rectangle
+    lims = scene_limits(scene)
+    rect = Node(Rect{2, Float32}(lims))     # plotted rectangle
+    rect_ret = Node(Rect{2, Float32}(lims)) # returned rectangle
 
     # Create an initially hidden rectangle
     plotted_rect = lines!(
@@ -169,11 +170,11 @@ function select_rectangle(scene; kwargs...)
                 rect[] = FRect(mini, mp - mini)
             end
         else
-            if drag == Mouse.up && waspressed[] # User has selected the rectangle
+            if drag == Mouse.up && waspressed[] # user has selected the rectangle
                 waspressed[] = false
                 r = absrect(rect[])
                 w, h = widths(r)
-                if w > 0.0 && h > 0.0 # Ensure that the rectangle has non0 size.
+                if w > 0.0 && h > 0.0 # Ensure that the rectangle has nonzero size.
                     rect_ret[] = r
                 end
             end
@@ -201,8 +202,12 @@ The `kwargs...` are propagated into `lines!` which plots the selected line.
 function select_line(scene; kwargs...)
     key = Mouse.left
     waspressed = Node(false)
-    line = Node([Point2f0(0,0), Point2f0(1,1)])
-    line_ret = Node([Point2f0(0,0), Point2f0(1,1)])
+    lims = scene_limits(scene)
+    start = Point2f0(origin(lims)[1:2])
+    width = Point2f0(widths(lims)[1:2])
+
+    line = Node([start, start .+ width])
+    line_ret = Node([start, start .+ width])
     # Create an initially hidden  arrow
     plotted_line = lines!(
         scene, line; visible = false, color = RGBAf0(0.1, 0.1, 0.8, 0.5),
@@ -251,10 +256,11 @@ The `kwargs...` are propagated into `scatter!` which plots the selected point.
 """
 function select_point(scene; kwargs...)
     key = Mouse.left
+    lims = scene_limits(scene)
     pmarker = Circle(Point2f0(0, 0), Float32(1))
     waspressed = Node(false)
-    point = Node([Point2f0(0,0)])
-    point_ret = Node(Point2f0(0,0))
+    point = Node([Point2f0(origin(lims)[1:2])])
+    point_ret = Node(Point2f0(origin(lims)[1:2]))
     # Create an initially hidden  arrow
     plotted_point = scatter!(
         scene, point; visible = false, marker = pmarker, markersize = 20px,
