@@ -300,15 +300,6 @@ function playbutton(f, scene, range, rate = (1/30))
     b
 end
 
-
-struct Popup
-    scene::Scene
-    open::Node
-    position::Node{Point2f0}
-    width::Node{Point2f0}
-end
-
-
 function textslider(
         range, label, scene = Scene(camera = campixel!);
         start = first(range), textalign = (:left, :center), textpos = (0, 50),
@@ -327,6 +318,46 @@ function textslider(
         start = start, textcolor = textcolor, kwargs...
     )[end]
     scene, s[:value]
+end
+
+
+struct Popup
+    scene::Scene
+    visible::Node
+    position::Node{Point2f0}
+    width::Node{Point2f0}
+end
+
+function Popup(parent::Scene, initial_position, initial_width)
+    pos_n = Node(Point2f0(position))
+    pos_cam = lift(pos_n, camera(parent).projectionview) do pos, pview
+        to_world(parent, Point2f0(pos))
+    end
+    width_n = Node(Point2f0(width))
+    hwidth = 30
+    harea = lift(pos_cam, width_n) do p, wh
+        IRect(1, wh[2] - hwidth + 1, wh[1] - 2, hwidth - 2)
+    end
+    parea = lift(pos_cam, width_n) do p, wh
+        IRect(p, Point2f0(wh) .- Point2f0(0, hwidth - 1))
+    end
+    vis = Node(false)
+    popup = Scene(
+        parent, parea,
+        visible = vis, raw = true, camera = campixel!,
+        backgroundcolor = RGBAf0(0.95, 0.95, 0.95, 1.0), clear = true
+    )
+    header = Scene(
+        popup, harea,
+        backgroundcolor = RGBAf0(0.9, 0.90, 0.90, 1.0), visible = vis,
+        raw = true, camera = campixel!, clear = true
+    )
+    initialized = Ref(false)
+    but = button!(header, "x", strokewidth = 1.0, position=(1,1), dimensions=(26, 26)) do click
+        vis[] = !vis[]
+        return
+    end
+    return Popup(popup, vis, pos_n, width_n)
 end
 
 
@@ -357,38 +388,6 @@ function sample_color(f, ui, colormesh, v)
         end
         return
     end
-end
-
-function popup(parent, position, width)
-    pos_n = Node(Point2f0(position))
-    pos_cam = lift(pos_n, camera(parent).projectionview) do pos, pview
-        to_world(parent, Point2f0(pos))
-    end
-    width_n = Node(Point2f0(width))
-    hwidth = 30
-    harea = lift(pos_cam, width_n) do p, wh
-        IRect(1, wh[2] - hwidth + 1, wh[1] - 2, hwidth - 2)
-    end
-    parea = lift(pos_cam, width_n) do p, wh
-        IRect(p, Point2f0(wh) .- Point2f0(0, hwidth - 1))
-    end
-    vis = Node(false)
-    popup = Scene(
-        parent, parea,
-        visible = vis, raw = true, camera = campixel!,
-        backgroundcolor = RGBAf0(0.95, 0.95, 0.95, 1.0), clear = true
-    )
-    header = Scene(
-        popup, harea,
-        backgroundcolor = RGBAf0(0.9, 0.90, 0.90, 1.0), visible = vis,
-        raw = true, camera = campixel!, clear = true
-    )
-    initialized = Ref(false)
-    but = button!(header, "x", strokewidth = 1.0, position=(1,1), dimensions=(26, 26)) do click
-        vis[] = !vis[]
-        return
-    end
-    return Popup(popup, vis, pos_n, width_n)
 end
 
 """
