@@ -1,5 +1,5 @@
 
-function Transformation(transform_func=identity)
+function Transformation(transform_func::Observable)
     flip = Node((false, false, false))
     scale = Node(Vec3f0(1))
     scale = lift(flip, scale) do f, s
@@ -26,9 +26,11 @@ function Transformation(transform_func=identity)
         model,
         flip,
         align,
-        Node{Any}(transform_func)
+        transform_func
     )
 end
+
+Transformation(transform_func=identity) = Transformation(Observable{Any}(transform_func))
 
 function Transformation(scene::SceneLike)
     flip = Node((false, false, false))
