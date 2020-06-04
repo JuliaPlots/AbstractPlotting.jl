@@ -99,6 +99,8 @@ export AbstractPlot, Combined, Atomic, Axis
 
 # Theming, working with Plots
 export Attributes, Theme, attributes, default_theme, theme, set_theme!
+
+# Convenience functions
 export title
 export xlims!, ylims!, zlims!
 export xlabel!, ylabel!, zlabel!
@@ -109,12 +111,15 @@ export xticks!, yticks!, zticks!
 export xtickrotation, ytickrotation, ztickrotation
 export xtickrotation!, ytickrotation!, ztickrotation!
 
-# Node/Signal related
+# Observable related
 export Node, Observable, lift, map_once, to_value, on, @lift
 
 # utilities and macros
-export @recipe, @extract, @extractvalue, @key_str, @get_attribute
+export @recipe, @extract, @extractvalue, @key_str, @get_attribute, @colorant_str
 export broadcast_foreach, to_vector, replace_automatic!
+
+# custom operators
+export (..)
 
 # conversion infrastructure
 export @key_str, convert_attribute, convert_arguments
@@ -122,6 +127,7 @@ export to_color, to_colormap, to_rotation, to_font, to_align, to_textsize
 export to_ndim, Reverse
 
 # Transformations
+export Transformation
 export translated, translate!, transform!, scale!, rotate!, grid, Accum, Absolute
 export boundingbox, insertplots!, center!, translation, scene_limits
 export hbox, vbox
@@ -161,13 +167,21 @@ export Billboard
 
 # Reexports of
 # Color/Vector types convenient for 3d/2d graphics
+# Rotation types and quaternions
 export Quaternion, Quaternionf0, qrotation
-export RGBAf0, RGBf0, VecTypes, RealVector, FRect, FRect2D, IRect2D
-export FRect3D, IRect3D, Rect3D, Transformation
-export IRect, FRect, Rect, Rect2D, Sphere, Circle
-export Vec4f0, Vec3f0, Vec2f0, Point4f0, Point3f0, Point2f0
+# Color types
+export RGBAf0, RGBf0, RGBA, RGB
+# Vector types (static arrays, real vectors, ntuples, etc)
+export VecTypes, RealVector
+# rectangles - F is Float32, I is Int,
+export Rect, Rect2D, Rect3D, FRect, FRect2D, FRect3D, IRect, IRect2D, IRect3D,
+# other geometry types
+export Sphere, Circle
+# vector and point types
+export Vecf0, Vec4f0, Vec3f0, Vec2f0, Pointf0, Point4f0, Point3f0, Point2f0
 export Vec, Vec2, Vec3, Vec4, Point, Point2, Point3, Point4
-export (..), GLNormalUVMesh
+# mesh types
+export GLNormalUVMesh
 
 
 
@@ -178,9 +192,13 @@ export PlotList, PlotSpec
 
 export plot!, plot
 
-
-export Stepper, step!, replay_events, record_events, RecordEvents, record, VideoStream
+# plot-stepping functionality
+export Stepper, step!
+# event recording
+export replay_events, record_events, RecordEvents
+# animation
 export VideoStream, recordframe!, record
+# saving/output
 export save
 
 # colormap stuff from PlotUtils, and showgradients
