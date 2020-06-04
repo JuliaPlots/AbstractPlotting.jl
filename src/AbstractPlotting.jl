@@ -174,7 +174,7 @@ export RGBAf0, RGBf0, RGBA, RGB
 # Vector types (static arrays, real vectors, ntuples, etc)
 export VecTypes, RealVector
 # rectangles - F is Float32, I is Int,
-export Rect, Rect2D, Rect3D, FRect, FRect2D, FRect3D, IRect, IRect2D, IRect3D,
+export Rect, Rect2D, Rect3D, FRect, FRect2D, FRect3D, IRect, IRect2D, IRect3D
 # other geometry types
 export Sphere, Circle
 # vector and point types
