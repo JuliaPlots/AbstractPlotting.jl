@@ -127,6 +127,33 @@ function boundingbox(x::Text, text::String, position::VecTypes)
     bb
 end
 
+function boundingbox(x::Text, text::String, positions::AbstractArray)
+
+    glyphorigins, glyphbbs = x._glyphlayout[]
+
+    if x.space[] == :data
+
+        bb = FRect3D()
+        for (pos, char, charo, glyphbb) in zip(positions, x[1][], glyphorigins, glyphbbs)
+            # ignore line breaks
+            char in ('\r', '\n') && continue
+
+            # TODO: Correct BBox
+            charbb = FRect3D(glyphbb) + charo + to_ndim(Point3f0, pos, 0)
+            if !isfinite(bb)
+                bb = charbb
+            else
+                bb = union(bb, charbb)
+            end
+        end
+
+    elseif x.space[] == :screen
+        bb = data_limits(x)
+    end
+
+    bb
+end
+
 function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
 
     glyphlayout = x._glyphlayout[]
