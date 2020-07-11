@@ -60,6 +60,7 @@ include("lobjects/llegend.jl")
 include("lobjects/lobject.jl")
 include("lobjects/lscene.jl")
 include("lobjects/lmenu.jl")
+include("lobjects/leditbox.jl")
 
 export LAxis
 export LSlider
@@ -72,6 +73,7 @@ export LLegend
 export LegendEntry, MarkerElement, PolyElement, LineElement, LegendElement
 export LScene
 export LMenu
+export LEditBox
 export linkxaxes!, linkyaxes!, linkaxes!
 export AxisAspect, DataAspect
 export autolimits!, limits!

@@ -746,3 +746,121 @@ $(let
 end)
 """
 LScene
+
+
+DEFAULT_KEYBOARD_LAYOUT = let
+    # Key => (base, shift-mod, altgr-mod)
+    Key = AbstractPlotting.Keyboard
+
+    Dict(
+        Key.q => ('q', 'Q'),
+        Key.w => ('w', 'W'),
+        Key.e => ('e', 'E'),
+        Key.r => ('r', 'R'),
+        Key.t => ('t', 'T'),
+        Key.z => ('z', 'Z'),
+        Key.u => ('u', 'U'),
+        Key.i => ('i', 'I'),
+        Key.o => ('o', 'O'),
+        Key.p => ('p', 'P'),
+        Key.a => ('a', 'A'),
+        Key.s => ('s', 'S'),
+        Key.d => ('d', 'D'),
+        Key.f => ('f', 'F'),
+        Key.g => ('g', 'G'),
+        Key.h => ('h', 'H'),
+        Key.j => ('j', 'J'),
+        Key.k => ('k', 'K'),
+        Key.l => ('l', 'L'),
+        Key.y => ('y', 'Y'),
+        Key.x => ('x', 'X'),
+        Key.c => ('c', 'C'),
+        Key.v => ('v', 'V'),
+        Key.b => ('b', 'B'),
+        Key.n => ('n', 'N'),
+        Key.m => ('m', 'M'),
+        Key.grave_accent => ('`', '~', '`'),
+        Key._1 => ('1', '!', '¹'), # Technically ¹²³ should not be here
+        Key._2 => ('2', '@', '²'),
+        Key._3 => ('3', '#', '³'),
+        Key._4 => ('4', '$'),
+        Key._5 => ('5', '%'),
+        Key._6 => ('6', '^'),
+        Key._7 => ('7', '&'),
+        Key._8 => ('8', '*'),
+        Key._9 => ('9', '('),
+        Key._0 => ('0', ')'),
+        Key.minus => ('-', '_', '-'),
+        Key.equal => ('=', '+'),
+        Key.left_bracket => ('[', '{'),
+        Key.right_bracket => (']', '}'),
+        Key.semicolon => (';', ':'),
+        Key.apostrophe => ('\'', '"'),
+        Key.backslash => ('\\', '|'),
+        Key.comma => (',', '<'),
+        Key.period => ('.', '>'),
+        Key.slash => ('/', '?'),
+        Key.space => (' ')
+    )
+end
+
+function default_attributes(::Type{LEditBox}, scene)
+    attrs, docdict, defaultdict = @documented_attributes begin
+        "The horizontal alignment of the edit box in its suggested boundingbox"
+        halign = :center
+        "The vertical alignment of the edit box in its suggested boundingbox"
+        valign = :center
+        "The extra space added to the sides of the edit box text's boundingbox."
+        padding = (10f0, 10f0, 10f0, 10f0)
+        "The font size of the edit box text."
+        textsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The text of the edit box."
+        text = "EditBox"
+        "The font family of the edit box."
+        font = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The width setting of the edit box."
+        width = Auto()
+        "The height setting of the edit box."
+        height = Auto()
+        "Controls if the parent layout can adjust to this element's width"
+        tellwidth = true
+        "Controls if the parent layout can adjust to this element's height"
+        tellheight = true
+        "The line width of the edit box border."
+        strokewidth = 5f0
+        "The color of the edit box border."
+        strokecolor = RGBf0(0.7, 0.7, 0.7)
+        "The color of the border when the mouse hovers over the edit box."
+        strokecolor_hover = RGBf0(0.4, 0.4, 0.4)
+        "The color of the border when the edit box is focused."
+        strokecolor_active = :black
+        "The color of the edit box."
+        boxcolor = :white
+        "The color of the text."
+        textcolor = :black
+        "The color of the text when the mouse hovers over the edit box."
+        textcolor_hover = :black
+        "The color of the text when the edit box is focused."
+        textcolor_active = :black
+        "The color of the edit box when it is focused."
+        boxcolor_active = :white
+        "The color of the edit box when the mouse hovers over the edit box."
+        boxcolor_hover = :white
+        "The align mode of the edit box in its parent GridLayout."
+        alignmode = Inside()
+        "Is the edit box currently focused?"
+        focused = false
+        "A dictionary mapping keys to characters. Each element may contain `(normal, shift-mod, alt-mod)` characters."
+        keyboard_layout = DEFAULT_KEYBOARD_LAYOUT
+    end
+    (attributes = attrs, documentation = docdict, defaults = defaultdict)
+end
+
+@doc """
+LEditBox has the following attributes:
+$(let
+    _, docs, defaults = default_attributes(LEditBox, nothing)
+    docvarstring(docs, defaults)
+end)
+"""
+LEditBox

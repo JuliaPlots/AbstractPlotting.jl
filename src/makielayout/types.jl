@@ -145,3 +145,10 @@ struct LScene <: AbstractPlotting.AbstractScene
     attributes::Attributes
     layoutobservables::MakieLayout.LayoutObservables
 end
+
+struct LEditBox <: LObject
+    parent::Scene
+    layoutobservables::LayoutObservables
+    attributes::Attributes
+    decorations::Dict{Symbol, Any}
+end
