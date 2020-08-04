@@ -1,3 +1,14 @@
+function LColorbar(parent::Scene, heatmap::Union{Heatmap, Image}; kwargs...)
+
+    LColorbar(parent;
+        colormap = heatmap.colormap,
+        limits = heatmap.colorrange,
+        highclip = heatmap.highclip,
+        lowclip = heatmap.lowclip,
+        kwargs...
+    )
+end
+
 function LColorbar(parent::Scene, plot::AbstractPlot; kwargs...)
 
     LColorbar(parent;
@@ -23,7 +34,7 @@ function LColorbar(parent::Scene; bbox = nothing, kwargs...)
         rightspinevisible, leftspinevisible, bottomspinevisible, topspinecolor,
         leftspinecolor, rightspinecolor, bottomspinecolor, colormap, limits,
         halign, valign, vertical, flipaxisposition, ticklabelalign, flip_vertical_label,
-        nsteps)
+        nsteps, highclip, lowclip)
 
     decorations = Dict{Symbol, Any}()
 
@@ -33,32 +44,39 @@ function LColorbar(parent::Scene; bbox = nothing, kwargs...)
 
     framebox = layoutobservables.computedbbox
 
-    colorlinepoints = lift(framebox, nsteps) do fb, nsteps
-        fbw = fb.widths[1]
-        fbh = fb.widths[2]
+    highclip_tri_visible = lift(x -> !(isnothing(x) || to_color(x) == to_color(:transparent)), highclip)
+    lowclip_tri_visible = lift(x -> !(isnothing(x) || to_color(x) == to_color(:transparent)), lowclip)
 
+    tri_heights = lift(highclip_tri_visible, lowclip_tri_visible, framebox) do hv, lv, box
         if vertical[]
-            [Point2f0(0.5f0 * fbw, y * fbh) for y in LinRange(0f0, 1f0, nsteps)]
+            (lv * width(box), hv * width(box))
         else
-            [Point2f0(x * fbw, 0.5f0 * fbh) for x in LinRange(0f0, 1f0, nsteps)]
+            (lv * height(box), hv * height(box))
+        end .* sin(pi/3)
+    end
+
+    barsize = lift(tri_heights) do heights
+        if vertical[]
+            max(1, height(framebox[]) - sum(heights))
+        else
+            max(1, width(framebox[]) - sum(heights))
         end
     end
 
-    linewidth = lift(framebox) do fb
-        fbw = fb.widths[1]
-        fbh = fb.widths[2]
-
+    barbox = lift(barsize) do sz
+        fbox = framebox[]
         if vertical[]
-            fbw
+            BBox(left(fbox), right(fbox), bottom(fbox) + tri_heights[][1], top(fbox) - tri_heights[][2])
         else
-            fbh
+            BBox(left(fbox) + tri_heights[][1], right(fbox) - tri_heights[][2], bottom(fbox), top(fbox))
         end
     end
 
-    xrange = lift(framebox) do fb
+
+    xrange = lift(barbox) do fb
         range(left(fb), right(fb), length = 2)
     end
-    yrange = lift(framebox) do fb
+    yrange = lift(barbox) do fb
         range(bottom(fb), top(fb), length = 2)
     end
 
@@ -73,16 +91,70 @@ function LColorbar(parent::Scene; bbox = nothing, kwargs...)
     hm = heatmap!(parent, xrange, yrange, colorcells, colormap = colormap, raw = true)[end]
     decorations[:heatmap] = hm
 
-    ab, al, ar, at = axislines!(
-        parent, framebox, spinewidth, topspinevisible, rightspinevisible,
-        leftspinevisible, bottomspinevisible, topspinecolor, leftspinecolor,
-        rightspinecolor, bottomspinecolor)
-    decorations[:topspine] = at
-    decorations[:leftspine] = al
-    decorations[:rightspine] = ar
-    decorations[:bottomspine] = ab
+    
+    highclip_tri = lift(barbox, spinewidth) do box, spinewidth
+        # if vertical[]
+            lb, rb = topline(box)
+            l = lb
+            r = rb
+            t = ((l .+ r) ./ 2) .+ Point2f0(0, sqrt(sum((r .- l) .^ 2)) * sin(pi/3))
+            [l, r, t]
+        # end
+    end
 
-    axispoints = lift(framebox, vertical, flipaxisposition) do scenearea,
+    highclip_tri_color = Observables.map(highclip) do hc
+        to_color(isnothing(hc) ? :transparent : hc)
+    end
+
+    highclip_visible = lift(x -> !(isnothing(x) || to_color(x) == to_color(:transparent)), highclip)
+
+    highclip_tri_poly = poly!(parent, highclip_tri, color = highclip_tri_color,
+        strokecolor = :transparent,
+        visible = highclip_visible)[end]
+
+    decorations[:highclip] = highclip_tri_poly
+
+
+    lowclip_tri = lift(barbox, spinewidth) do box, spinewidth
+        # if vertical[]
+            lb, rb = bottomline(box)
+            l = lb
+            r = rb
+            t = ((l .+ r) ./ 2) .- Point2f0(0, sqrt(sum((r .- l) .^ 2)) * sin(pi/3))
+            [l, r, t]
+        # end
+    end
+
+    lowclip_tri_color = Observables.map(lowclip) do lc
+        to_color(isnothing(lc) ? :transparent : lc)
+    end
+
+    lowclip_visible = lift(x -> !(isnothing(x) || to_color(x) == to_color(:transparent)), lowclip)
+
+    lowclip_tri_poly = poly!(parent, lowclip_tri, color = lowclip_tri_color,
+        strokecolor = :transparent,
+        visible = lowclip_visible)[end]
+
+    decorations[:lowclip] = lowclip_tri_poly
+
+
+    borderpoints = lift(barbox, highclip_visible, lowclip_visible) do bb, hcv, lcv
+
+        points = [bottomright(bb), topright(bb)]
+        if hcv
+            push!(points, highclip_tri[][3])
+        end
+        append!(points, [topleft(bb), bottomleft(bb)])
+        if lcv
+            push!(points, lowclip_tri[][3])
+        end
+        push!(points, bottomright(bb))
+        points
+    end
+
+    decorations[:spines] = lines!(parent, borderpoints, linewidth = spinewidth, color = topspinecolor)[end]
+
+    axispoints = lift(barbox, vertical, flipaxisposition) do scenearea,
             vertical, flipaxisposition
 
         if vertical
