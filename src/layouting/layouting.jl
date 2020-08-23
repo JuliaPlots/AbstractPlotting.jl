@@ -28,12 +28,29 @@ function attribute_per_char(string, attribute)
     error("A vector of attributes with $(length(attribute)) elements was given but this fits neither the length of '$string' ($(length(string))) nor the number of words ($(n_words))")
 end
 
+"""
+    Glyphlayout
+
+Stores information about the glyphs in a string that had a layout calculated for them.
+`origins` are the character origins relative to the layout's [0,0] point (the alignment)
+and rotation anchor). `bboxes` are the glyph bounding boxes relative to the glyphs' own
+origins. `hadvances` are the horizontal advance values, those are mostly needed for interactive
+purposes, for example to display a cursor at the right offset from a space character.
+"""
 struct Glyphlayout
     origins::Vector{Point3f0}
     bboxes::Vector{FRect2D}
     hadvances::Vector{Float32}
 end
 
+"""
+    layout_text(
+        string::AbstractString, textsize::Union{AbstractVector, Number},
+        font, align, rotation, model, justification, lineheight
+    )
+
+Compute a Glyphlayout for a `string` given textsize, font, align, rotation, model, justification, and lineheight.
+"""
 function layout_text(
         string::AbstractString, textsize::Union{AbstractVector, Number},
         font, align, rotation, model, justification, lineheight
@@ -58,7 +75,7 @@ function layout_text(
 end
 
 """
-    glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification)
+    glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification, rotation)
 
 Calculate the positions for each glyph in a string given a certain font, font size, alignment, etc.
 This layout in text coordinates, relative to the anchor point [0,0] can then be translated and
@@ -146,7 +163,7 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
 
     charorigins = [Ref(rotation) .* Point3f0.(xsgroup, y, 0) for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
 
-    # concantenate all line-related vectors into one. fill info for '\n' positions with NaN data, doesn't matter
+    # concantenate all line-related vectors into one. fill info for '\n' chars with NaN data, doesn't matter
     charorigins_vec = padded_vcat(charorigins, Point3f0(NaN))
     height_insensitive_bbs_vec = padded_vcat(height_insensitive_bbs, FRect2D())
     hadvances_vec = padded_vcat(hadvances, NaN)
