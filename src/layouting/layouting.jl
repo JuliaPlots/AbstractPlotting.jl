@@ -169,9 +169,9 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
         va = if valign isa Number
             Float32(valign)
         elseif valign == :top
-            0f0
+            1f0
         elseif valign == :bottom
-            1.0f0
+            0f0
         elseif valign == :center
             0.5f0
         else
