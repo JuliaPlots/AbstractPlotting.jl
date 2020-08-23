@@ -279,7 +279,6 @@ function plot!(plot::Text)
     onany(plot[1], plot.position, plot.textsize, plot.font, plot.align, plot.rotation, plot.model, plot.justification, plot.lineheight) do str, pos, ts, f, al, rot, mo, jus, lh
         ts = to_textsize(ts)
         f = to_font(f)
-        al = to_align(al)
         rot = to_rotation(rot)
 
         if str isa String

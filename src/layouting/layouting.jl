@@ -56,7 +56,6 @@ function layout_text(
         font, align, rotation, model, justification, lineheight
     )
 
-    offset_vec = to_align(align)
     ft_font = to_font(font)
     rscale = to_textsize(textsize)
     rot = to_rotation(rotation)
@@ -68,8 +67,8 @@ function layout_text(
     fontperchar = attribute_per_char(string, ft_font)
     textsizeperchar = attribute_per_char(string, rscale)
 
-    glyphlayout = glyph_positions(string, fontperchar, textsizeperchar, offset_vec[1],
-        offset_vec[2], lineheight, justification, rot)
+    glyphlayout = glyph_positions(string, fontperchar, textsizeperchar, align[1],
+        align[2], lineheight, justification, rot)
 
     return glyphlayout
 end
@@ -84,6 +83,18 @@ rotated to wherever it is needed in the plot.
 function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification, rotation)
 
     isempty(str) && return Vec2f0[]
+
+    halign = if halign isa Number
+        Float32(halign)
+    elseif halign == :left
+        0.0f0
+    elseif halign == :center
+        0.5f0
+    elseif halign == :right
+        1.0f0
+    else
+        error("Invalid halign $halign. Valid values are <:Number, :left, :center and :right.")
+    end
 
     char_font_scale = collect(zip([c for c in str], font_per_char, fontscale_px))
 
@@ -152,7 +163,23 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
 
     overall_height = first_line_ascender - ys[end] - last_line_descender
 
-    ys_aligned = ys .- first_line_ascender .+ (1 - valign) .* overall_height
+    ys_aligned = if valign == :baseline
+        ys .- first_line_ascender .+ overall_height .+ last_line_descender
+    else
+        va = if valign isa Number
+            Float32(valign)
+        elseif valign == :top
+            0f0
+        elseif valign == :bottom
+            1.0f0
+        elseif valign == :center
+            0.5f0
+        else
+            error("Invalid valign $valign. Valid values are <:Number, :bottom, :baseline, :top, and :center.")
+        end
+
+        ys .- first_line_ascender .+ (1 - va) .* overall_height
+    end
 
     height_insensitive_bbs = map(cfs_groups, extents) do group, extent
         map(group, extent) do (char, font, scale), ext
