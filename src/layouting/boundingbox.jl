@@ -101,7 +101,8 @@ function boundingbox(x::Text, text::String, position::VecTypes)
     # aoffsetp = whp .* to_ndim(Vec3f0, align, 0f0)
     # return FRect3D(minimum(bb) .+ aoffset .- aoffsetp, whp)
 
-    glyphorigins, glyphbbs = x._glyphlayout[]
+    glyphlayout = x._glyphlayout[]
+    glyphorigins, glyphbbs = glyphlayout.origins, glyphlayout.bboxes
     pos = to_ndim(Point3f0, x.position[], 0)
 
     if x.space[] == :data
@@ -156,15 +157,14 @@ end
 
 function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
 
-    glyphlayout = x._glyphlayout[]
+    layouts = x._glyphlayout[]
 
     if x.space[] == :data
         bb = FRect3D()
-        for (t, pos, (charorigins, glyphbbs)) in zip(texts, positions, glyphlayout)
-            for (char, charo, glyphbb) in zip(t, charorigins, glyphbbs)
-                # ignore line breaks
-                char in ('\r', '\n') && continue
-                charbb = FRect3D(glyphbb) + charo + to_ndim(Point3f0, pos, 0)
+        for (text, pos, layout) in zip(texts, positions, layouts)
+            for (char, origin, bbox) in zip(text, layout.origins, layout.bboxes)
+                char == '\n' && continue
+                charbb = FRect3D(bbox) + origin + to_ndim(Point3f0, pos, 0)
                 if !isfinite(bb)
                     bb = charbb
                 else

@@ -28,6 +28,11 @@ function attribute_per_char(string, attribute)
     error("A vector of attributes with $(length(attribute)) elements was given but this fits neither the length of '$string' ($(length(string))) nor the number of words ($(n_words))")
 end
 
+struct Glyphlayout
+    origins::Vector{Point3f0}
+    bboxes::Vector{FRect2D}
+    hadvances::Vector{Float32}
+end
 
 function layout_text(
         string::AbstractString, textsize::Union{AbstractVector, Number},
@@ -46,35 +51,20 @@ function layout_text(
     fontperchar = attribute_per_char(string, ft_font)
     textsizeperchar = attribute_per_char(string, rscale)
 
-    glyphpos, height_insensitive_bbs = glyph_positions(string, fontperchar, textsizeperchar, offset_vec[1],
-        offset_vec[2], lineheight, justification)
+    glyphlayout = glyph_positions(string, fontperchar, textsizeperchar, offset_vec[1],
+        offset_vec[2], lineheight, justification, rot)
 
-    positions = Point3f0[]
-    bbs = FRect2D[]
-
-    for (i, (group, hi_bbs)) in enumerate(zip(glyphpos, height_insensitive_bbs))
-        for (gp, hi_bb) in zip(group, hi_bbs)
-            p = to_ndim(Point3f0, gp, 0)
-            # rotate around the alignment point (this is now at [0, 0, 0])
-            p_rotated = rot * p
-            push!(positions, p_rotated)
-            push!(bbs, hi_bb)
-        end
-
-        # between groups, push a zero point for newline, this should be ignored later
-        # and serves only as a placeholder to make iteration over the string easier
-        if i < length(glyphpos)
-            push!(positions, Point3f0(0, 0, 0))
-            # just take a random extent, just as a filler
-            # easier than constructing one
-            push!(bbs, hi_bbs[1])
-        end
-    end
-
-    return positions, bbs
+    return glyphlayout
 end
 
-function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification)
+"""
+    glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification)
+
+Calculate the positions for each glyph in a string given a certain font, font size, alignment, etc.
+This layout in text coordinates, relative to the anchor point [0,0] can then be translated and
+rotated to wherever it is needed in the plot.
+"""
+function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification, rotation)
 
     isempty(str) && return Vec2f0[]
 
@@ -92,6 +82,11 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
     extents = map(cfs_groups) do group
         # TODO: scale as SVector not Number
         [get_extent(font, char) .* SVector(scale, scale) for (char, font, scale) in group]
+    end
+
+    # we need the advances for correct cursor placement
+    hadvances = map(extents) do extgroup
+        hadvance.(extgroup)
     end
 
     # add or subtract kernings?
@@ -149,9 +144,30 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
         end
     end
 
+    charorigins = [Ref(rotation) .* Point3f0.(xsgroup, y, 0) for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
 
-    charorigins = [Vec2.(xsgroup, y) for (xsgroup, y) in zip(xs_aligned, ys_aligned)]
-    return charorigins, height_insensitive_bbs
+    # concantenate all line-related vectors into one. fill info for '\n' positions with NaN data, doesn't matter
+    charorigins_vec = padded_vcat(charorigins, Point3f0(NaN))
+    height_insensitive_bbs_vec = padded_vcat(height_insensitive_bbs, FRect2D())
+    hadvances_vec = padded_vcat(hadvances, NaN)
+
+    return Glyphlayout(charorigins_vec, height_insensitive_bbs_vec, hadvances_vec)
+end
+
+# function to concatenate vectors with a value between every pair
+function padded_vcat(arrs::AbstractVector{T}, fillvalue) where T <: AbstractVector{S} where S
+    n = sum(length.(arrs))
+    arr = fill(convert(S, fillvalue), n + length(arrs) - 1)
+
+    counter = 1
+    @inbounds for a in arrs
+        for v in a
+            arr[counter] = v
+            counter += 1
+        end
+        counter += 1
+    end
+    arr
 end
 
 function alignment2num(x::Symbol)
