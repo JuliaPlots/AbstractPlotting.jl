@@ -37,7 +37,7 @@ end
 function layout_text(
         string::AbstractString, textsize::Union{AbstractVector, Number},
         font, align, rotation, model, justification, lineheight
-    ) where {N, T}
+    )
 
     offset_vec = to_align(align)
     ft_font = to_font(font)
