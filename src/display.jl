@@ -115,32 +115,7 @@ isijulia() = isdefined(Main, :IJulia) && isdefined(Main.IJulia, :clear_output)
 isvscode() = isdefined(Main, :VSCodeServer)
 
 # fallback show when no backend is selected
-function backend_show(backend, io::IO, ::MIME"text/plain", scene::Scene)
-    if isempty(available_backends)
-        @warn """Printing Scene as text. You see this because you haven't loaded any backend (GLMakie, CairoMakie, WGLMakie),
-        or you loaded GLMakie, but it didn't build correctly. In the latter case,
-        try `]build GLMakie` and watch out for any warnings.
-        """
-    end
-    if !use_display[] && isvscode()
-        # do nothing
-    elseif !use_display[] && !isempty(available_backends)
-        plotpane = has_juno_plotpane()
-        if plotpane !== nothing && !plotpane
-            # we want to display as inline!, we are in Juno, but the plotpane is disabled
-            @warn """Showing scene as inline with Plotpane disabled. This happens because `AbstractPlotting.inline!(true)` is set,
-            while `Atom.PlotPaneEnabled[]` is false. Either enable the plotpane, or set inline to false!"""
-        else
-            if plotpane === nothing && !isijulia()
-                @warn """Showing scene as text. This happens because `AbstractPlotting.inline!(true)` is set.
-                This needs to be false to show a plot in a window when in the REPL."""
-            elseif plotpane === nothing || !plotpane
-                 @warn """Showing scene as text. This happens because `AbstractPlotting.inline!(true)` is set.
-                This needs to be false to show a plot in a window when in the REPL."""
-            end
-        end
-    end
-    
+function backend_show(backend, io::IO, ::MIME"text/plain", scene::Scene)  
     print(io, scene)
     return
 end
@@ -154,6 +129,29 @@ function Base.show(io::IO, plot::Atomic)
 end
 
 function Base.show(io::IO, scene::Scene)
+
+    if isempty(available_backends)
+        @warn """Printing Scene as text. You see this because you haven't loaded any backend (GLMakie, CairoMakie, WGLMakie),
+        or you loaded GLMakie, but it didn't build correctly. In the latter case,
+        try `]build GLMakie` and watch out for any warnings.
+        """
+    else
+        plotpane = has_juno_plotpane()
+        if plotpane !== nothing && !plotpane
+            # we want to display as inline!, we are in Juno, but the plotpane is disabled
+            @warn """Showing scene as inline with Juno plot pane disabled. This happens because `AbstractPlotting.inline!(true)` is set,
+            while `Atom.PlotPaneEnabled[]` is false. Either enable the plot pane, or set inline to false!"""
+        else
+            if use_display[]
+                @warn """Showing scene as text. `AbstractPlotting.inline!(false)` is set.
+                If you expected a window to open, this could possibly be a backend bug."""
+            else
+                @warn """Showing scene as text. `AbstractPlotting.inline!(true)` is set.
+                This needs to be false to show a plot in a window when in the REPL."""
+            end
+        end
+    end
+
     println(io, "Scene ($(size(scene, 1))px, $(size(scene, 2))px):")
 
     print(io, "  $(length(scene.plots)) Plot$(_plural_s(scene.plots))")
