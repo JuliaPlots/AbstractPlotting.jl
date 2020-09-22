@@ -338,7 +338,7 @@ theme(x::AbstractPlot, key) = x.attributes[key]
 theme(::Nothing, key::Symbol) = current_default_theme()[key]
 
 Base.push!(scene::Combined, subscene) = nothing # Combined plots add themselves uppon creation
-function Base.push!(scene::Scene, plot::AbstractPlot)
+function Base.push!(scene::Scene, @nospecialize(plot::AbstractPlot))
     push!(scene.plots, plot)
     plot isa Combined || (plot.parent[] = scene)
     if !scene.raw[]

@@ -38,6 +38,7 @@ struct SurfaceLike <: ConversionTrait end
 conversion_trait(::Type{<: Union{Surface, Heatmap, Image}}) = SurfaceLike()
 
 function convert_arguments(T::PlotFunc, args...; kw...)
+    @nospecialize
     ct = conversion_trait(T)
     try
         convert_arguments(ct, args...; kw...)
@@ -568,6 +569,7 @@ function convert_arguments(P::PlotFunc, r::AbstractVector, f::Function)
 end
 
 function convert_arguments(P::PlotFunc, i::AbstractInterval, f::Function)
+    @nospecialize
     x, y = PlotUtils.adapted_grid(f, endpoints(i))
     ptype = plottype(P, Lines)
     to_plotspec(ptype, convert_arguments(ptype, x, y))

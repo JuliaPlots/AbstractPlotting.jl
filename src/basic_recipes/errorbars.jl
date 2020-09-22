@@ -54,7 +54,7 @@ function _plot_errorbars!(plot, xys, low, high)
     whiskers = lift(linesegpairs, scene.camera.projectionview,
         scene.camera.pixel_space, whiskerwidth) do pairs, _, _, whiskerwidth
 
-        endpoints = [p for pair in pairs for p in pair]
+        endpoints = [p for pair in pairs for p in pair]  # TODO precompile?
 
         screenendpoints = scene_to_screen(endpoints, scene)
 

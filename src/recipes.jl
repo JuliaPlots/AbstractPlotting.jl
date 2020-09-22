@@ -9,10 +9,12 @@ The `Core.@__doc__` macro transfers the docstring given to the Recipe into the f
 function default_plot_signatures(funcname, funcname!, PlotType)
     quote
         Core.@__doc__ function ($funcname)(args...; attributes...)
+            @nospecialize
             plot($PlotType, args...; attributes...)
         end
 
         Core.@__doc__ function ($funcname!)(args...; attributes...)
+            @nospecialize
             plot!($PlotType, args...; attributes...)
         end
     end
@@ -126,6 +128,7 @@ macro recipe(theme_func, Tsym::Symbol, args::Symbol...)
     funcname! = esc(Symbol("$(funcname_sym)!"))
     PlotType = esc(Tsym)
     funcname = esc(funcname_sym)
+    # TODO: use @nospecialize in the ::Type arguments (but have to distenangle from the esc)
     expr = quote
         $(funcname)() = not_implemented_for($funcname)
         const $(PlotType){$(esc(:ArgType))} = Combined{$funcname, $(esc(:ArgType))}

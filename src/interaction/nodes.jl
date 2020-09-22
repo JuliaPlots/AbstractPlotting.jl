@@ -5,6 +5,7 @@ function lift(
         init = f(to_value(o1), to_value.(rest)...), typ = typeof(init),
         name = :node # name ignored for now
     )
+    @nospecialize
     result = Observable{typ}(init)
     map!(f, result, o1, rest...)
 end

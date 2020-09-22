@@ -385,6 +385,7 @@ apply for return type
     (args...,)
 """
 function apply_convert!(P, attributes::Attributes, x::Tuple)
+    @nospecialize
     return (plottype(P, x...), x)
 end
 
@@ -402,6 +403,7 @@ function apply_convert!(P, attributes::Attributes, x::PlotSpec{S}) where S
 end
 
 function seperate_tuple(args::Node{<: NTuple{N, Any}}) where N
+    @nospecialize
     ntuple(N) do i
         lift(args) do x
             if i <= length(x)
@@ -435,6 +437,7 @@ function plot(scene::Scene, plot::AbstractPlot)
 end
 
 function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::Attributes, input, args) where Typ
+    @nospecialize
     # The argument type of the final plot object is the assumened to stay constant after
     # argument conversion. This might not always hold, but it simplifies
     # things quite a bit
@@ -543,6 +546,7 @@ const PlotFunc = Union{Type{Any}, Type{<: AbstractPlot}}
 # non-mutating, without positional attributes
 
 function plot(P::PlotFunc, args...; kw_attributes...)
+    @nospecialize
     attributes = Attributes(kw_attributes)
     plot(P, attributes, args...)
 end
@@ -550,6 +554,7 @@ end
 # with positional attributes
 
 function plot(P::PlotFunc, attrs::Attributes, args...; kw_attributes...)
+    @nospecialize
     attributes = merge!(Attributes(kw_attributes), attrs)
     scene_attributes = extract_scene_attributes!(attributes)
     scene = Scene(; scene_attributes...)
@@ -559,6 +564,7 @@ end
 # mutating, without positional attributes
 
 function plot!(P::PlotFunc, scene::SceneLike, args...; kw_attributes...)
+    @nospecialize
     attributes = Attributes(kw_attributes)
     plot!(scene, P, attributes, args...)
 end
@@ -566,12 +572,14 @@ end
 # without scenelike, use current scene
 
 function plot!(P::PlotFunc, args...; kw_attributes...)
+    @nospecialize
     plot!(P, current_scene(), args...; kw_attributes...)
 end
 
 # with positional attributes
 
 function plot!(P::PlotFunc, scene::SceneLike, attrs::Attributes, args...; kw_attributes...)
+    @nospecialize
     attributes = merge!(Attributes(kw_attributes), attrs)
     plot!(scene, P, attributes, args...)
 end
@@ -592,6 +600,7 @@ plotfunc(::Combined{F}) where F = F
 Main plotting signatures that plot/plot! route to if no Plot Type is given
 """
 function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, args...; kw_attributes...)
+    @nospecialize
     attributes = merge!(Attributes(kw_attributes), attributes)
     argvalues = to_value.(args)
     PreType = plottype(P, argvalues...)
@@ -678,7 +687,8 @@ function extract_scene_attributes!(attributes)
     return result
 end
 
-function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, input::NTuple{N, Node}, args::Node) where {N}
+function plot!(scene::SceneLike, P::PlotFunc, attributes::Attributes, input::Tuple{Vararg{Node}}, args::Node)
+    @nospecialize
     # create "empty" plot type - empty meaning containing no plots, just attributes + arguments
     scene_attributes = extract_scene_attributes!(attributes)
     plot_object = P(scene, copy(attributes), input, args)

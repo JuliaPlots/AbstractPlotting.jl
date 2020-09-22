@@ -107,6 +107,7 @@ function to_line_segments(polygon::AbstractVector{<: VecTypes})
 end
 
 function plot!(plot::Poly{<: Tuple{<: Union{Polygon, AbstractVector{<: PolyElements}}}})
+    @nospecialize
     geometries = plot[1]
     meshes = lift(poly_convert, geometries)
     mesh!(plot, meshes;
@@ -399,7 +400,7 @@ function convert_arguments(::Type{<: Annotations},
     end,)
 end
 
-function plot!(plot::Annotations)
+function plot!(@nospecialize(plot::Annotations))
     sargs = (
         plot.model, plot.font,
         plot[1],
@@ -419,10 +420,12 @@ function plot!(plot::Annotations)
     ).plots[end]
 
     onany(sargs...) do model, pfonts, text_pos, args...
+        # TODO precompile?
         io = IOBuffer();
         empty!(combinedpos); empty!(colors); empty!(textsize); empty!(fonts); empty!(rotations)
         broadcast_foreach(1:length(text_pos), to_font(pfonts), text_pos, args...) do idx, f,
                 (text, startpos), color, tsize, alignment, rotation, justification, lineheight
+            # TODO this is a huge inference bottleneck, nearly 1s. Would be great to split this out and precompile it.
             c = to_color(color)
             rot = to_rotation(rotation)
             pos = layout_text(text, startpos, tsize, f, alignment, rot, model, justification, lineheight)
@@ -771,6 +774,7 @@ end
 
 
 function plot!(plot::T) where T <: Union{Contour, Contour3d}
+    @nospecialize
     x, y, z = plot[1:3]
     if to_value(plot[:fillrange])
         plot[:interpolate] = true
@@ -1138,6 +1142,7 @@ end
 
 function plot!(p::StreamPlot)
     data = lift(p.f, p.limits, p.gridsize, p.stepsize, p.maxsteps, p.density) do f, limits, resolution, stepsize, maxsteps, density
+        # TODO precompile?
         P = if applicable(f, Point2f0(0)) || applicable(f, Point3f0(0))
             Point
         else

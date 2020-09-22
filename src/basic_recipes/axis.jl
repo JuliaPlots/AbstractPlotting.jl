@@ -264,6 +264,7 @@ function calculated_attributes!(::Type{<: Union{Axis2D, Axis3D}}, plot)
     ticks = plot.ticks
     args = (plot.padding, plot[1], ticks.ranges, ticks.labels, ticks.formatter)
     ticks[:ranges_labels] = lift(args...) do pad, lims, ranges, labels, formatter
+        # TODO precompile?
         limit_widths = map(x-> x[2] - x[1], lims)
         pad = (limit_widths .* pad)
         # pad the drawn limits and use them as the ranges
@@ -382,6 +383,7 @@ function draw_titles(
         textcolor, textsize, rotation, align, font,
         title
     )
+    @nospecialize
 
     tickspace_x = maximum(map(yticks) do tick
         str = last(tick)
@@ -462,6 +464,7 @@ function draw_axis2d(
         ti_labels,
         ti_textcolor, ti_textsize, ti_rotation, ti_align, ti_font, ti_title
     )
+    @nospecialize
     xyrange, labels = xyrange_labels
     start!(textbuffer); start!(frame_linebuffer); foreach(start!, grid_linebuffer)
     foreach(start!, tickmarks_linebuffer)
@@ -602,6 +605,7 @@ to3tuple(x::Tuple{Any, Any, Any}) = x
 to3tuple(x) = ntuple(i-> x, Val(3))
 
 function draw_axis3d(textbuffer, linebuffer, limits, ranges_labels, args...)
+    @nospecialize
     # make sure we extend all args to 3D
     ranges, labels = ranges_labels
     args3d = to3tuple.(args)

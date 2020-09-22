@@ -17,11 +17,12 @@ function plot!(plot::Violin)
     width, side, trim, show_median = plot[:width], plot[:side], plot[:trim], plot[:show_median]
 
     signals = lift(plot[1], plot[2], width, side, trim, show_median) do x, y, bw, vside, trim, show_median
+        # TODO: would be lovely to precompile this
         vertices = Vector{Point2f0}[]
         lines = Pair{Point2f0, Point2f0}[]
         for (key, idxs) in StructArrays.finduniquesorted(x)
             v = view(y, idxs)
-            
+
             spec = (x = key, kde = density(v; trim = trim), median = median(v))
             min, max = extrema_nan(spec.kde.density)
             scale = 0.5*bw/max

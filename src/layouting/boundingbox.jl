@@ -154,6 +154,7 @@ function boundingbox(
         # the boundingbox slightly changes size in each frame (in MakieLayout mostly)
         use_vertical_dimensions_from_font = true
     )
+    @nospecialize
     atlas = get_texture_atlas()
     N = length(text)
     ctext_state = iterate(text)

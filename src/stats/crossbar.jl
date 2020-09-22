@@ -1,4 +1,4 @@
-#= 
+#=
 S. Axen implementation from https://github.com/JuliaPlots/StatsMakie.jl/blob/master/src/recipes/crossbar.jl#L22
 The StatMakie.jl package is licensed under the MIT "Expat" License:
     Copyright (c) 2018: Pietro Vertechi. =#
@@ -53,6 +53,7 @@ function AbstractPlotting.plot!(plot::CrossBar)
         plot[4],
         args...,
     ) do x, y, ymin, ymax, bw, show_notch, nmin, nmax, nw, orientation
+        # TODO precompile this?
         show_notch = show_notch && (nmin !== automatic && nmax !== automatic)
 
         # for horizontal crossbars just flip all components

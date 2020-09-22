@@ -171,6 +171,7 @@ function LLegend(
     end
 
     on(entry_groups) do entry_groups
+        # TODO: precompile?
         # first delete all existing labels and patches
 
         for t in titletexts
@@ -412,7 +413,7 @@ one content element. A content element can be an `AbstractPlot`, an array of
 `legendelements` method is defined.
 """
 function LLegend(scene,
-        contents::AbstractArray,
+        @nospecialize(contents::AbstractArray),
         labels::AbstractArray{String},
         title::Optional{String} = nothing;
         kwargs...)

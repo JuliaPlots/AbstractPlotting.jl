@@ -5,7 +5,7 @@ function data_limits(x)
     error("No datalimits for $(typeof(x)) and $(argtypes(x))")
 end
 
-function data_limits(x::Atomic)
+function data_limits(@nospecialize(x::Atomic))
     isempty(x.plots) ? atomic_limits(x) : data_limits(x.plots)
 end
 
