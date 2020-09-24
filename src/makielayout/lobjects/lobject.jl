@@ -9,12 +9,20 @@ end
 reportedsizenode(layoutable::Layoutable) = layoutable.layoutobservables.reportedsize
 protrusionnode(layoutable::Layoutable) = layoutable.layoutobservables.protrusions
 
-
-function Base.getproperty(layoutable::T, s::Symbol) where T <: Layoutable
-    if s in fieldnames(T)
-        getfield(layoutable, s)
-    else
-        layoutable.attributes[s]
+# Define `getproperty` for each Layoutable so that inference succeeds for the fields via constant propagation
+for L in Any[Any[GridLayout, LAxis]; subtypes(LObject)]
+    (L === LText || L === LToggle) && continue  # defined elsewhere
+    # The final `else` is for attribute lookup
+    ex = :(return getfield(layoutable, :attributes)[s])
+    for (fn, ft) in zip(fieldnames(L), fieldtypes(L))
+        fnq = QuoteNode(fn)
+        ex = Expr(:elseif, :(s === $fnq), :(return getfield(layoutable, $fnq)::$ft), ex)
+    end
+    ex.head = :if   # mutate the head to `if` rather than `ifelse`
+    @eval begin
+        function Base.getproperty(layoutable::$L, s::Symbol)
+            $ex
+        end
     end
 end
 

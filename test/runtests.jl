@@ -24,6 +24,9 @@ using MeshIO, FileIO, AbstractPlotting.MakieLayout
     me = layout[end + 1, :] = LMenu(scene, options=["one", "two", "three"])
     tb = layout[end + 1, :] = LTextbox(scene)
     @test true
+
+    getscene(x) = x.scene
+    @test @inferred(getscene(ax)) isa Scene
 end
 
 @testset "Minimal AbstractPlotting tests" begin
