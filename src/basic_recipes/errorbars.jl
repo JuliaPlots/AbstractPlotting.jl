@@ -54,10 +54,12 @@ function _plot_errorbars!(plot, xys, low, high)
     end
 
     linesegpairs = lift(xys, low, high, is_in_y_direction) do xys, low, high, is_in_y_direction
-
-        [(xy .+ f_if(is_in_y_direction, reverse, Point2f0(-lo, 0)),
-          xy .+ f_if(is_in_y_direction, reverse, Point2f0( hi, 0)),)
-                for (xy, lo, hi) in zip(xys, low, high)]
+        map(1:min(length(xys), length(low), length(high))) do i
+            (
+                xys[i] .+ f_if(is_in_y_direction, reverse, Point2f0(-low[i], 0)),
+                xys[i] .+ f_if(is_in_y_direction, reverse, Point2f0(high[i], 0)),
+            )
+        end
     end
 
     scene = plot.parent
