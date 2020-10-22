@@ -146,7 +146,8 @@ rectangle has area > 0.
 
 The `kwargs...` are propagated into `lines!` which plots the selected rectangle.
 """
-function select_rectangle(scene; strokewidth = 3.0, kwargs...)
+function select_rectangle(scene; strokewidth = 3.0, yzoomlock=false,
+								 xzoomlock=false, kwargs...)
     key = Mouse.left
     waspressed = Node(false)
     rect = Node(FRect(0, 0, 1, 1)) # plotted rectangle
@@ -160,13 +161,26 @@ function select_rectangle(scene; strokewidth = 3.0, kwargs...)
     on(events(scene).mousedrag) do drag
         if ispressed(scene, key) && is_mouseinside(scene)
             mp = mouseposition(scene)
+
+			# get the width of 1px
+			pxw1 = to_world(scene, Point2f0(1.0, 1.0))
+			pxw2 = to_world(scene, Point2f0(2.0, 2.0))
+			px2w = pxw2-pxw1
+
             if drag == Mouse.down
                 waspressed[] = true
                 plotted_rect[:visible] = true # start displaying
                 rect[] = FRect(mp, 0.0, 0.0)
             elseif drag == Mouse.pressed
                 mini = minimum(rect[])
-                rect[] = FRect(mini, mp - mini)
+				if yzoomlock
+					ww = Point2f0(mp[1] - mini[1], px2w[2])
+				elseif xzoomlock
+					ww = Point2f0(px2w[1], mp[2] - mini[2])
+				else
+					ww = mp - mini
+				end
+                rect[] = FRect(mini, ww)
             end
         else
             if drag == Mouse.up && waspressed[] # User has selected the rectangle
