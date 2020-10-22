@@ -730,9 +730,21 @@ function add_zoom!(ax::LAxis)
     end
 
     # Also support rubber band selection
-    rect = select_rectangle(scene)
+	rect = select_rectangle(scene;yzoomlock=yzoomlock[], xzoomlock=xzoomlock[])
     on(rect) do r
-        tlimits[] = r
+		xorigin = tlimits[].origin[1]
+		yorigin = tlimits[].origin[2]
+
+		xwidth = tlimits[].widths[1]
+		ywidth = tlimits[].widths[2]
+
+		newxwidth = xzoomlock[] ? xwidth : r.widths[1]
+		newywidth = yzoomlock[] ? ywidth : r.widths[2]
+
+		newxorigin = xzoomlock[] ? xorigin : r.origin[1]
+		newyorigin = yzoomlock[] ? yorigin : r.origin[2]
+
+		tlimits[] = FRect(newxorigin, newyorigin, newxwidth, newywidth)
     end
 end
 
