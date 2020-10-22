@@ -1,6 +1,6 @@
-authors = ["Simon Danisch", "Julius Krumbiegel"]
 name = "AbstractPlotting"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
+authors = ["Simon Danisch", "Julius Krumbiegel"]
 version = "0.13.0"
 
 [deps]
@@ -68,6 +68,7 @@ Packing = "0.4"
 PlotUtils = "1"
 Showoff = "0.3"
 SignedDistanceFields = "0.4"
+StableRNGs = "1.0"
 StaticArrays = "0.12"
 StatsBase = "0.31, 0.32, 0.33"
 StructArrays = "0.3.0, 0.4"
