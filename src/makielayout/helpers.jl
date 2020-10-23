@@ -319,7 +319,7 @@ function Base.delete!(lobject::Union{LObject, LAxis})
         remove_element(d)
     end
 
-    if hasfield(typeof(lobject), :scene)
+    if Base.hasfield(typeof(lobject), :scene)
         delete_scene!(lobject.scene)
     end
 
