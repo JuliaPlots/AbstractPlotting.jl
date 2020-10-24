@@ -31,7 +31,7 @@ function LAxis(parent::Scene; bbox = nothing, kwargs...)
         bottomspinecolor, leftspinecolor, topspinecolor, rightspinecolor,
         backgroundcolor,
         xlabelfont, ylabelfont, xticklabelfont, yticklabelfont,
-        flip_ylabel, xreversed, yreversed,
+        flip_ylabel, xreversed, yreversed, rubberband
     )
 
     decorations = Dict{Symbol, Any}()
@@ -730,9 +730,11 @@ function add_zoom!(ax::LAxis)
     end
 
     # Also support rubber band selection
-    rect = select_rectangle(scene)
+    rect = select_rectangle(scene, ax.rubberband)
     on(rect) do r
-        tlimits[] = r
+        if ax.rubberband[]
+            tlimits[] = r
+        end
     end
 end
 

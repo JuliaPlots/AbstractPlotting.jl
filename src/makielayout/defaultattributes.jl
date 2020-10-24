@@ -200,6 +200,8 @@ function default_attributes(::Type{LAxis}, scene)
         yreversed = false
         "Controls if the x axis goes rightwards (false) or leftwards (true)"
         xreversed = false
+        "Enables rubber-band zooming by drawing a rectangle"
+        rubberband = false
     end
 
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
