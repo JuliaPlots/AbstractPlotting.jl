@@ -77,10 +77,7 @@ function poly_convert(polygon::AbstractVector{<: VecTypes})
 end
 
 function poly_convert(polygons::AbstractVector{<: AbstractVector{<: VecTypes}})
-    return map(polygons) do poly
-        s = GeometryBasics.split_intersections(poly)
-        merge(triangle_mesh.(Polygon.(s)))
-    end
+    return triangle_mesh.(polygons)
 end
 
 to_line_segments(polygon) = convert_arguments(PointBased(), polygon)[1]
