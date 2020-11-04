@@ -1,6 +1,6 @@
-authors = ["Simon Danisch", "Julius Krumbiegel"]
 name = "AbstractPlotting"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
+authors = ["Simon Danisch", "Julius Krumbiegel"]
 version = "0.13.5"
 
 [deps]
@@ -62,6 +62,7 @@ GeometryBasics = "0.3"
 GridLayoutBase = "0.4.1"
 ImageIO = "0.2, 0.3"
 IntervalSets = "0.3, 0.4, 0.5"
+Isoband = "0.1"
 KernelDensity = "0.5, 0.6"
 Match = "1.1"
 Observables = "0.3.1"
