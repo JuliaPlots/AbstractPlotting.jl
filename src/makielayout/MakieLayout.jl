@@ -52,6 +52,7 @@ include("defaultattributes.jl")
 include("lineaxis.jl")
 include("interactions.jl")
 include("lobjects/laxis.jl")
+include("lobjects/laxis3d.jl")
 include("lobjects/lcolorbar.jl")
 include("lobjects/ltext.jl")
 include("lobjects/lslider.jl")
@@ -65,6 +66,7 @@ include("lobjects/lmenu.jl")
 include("lobjects/ltextbox.jl")
 
 export LAxis
+export LAxis3D
 export LSlider
 export LButton
 export LColorbar

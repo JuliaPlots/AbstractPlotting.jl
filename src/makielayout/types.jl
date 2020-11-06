@@ -100,6 +100,13 @@ mutable struct LAxis <: AbstractPlotting.AbstractScene
     interactions::Dict{Symbol, Tuple{Bool, Any}}
 end
 
+mutable struct LAxis3D <: AbstractPlotting.AbstractScene
+    parent::Scene
+    scene::Scene
+    layoutobservables::LayoutObservables
+    attributes::Attributes
+end
+
 mutable struct LColorbar <: LObject
     parent::Scene
     layoutobservables::LayoutObservables
