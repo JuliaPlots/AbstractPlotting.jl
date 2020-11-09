@@ -11,12 +11,68 @@ function LAxis3D(parent::Scene; bbox = nothing, kwargs...)
 
     scenearea = lift(round_to_IRect2D, layoutobservables.computedbbox)
 
-    scene = Scene(parent, scenearea, raw = true, camera = cam3d!)
+    scene = Scene(parent, scenearea, raw = true)
+    campixel!(scene)
 
-    linesegments!(scene, Point3f0[(0, 0, 0), (1, 0, 0), (0, 0, 0), (0, 1, 0), (0, 0, 0), (0, 0, 1)], raw = true)
+    attrs.limits = Node(FRect3D((0, 0, 0), (1, 1, 1)))
+
+    attrs.frameflips = Node((false, false, false))
+
+    # camera position
+    attrs.camerapos = Node(Vec3f0(-10, -10, -10))
+    attrs.cameralookat = Node(Vec3f0(0, 0, 0))
+    attrs.camera_upvector = Node(Vec3f0(0, 1, 0))
+    xyz_scaling = Node(Vec3f0(1, 1, 1))
+
+    attrs.fovy = Node(45.0f0)
+    attrs.aspect = Node(1.0f0)
+    attrs.znear = Node(-10f0)
+    attrs.zfar = Node(10_000f0)
+
+    viewmatrix = lift(AbstractPlotting.lookat, attrs.camerapos, attrs.cameralookat, attrs.camera_upvector)
+
+    perspecmat = lift(AbstractPlotting.perspectiveprojection, attrs.fovy, attrs.aspect, attrs.znear, attrs.zfar)
+
+    on(viewmatrix) do vm
+        camera(scene).view[] = vm
+        camera(scene).projectionview[] = perspecmat[] * vm
+    end
+
+    on(perspecmat) do pm
+        camera(scene).projection[] = pm
+        camera(scene).projectionview[] = pm * viewmatrix[]
+    end
+
+    viewmatrix[] = viewmatrix[]
+    perspecmat[] = perspecmat[]
+
+    # camera lookat
+    # camera upvector
+    # xyz scaling factors
+    # field of view / orthographic?
+
+    linesegments!(scene, Point3f0[(0, 0, 0), (1, 0, 0), (0, 0, 0), (0, 1, 0), (0, 0, 0), (0, 0, 1)], color = [:red, :green, :blue])
+    # for dim in 1:3
+    #     add_frame!(scene, attrs.limits, attrs.frameflips, dim)
+    # end
 
     LAxis3D(parent, scene, layoutobservables, attrs)
 end
+
+
+function add_frame!(scene, limits, flips, dim)
+
+    framepoints = lift(limits, flips) do lims, flips
+
+        dim_extrema = (minimum(limits)[dim], maximum(limits)[dim])
+        dim_limit = dim_extrema[flips[dim]+1]
+
+        
+
+    end
+
+end
+
 
 function default_attributes(::Type{LAxis3D}, scene)
     attrs, docdict, defaultdict = @documented_attributes begin
@@ -44,14 +100,14 @@ function default_attributes(::Type{LAxis3D}, scene)
 end
 
 @doc """
-LAxis has the following attributes:
+LAxis3D has the following attributes:
 
 $(let
-    _, docs, defaults = default_attributes(LAxis, nothing)
+    _, docs, defaults = default_attributes(LAxis3D, nothing)
     docvarstring(docs, defaults)
 end)
 """
-LAxis
+LAxis3D
 
 
 function AbstractPlotting.plot!(
