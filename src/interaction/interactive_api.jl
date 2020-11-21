@@ -133,7 +133,7 @@ Properly identifies the scene for a plot with multiple sub-plots.
 hovered_scene() = error("hoevered_scene is not implemented yet.")
 
 """
-    select_rectangle(scene; kwargs...) -> rect
+    select_rectangle(laxis_or_scene; kwargs...) -> rect
 Interactively select a rectangle on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. The function returns an **observable** `rect` whose
 value corresponds to the selected rectangle on the scene. In addition the function
@@ -145,6 +145,9 @@ The value of the returned observable is updated **only** when the user un-clicks
 rectangle has area > 0.
 
 The `kwargs...` are propagated into `lines!` which plots the selected rectangle.
+
+If called on an `::LAxis`, the interaction is properly registered through the
+interaction registration pipeline.
 """
 function select_rectangle(scene; strokewidth = 3.0, kwargs...)
     key = Mouse.left

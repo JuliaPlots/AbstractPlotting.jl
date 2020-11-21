@@ -109,11 +109,11 @@ function _chosen_limits(rz, ax)
     lims = ax.limits[]
     # restrict to y change
     if rz.restrict_x || !ax.xrectzoom[]
-        r = FRect2D(lims.origin[1], r.origin[2], widths(lims)[1], widths(r)[2]) 
+        r = FRect2D(lims.origin[1], r.origin[2], widths(lims)[1], widths(r)[2])
     end
     # restrict to x change
     if rz.restrict_y || !ax.yrectzoom[]
-        r = FRect2D(r.origin[1], lims.origin[2], widths(r)[1], widths(lims)[2]) 
+        r = FRect2D(r.origin[1], lims.origin[2], widths(r)[1], widths(lims)[2])
     end
     return r
 end
@@ -298,6 +298,14 @@ function process_interaction(dp::DragPan, event::MouseEvent, ax)
     timed_ticklabelspace_reset(ax, dp.reset_timer, dp.prev_xticklabelspace, dp.prev_yticklabelspace, dp.reset_delay)
 
     tlimits[] = FRect(Vec2f0(xori, yori), widths(tlimits[]))
-           
+
     return nothing
+end
+
+############################################################################
+#             Interactions that return values when activated               #
+############################################################################
+function AbstractPlotting.select_rectangle(ax::MakieLayout.LAxis; kwargs...)
+    deactivate_interaction!(ax, :rectanglezoom)
+    select_rectangle(ax.scene; kwargs...)
 end
