@@ -189,7 +189,7 @@ function select_rectangle(scene; strokewidth = 3.0, kwargs...)
 end
 
 """
-    select_line(scene; kwargs...) -> line
+    select_line(laxis_or_scene; kwargs...) -> line
 Interactively select a line (typically an arrow) on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. Return an **observable** whose value corresponds
 to the selected line on the scene. In addition the function
@@ -200,6 +200,9 @@ The value of the returned line is updated **only** when the user un-clicks
 and only if the selected line has non-zero length.
 
 The `kwargs...` are propagated into `lines!` which plots the selected line.
+
+If called on an `::LAxis`, the interaction is properly registered through the
+interaction registration pipeline.
 """
 function select_line(scene; kwargs...)
     key = Mouse.left
@@ -241,7 +244,7 @@ function select_line(scene; kwargs...)
 end
 
 """
-    select_point(scene; kwargs...) -> point
+    select_point(laxis_or_scene; kwargs...) -> point
 Interactively select a point on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. Return an **observable** whose value corresponds
 to the selected point on the scene. In addition the function
@@ -251,6 +254,9 @@ around. When the button is not clicked any more, the plotted point disappears.
 The value of the returned point is updated **only** when the user un-clicks.
 
 The `kwargs...` are propagated into `scatter!` which plots the selected point.
+
+If called on an `::LAxis`, the interaction is properly registered through the
+interaction registration pipeline.
 """
 function select_point(scene; kwargs...)
     key = Mouse.left

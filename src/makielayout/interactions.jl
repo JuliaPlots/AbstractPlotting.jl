@@ -309,3 +309,17 @@ function AbstractPlotting.select_rectangle(ax::MakieLayout.LAxis; kwargs...)
     deactivate_interaction!(ax, :rectanglezoom)
     select_rectangle(ax.scene; kwargs...)
 end
+
+function AbstractPlotting.select_line(ax::MakieLayout.LAxis; kwargs...)
+    deactivate_interaction!(ax, :rectanglezoom)
+    select_line(ax.scene; kwargs...)
+end
+
+# For select point, technically it is not necessary to remove the rectanglezoom
+# interaction, however, I've found out that even the slightest mouse movement
+# while selecting a point will case the plot to zoom in aribtrarily.
+# Thus it is better to disable and use mousewheel to zoom
+function AbstractPlotting.select_point(ax::MakieLayout.LAxis; kwargs...)
+    deactivate_interaction!(ax, :rectanglezoom)
+    select_point(ax.scene; kwargs...)
+end
