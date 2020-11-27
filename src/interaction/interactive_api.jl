@@ -146,8 +146,7 @@ rectangle has area > 0.
 
 The `kwargs...` are propagated into `lines!` which plots the selected rectangle.
 
-If called on an `::LAxis`, the interaction is properly registered through the
-interaction registration pipeline.
+If called on an `::LAxis`, it disables the click+drag+zoom default functionality.
 """
 function select_rectangle(scene; strokewidth = 3.0, kwargs...)
     key = Mouse.left
@@ -201,8 +200,7 @@ and only if the selected line has non-zero length.
 
 The `kwargs...` are propagated into `lines!` which plots the selected line.
 
-If called on an `::LAxis`, the interaction is properly registered through the
-interaction registration pipeline.
+If called on an `::LAxis`, it disables the click+drag+zoom default functionality.
 """
 function select_line(scene; kwargs...)
     key = Mouse.left
@@ -255,8 +253,7 @@ The value of the returned point is updated **only** when the user un-clicks.
 
 The `kwargs...` are propagated into `scatter!` which plots the selected point.
 
-If called on an `::LAxis`, the interaction is properly registered through the
-interaction registration pipeline.
+If called on an `::LAxis`, it disables the click+drag+zoom default functionality.
 """
 function select_point(scene; kwargs...)
     key = Mouse.left
