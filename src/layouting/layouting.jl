@@ -98,13 +98,13 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
 
     charinfos = broadcast([c for c in str], font_per_char, fontscale_px) do char, font, scale
         # TODO: scale as SVector not Number
-        extent = get_extent(font, char) .* SVector(scale, scale)
+        unscaled_extent = get_extent(font, char)
         lineheight = Float32(font.height / font.units_per_EM * lineheight_factor * scale)
-        unscaled_hi_bb = height_insensitive_boundingbox(extent, font)
+        unscaled_hi_bb = height_insensitive_boundingbox(unscaled_extent, font)
         hi_bb = FRect2D(
             AbstractPlotting.origin(unscaled_hi_bb) * scale,
             widths(unscaled_hi_bb) * scale)
-        (char = char, font = font, scale = scale, extent = extent, hadvance = hadvance(extent),
+        (char = char, font = font, scale = scale, hadvance = hadvance(unscaled_extent) * scale,
             hi_bb = hi_bb, lineheight = lineheight)
     end
 
@@ -120,21 +120,16 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
         lineinfos
     end
 
-    # for line in lineinfos
-    #     @show [l.char for l in line]
-    # end
-
-
     # add or subtract kernings?
     xs = map(lineinfos) do line        
         cumsum([
-            isempty(line) ? 0.0 : -leftinkbound(line[1].extent);
+            isempty(line) ? 0.0 : -(line[1].hi_bb.origin[1]);
             [l.hadvance for l in line[1:end-1]]
         ])
     end
 
     # each linewidth is the last origin plus inkwidth
-    linewidths = last.(xs) .+ [isempty(line) ? 0.0 : inkwidth(line[end].extent) for line in lineinfos]
+    linewidths = last.(xs) .+ [isempty(line) ? 0.0 : widths(line[end].hi_bb)[1] for line in lineinfos]
     maxwidth = maximum(linewidths)
 
     width_differences = maxwidth .- linewidths
@@ -154,9 +149,6 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
     xs_aligned = [xsgroup .- halign * maxwidth for xsgroup in xs_justified]
 
     # y alignment
-    # first_max_ascent = maximum(hbearing_ori_to_top, extents[1])
-    # last_max_descent = maximum(x -> inkheight(x) - hbearing_ori_to_top(x), extents[end])
-
     first_line_ascender = maximum(lineinfos[1]) do l
         ascender(l.font) * l.scale
     end
