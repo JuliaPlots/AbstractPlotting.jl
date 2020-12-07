@@ -119,7 +119,13 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
     end
 
     # calculate linewidths as the last origin plus inkwidth for each line
-    linewidths = last.(xs) .+ [isempty(line) ? 0.0 : widths(line[end].hi_bb)[1] for line in lineinfos]
+    linewidths = map(lineinfos, xs) do line, xx
+        nchars = length(line)
+        # if the last and not the only character is \n, take the previous one
+        # to compute the width
+        i = (nchars > 1 && line[end].char == '\n') ? nchars - 1 : nchars
+        xx[i] + widths(line[i].hi_bb)[1]
+    end
 
     # the maximum width is needed for justification
     maxwidth = maximum(linewidths)
@@ -128,8 +134,29 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
     width_differences = maxwidth .- linewidths
 
     # shift all x values by the justification amount needed for each line
+    # if justification is automatic it depends on alignment
+    float_justification = if justification === automatic
+        if halign == :left || halign == 0
+            0.0f0
+        elseif halign == :right || halign == 1
+            1.0f0
+        elseif halign == :center || halign == 0.5
+            0.5f0
+        else
+            0.5f0
+        end
+    elseif justification == :left
+        0.0f0
+    elseif justification == :right
+        1.0f0
+    elseif justification == :center
+        0.5f0
+    else
+        Float32(justification)
+    end
+
     xs_justified = map(xs, width_differences) do xsgroup, wd
-        xsgroup .+ wd * justification
+        xsgroup .+ wd * float_justification
     end
 
     # each character carries a "lineheight" metric given its font and scale and a lineheight scaling factor
