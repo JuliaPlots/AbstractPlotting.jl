@@ -82,7 +82,7 @@ rotated to wherever it is needed in the plot.
 """
 function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halign, valign, lineheight_factor, justification, rotation)
 
-    isempty(str) && return Vec2f0[]
+    isempty(str) && return Glyphlayout([], [], [])
 
     halign = if halign isa Number
         Float32(halign)
@@ -96,7 +96,7 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
         error("Invalid halign $halign. Valid values are <:Number, :left, :center and :right.")
     end
 
-    charinfos = broadcast([c for c in str], font_per_char, Ref(fontscale_px)) do char, font, scale
+    charinfos = broadcast([c for c in str], font_per_char, fontscale_px) do char, font, scale
         # TODO: scale as SVector not Number
         extent = get_extent(font, char) .* SVector(scale, scale)
         lineheight = Float32(font.height / font.units_per_EM * lineheight_factor * scale)
@@ -129,7 +129,7 @@ function glyph_positions(str::AbstractString, font_per_char, fontscale_px, halig
     xs = map(lineinfos) do line        
         cumsum([
             isempty(line) ? 0.0 : -leftinkbound(line[1].extent);
-            [l.hadvance for l in line[2:end-1]]
+            [l.hadvance for l in line[1:end-1]]
         ])
     end
 
