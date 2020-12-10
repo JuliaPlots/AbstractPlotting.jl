@@ -14,7 +14,7 @@ All right, let's get started!
 
 ## Scene and Layout
 
-First, we import CairoMakie, which brings in AbstractPlotting and MakieLayout as well.
+First, we import CairoMakie, which brings in AbstractPlotting, and MakieLayout.
 Then we create the main scene and layout.
 The function `layoutscene` is a convenience function that creates a `Scene`
 which has a `GridLayout` attached to it that always fills the whole scene area.
@@ -22,6 +22,7 @@ You can pass the outer padding of the top layout as the first argument.
 
 ```@example tutorial
 using CairoMakie
+using MakieLayout
 using Random # hide
 Random.seed!(2) # hide
 
@@ -275,6 +276,7 @@ two axes at once. The number of cells and objects has to match to do this.
 hm_axes = layout[1:2, 3] = [LAxis(scene, title = t) for t in ["Cell Assembly Pre", "Cell Assembly Post"]]
 
 heatmaps = [heatmap!(ax, i .+ rand(20, 20)) for (i, ax) in enumerate(hm_axes)]
+[limits!(hm_ax, 0, 20, 0, 20) for hm_ax in hm_axes] # Setting limits for axes: x1, x2, y1, y2
 
 scene
 save("step_013.svg", scene) # hide
