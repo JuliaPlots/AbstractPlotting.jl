@@ -10,9 +10,10 @@ nothing # hide
 ```
 
 For this tutorial, we also call `AbstractPlotting.inline!(true)` so plots appear inline after each example.
-Otherwise, an interactive window will open when you return a `Scene`.
+Otherwise, an interactive window will open when you return a `Scene`. To enable this, we need to import `AbstractPlotting`.
 
 ```@example 1
+using AbstractPlotting
 AbstractPlotting.inline!(true)
 nothing # hide
 ```
@@ -46,7 +47,7 @@ Mutating plotting functions return the changed scene by default.
 ```@example 1
 points = [Point2f0(cos(t), sin(t)) for t in LinRange(0, 2pi, 20)]
 colors = 1:20
-scatter!(scene, points, color = colors, markersize = 15)
+scatter!(scene, points, color = colors, markersize = 15px)
 ```
 
 As you can see, we also got a basic 2D axis with the `scatter!` command. If you use a 3D plotting function,
@@ -73,7 +74,7 @@ The scatter is the last object, so we can use `scene[end]`. Then we change the m
 
 ```@example 1
 scatterobject = scene[end]
-scatterobject.markersize = 30
+scatterobject.markersize = 30px
 scene
 ```
 
