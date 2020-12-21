@@ -14,21 +14,22 @@ All right, let's get started!
 
 ## Scene and Layout
 
-First, we import CairoMakie, which brings in AbstractPlotting and MakieLayout as well.
-
+First, we import CairoMakie, which re-exports everything from AbstractPlotting and MakieLayout.
 ```@example tutorial
 using CairoMakie
 ```
-
-(Makie or CairoMakie will install AbstractPlotting as a dependency. MakieLayout is a submodule in AbstractPlotting. So no need to install these packages)
-
-
-If we do not want to install CairoMakie, then we should do
-```@example tutorial
-using Makie
+The same works for all the other backends (WGLMakie, GLMakie).
+The MakieLayout package itself is depcrecated, since it now lives directly in AbstractPlotting.
+If we do not want to make the code backend dependend, 
+e.g. inside a package where the user should chose the backend, 
+we can depend on `AbstractPlotting` alone.
+This allows the user to do:
+```julia
+using CustomPlots # depends only on AbstractPlotting
+using GLMakie # choses GLMakie as the backend for CustomPlots
 ```
 
-Then we create the main scene and layout.
+After chosing the backend, we can create the main scene and layout.
 The function `layoutscene` is a convenience function that creates a `Scene`
 which has a `GridLayout` attached to it that always fills the whole scene area.
 You can pass the outer padding of the top layout as the first argument.
