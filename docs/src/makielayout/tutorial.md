@@ -15,13 +15,25 @@ All right, let's get started!
 ## Scene and Layout
 
 First, we import CairoMakie, which brings in AbstractPlotting and MakieLayout as well.
+
+```@example tutorial
+using CairoMakie
+```
+
+(Makie or CairoMakie will install AbstractPlotting as a dependency. MakieLayout is a submodule in AbstractPlotting. So no need to install these packages)
+
+
+If we do not want to install CairoMakie, then we should do
+```@example tutorial
+using Makie
+```
+
 Then we create the main scene and layout.
 The function `layoutscene` is a convenience function that creates a `Scene`
 which has a `GridLayout` attached to it that always fills the whole scene area.
 You can pass the outer padding of the top layout as the first argument.
 
 ```@example tutorial
-using CairoMakie
 using Random # hide
 Random.seed!(2) # hide
 
