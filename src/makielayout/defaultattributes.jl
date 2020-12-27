@@ -507,7 +507,10 @@ function default_attributes(::Type{LSlider}, scene)
         width = Auto()
         "The height setting of the slider."
         height = Auto()
-        "The range of values that the slider can pick from."
+        """The range of values that the slider can pick from.
+        This attributed should not be written to by user code.
+        Instead, use `set_range!(slider, range)`.
+        """
         range = 0:10
         "Controls if the parent layout can adjust to this element's width"
         tellwidth = true
@@ -515,7 +518,10 @@ function default_attributes(::Type{LSlider}, scene)
         tellheight = true
         "The start value of the slider or the value that is closest in the slider range."
         startvalue = 0
-        "The current value of the slider."
+        """The current value of the slider.
+        This attribute should not be written to by user code.
+        Instead, use `set_close_to!(slider, value)`.
+        """
         value = 0
         "The width of the slider line"
         linewidth = 15
@@ -766,7 +772,10 @@ function default_attributes(::Type{LTextbox}, scene)
         alignmode = Inside()
         "A placeholder text that is displayed when the saved string is nothing."
         placeholder = "Click to edit..."
-        "The currently stored string."
+        """The currently stored string.
+        This attributed should not be written to by user code.
+        Instead, use `MakieLayout.set!(button, text)`
+        """
         stored_string = nothing
         "The currently displayed string (for internal use)."
         displayed_string = nothing

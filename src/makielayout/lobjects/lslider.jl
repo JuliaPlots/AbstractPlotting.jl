@@ -202,3 +202,11 @@ function set_close_to!(slider, value)
     closest = closest_index(slider.range[], value)
     slider.selected_index = closest
 end
+
+"""
+Set the range of values that `slider` can pick from.
+"""
+function set_range!(slider, range)
+    slider.range[] = range
+    set_close_to!(slider, slider.value[])
+end
