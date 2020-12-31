@@ -15,6 +15,9 @@ mutable struct Scene <: AbstractScene
     "[`Events`](@ref) associated with the Scene."
     events::Events
 
+    "Storage for interactions that may react to events"
+    interactions::Interactions
+
     "The current pixel area of the Scene."
     px_area::Node{IRect2D}
 
@@ -104,7 +107,7 @@ function Scene(
     updated = Node(false)
 
     scene = Scene(
-        parent, events, px_area, clear, camera, camera_controls,
+        parent, events, Interactions(), px_area, clear, camera, camera_controls,
         Node{Union{Nothing,FRect3D}}(scene_limits),
         transformation, plots, theme, attributes,
         children, current_screens, updated
@@ -128,7 +131,6 @@ function Scene(
     end
     scene
 end
-
 
 function Scene(;clear=true, transform_func=identity, scene_attributes...)
     events = Events()
@@ -406,7 +408,7 @@ function Base.push!(scene::Scene, child::Scene)
     return scene
 end
 
-events(scene::Scene) = scene.events
+events(scene::Scene) = begin @warn "Deprecate me!"; scene.events end
 events(scene::SceneLike) = events(scene.parent)
 
 camera(scene::Scene) = scene.camera
@@ -598,3 +600,215 @@ function update_limits!(scene::Scene, new_limits::Rect, padding::Vec3f0=scene.pa
     scene.data_limits[] = FRect3D(minimum(lims) .- padd_abs, lim_w .+  2padd_abs)
     scene
 end
+
+
+################################################################################
+### Interactions
+################################################################################
+
+
+# Basic idea:
+# - top level scene gets events from the backend via `process!(::Scene, ::AbstractEvent)`
+# - events are forwarded to `process!(::Interactions, ::AbstractEvent, ::Scene)`
+# - and then `process!(interaction, ::AbstractEvent, ::Scene)`
+#   - Interactions are sorted by priority (high first)
+#   - events can be consumed by returning true
+# - if an event has not been processed consumed, it will be forwarded to child scenes
+
+# maybe even Interactions()[:my_interaction] = MyInteraction()?
+Base.setindex!(col::Interactions, key, value) = register!(col, key, value)
+register!(f::Function, col, key, priority = 0) = register!(col, key, f, priority)
+function register!(col::Interactions, key, interaction, priority=0)
+    priorities = col.priorities
+    keymap = col.keymap
+    interactions = col.interactions
+
+    if haskey(keymap, key)
+        # KeyError()  maybe?
+        error("Interaction with name $key already exists.")
+    end
+
+    # Insert priority-ordered interaction
+    idx = priority_to_index(priorities, priority)
+    insert!(priorities, idx, priority)
+    insert!(interactions, idx, interaction)
+    for (k, v) in keymap
+        v >= idx && (keymap[k] += 1)
+    end
+    push!(keymap, key => idx)
+
+    nothing
+end
+
+# Find index based on priority
+function priority_to_index(priorities, priority)
+    if isempty(priorities) || (first(priorities) > priority)
+        1
+    elseif last(priorities) < priority
+        length(priorities)+1
+    else
+        findfirst(p -> p > priority, priorities)
+    end
+end
+
+
+# removing - follow Dict?
+deregister!(col::Interactions, key::Symbol) = delete!(col, key)
+function Base.delete!(col::Interactions, key::Symbol)
+    idx = col.keymap[key]
+    deleteat!(col.interactions, idx)
+    deleteat!(col.priorities, idx)
+    delete!(col.keymap, key)
+    for (k, v) in col.keymap
+        v > idx && (col.keymap[k] -= 1)
+    end
+    nothing
+end
+
+# get/set priority
+priority(col::Interactions, key::Symbol) = col.priorities[col.keymap[key]]
+function priorities(col::Interactions)
+    output = Dict{Int64, Vector{Symbol}}()
+    for (k, v) in col.keymap
+        priority = col.priorities[v]
+        if haskey(output, priority)
+            output[priority] = Symbol[k]
+        else
+            push!(output[priority], k)
+        end
+    end
+    output
+end
+function priority!(col::Interactions, key::Symbol, priority)
+    old = col.keymap[key]
+    new = priority_to_index(priorities, priority)
+    
+    # Same position, nothing to do
+    col.priorities[old] == new-1 && return nothing
+
+    # Otherwise remove and insert elsewhere
+    interaction = col.interactions[old]
+    deleteat!(col.interactions, old)
+    deleteat!(col.priorities, old)
+    insert!(col.interactions, new-1, interaction)
+    insert!(col.priorities, new-1, priority)
+
+    col.keymap[key] = new-1
+    for (k, v) in col.keymap
+        (old < v < new-1) && (col.keymap[k] -= 1)
+    end
+
+    nothing
+end
+
+# dispatch events to interactions
+function process!(col::Interactions, @nospecialize(event), parent::Scene)
+    for interaction in reverse(col.interactions)
+        process!(interaction, event, parent) && return true
+    end
+    return false
+end
+
+# Default
+process!(@nospecialize args...) = false
+
+# For functions
+function process!(f::Function, @nospecialize(event), parent::Scene)
+    if applicable(f, event, parent)
+        # Make this error if the returntype is not a Bool
+        return ifelse(f(event, parent), true, false)
+    end
+    return false
+end
+
+
+
+function process!(scene::Scene, @nospecialize(event))
+    t = time()
+    process!(scene.interactions, event, scene) && return true
+    t1 = time()
+    for child in scene.children
+        process!(child, event) && return true
+    end
+    t2 = time()
+    @info "$(t2-t) = $(t1-t) + $(t2-t1) $(typeof(event))"
+    return false
+end
+
+"""
+    register!(scene, key::Symbol, interaction::Any[, priority=0])
+    register!(scene, key[, priority]) do event, scene ... end
+
+Register an interaction (function or object) with the given key.
+
+Interactions are used to process events which are created by the backend and
+given to the top-level scene. The scene distributes events to interactions in 
+order of priority (high first). If an interaction returns true, that event is
+consumed, i.e. not passed to other interactions. If an event is not consumed it
+will be forwarded to child scenes and may be processed there.
+
+An interaction of type `::Function` should have the signature 
+`f(::EventType, ::Scene)::Bool` where `EventType` is some type inherting from 
+`AbstractEvent` and always return `true` or `false`.
+
+More complex interaction can be implemented as custom types, e.g. 
+`struct MyInteraction ... end`. To process an event a function
+`process!(::MyInteraction, ::EventType, ::Scene)::Bool` should be implemented, 
+where `EventType` is some type inheriting from `AbstractEvent`.
+
+The available Events are:
+
+```
+AbstractEvent
+    AbstractKeyboardEvent
+        KeyEvent
+        InputEvent
+    AbstractMouseEvent
+        MouseClickedEvent
+        MouseMovedEvent
+        MouseScrolledEvent
+    AbstractWindowEvent
+        WindowResizeEvent
+        WindowDPIEvent
+        WindowOpenEvent
+        DroppedFilesEvent
+        WindowFocusEvent
+        WindowEnteredEvent
+    RenderTickEvent
+```
+"""
+function register!(scene::Scene, key, int, prirority=0)
+    register!(scene.interactions, key, int, priority)
+end
+function register!(f::Function, scene::Scene, key, prirority=0)
+    register!(f, scene.interactions, key, priority)
+end
+
+"""
+    deregister!(scene, key)
+
+Removes the interaction associated with the given key.
+"""
+function deregister!(scene::Scene, key)
+    deregister!(scene.interactions, key)
+end
+
+"""
+    priority(scene, key)
+
+Get the priority of an interaction associated with a given key.
+"""
+priority(scene::Scene, key) = priority(scene.interactions, key)
+"""
+    priority!(scene, key, priority)
+
+Sets the priority of an interaction associated with a given key.
+"""
+priority!(scene::Scene, key, priority) = priority!(scene.interactions, key, priority)
+
+"""
+    priorities(scene)
+
+Returns a `Dict(priority => keys)`` of all priority values and their associated keys.
+"""
+priorities(scene::Scene) = priorities(scene.interactions)

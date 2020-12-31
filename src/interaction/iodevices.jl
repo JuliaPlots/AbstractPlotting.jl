@@ -162,6 +162,7 @@ module Mouse
         right = 1 # Conform to GLFW
     end
 
+    # TODO Does this still have a reason to exist?
     """
         Mouse.DragEnum
 
@@ -180,3 +181,19 @@ end
 
 # Void for no button needs to be pressed,
 const ButtonTypes = Union{Nothing, Mouse.Button, Keyboard.Button}
+
+
+@enum ButtonState begin
+    press   = 0
+    repeat  = 1
+    release = 2
+end
+
+# This would need to be split into a bunch of different things...
+# might as well just query `ispressed(scene, left_shift)` etc
+# @enum ButtonModifier begin
+#     shift   = 1
+#     control = 2
+#     alt     = 4
+#     super   = 8
+# end

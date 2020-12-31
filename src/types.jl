@@ -14,6 +14,7 @@ end
 
 include("interaction/iodevices.jl")
 
+# TODO maybe remove? deprecate?
 """
 This struct provides accessible `Observable`s to monitor the events
 associated with a Scene.
@@ -89,6 +90,72 @@ function Events()
         Node(false),
     )
 end
+
+# Dispatchable events
+abstract type AbstractEvent end
+abstract type AbstractKeyboardEvent <: AbstractEvent end
+abstract type AbstractMouseEvent <: AbstractEvent end
+abstract type AbstractWindowEvent <: AbstractEvent end
+
+
+# all the key presses (== keyboardbuttons)
+struct KeyEvent <: AbstractKeyboardEvent
+    key::Keyboard.Button
+    state::ButtonState
+    # mod::ButtonModifier
+end
+
+# unicode_input
+struct UnicodeInputEvent <: AbstractKeyboardEvent
+    char::Char
+end
+
+# all the mouse button presses (== mousebuttons)
+struct MouseButtonEvent <: AbstractMouseEvent
+    button::Mouse.Button
+    state::ButtonState
+    # mod::ButtonModifier
+end
+
+# mousepositions -> mousedrag?
+struct MouseMovedEvent <: AbstractMouseEvent
+    position::Vec2f0
+end
+
+struct MouseScrolledEvent <: AbstractMouseEvent
+    delta::Vec2f0
+end
+
+# Window events
+struct WindowResizeEvent <: AbstractWindowEvent
+    area::IRect2D
+end
+struct WindowDPIEvent <: AbstractWindowEvent
+    dpi::Float64
+end
+struct WindowOpenEvent <: AbstractWindowEvent
+    is_open::Bool
+end
+struct DroppedFilesEvent <: AbstractWindowEvent
+    files::Vector{String}
+end
+struct WindowFocusEvent <: AbstractWindowEvent
+    has_focus::Bool
+end
+struct WindowEnteredEvent <: AbstractWindowEvent
+    entered_window::Bool
+end
+
+# ticks once per render - might be useful for animations?
+struct RenderTickEvent <: AbstractEvent end
+
+struct Interactions
+    keymap::Dict{Symbol, Int64}
+    priorities::Vector{Int64}
+    interactions::Vector{Any}
+end
+Interactions() = Interactions(Dict{Symbol, Int64}(), Int64[], Any[])
+
 
 mutable struct Camera
     pixel_space::Node{Mat4f0}

@@ -95,6 +95,7 @@ function ispressed(buttons::Set{T}, button::Set{T}) where T <: Union{Keyboard.Bu
     return issubset(button, buttons)
 end
 
+# TODO: allow this to call GLFW.GetKey(...) or GLFW.GetMouseButton(...)?
 """
     ispressed(scene, button)
 

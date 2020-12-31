@@ -73,11 +73,13 @@ struct DragPan
     reset_delay::Float32
 end
 
+# TODO replace
 struct ScrollEvent
     x::Float32
     y::Float32
 end
 
+# TODO replace
 struct KeysEvent
     keys::Set{AbstractPlotting.Keyboard.Button}
 end

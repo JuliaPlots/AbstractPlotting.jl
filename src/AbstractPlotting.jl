@@ -166,7 +166,7 @@ export pixelarea, plots, cameracontrols, cameracontrols!, camera, events
 export to_world
 
 # picking + interactive use cases + events
-export mouseover, ispressed, onpick, pick, Events, Keyboard, Mouse, mouse_selection
+export mouseover, ispressed, onpick, pick, Events, Keyboard, Mouse, mouse_selection, ButtonState
 export register_callbacks
 export window_area
 export window_open
@@ -180,6 +180,13 @@ export dropped_files
 export hasfocus
 export entered_window
 export disconnect!, must_update, force_update!, update!, update_limits!
+
+export AbstractEvent, AbstractKeyboardEvent, AbstractMouseEvent, AbstractWindowEvent
+export KeyEvent, UnicodeInputEvent
+export MouseButtonEvent, MouseMovedEvent, MouseScrolledEvent
+export WindowResizeEvent, WindowDPIEvent, WindowOpenEvent, DroppedFilesEvent, 
+        WindowFocusEvent, WindowEnteredEvent
+export RenderTickEvent
 
 # currently special-cased functions (`textslider`) for example
 export textslider
