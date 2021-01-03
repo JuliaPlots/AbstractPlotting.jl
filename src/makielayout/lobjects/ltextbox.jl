@@ -1,3 +1,5 @@
+const DEFAULT_UI_PRIORITY = Int8(100)
+
 function LTextbox(parent::Scene; bbox = nothing, kwargs...)
 
     attrs = merge!(
@@ -182,18 +184,32 @@ function LTextbox(parent::Scene; bbox = nothing, kwargs...)
         displayed_string[] = join(newchars)
     end
 
-    on(events(scene).unicode_input) do char_array
-        if !focused[] || isempty(char_array)
-            return
+    # on(events(scene).unicode_input) do char_array
+    #     if !focused[] || isempty(char_array)
+    #         return
+    #     end
+
+    #     for c in char_array
+    #         if is_allowed(c, restriction[])
+    #             insertchar!(c, cursorindex[] + 1)
+    #         end
+    #     end
+    # end
+    # NOTE 
+    # The plot used here doesn't really matter since we're not adjusting it.
+    # Using the last generated plot would be slightly faster though.
+    # Attaching to a plot should mean that everything gets cleaned up 
+    # automatically when the plot is removed/detached though.
+    register!(box, :input, DEFAULT_UI_PRIORITY) do event::UnicodeInputEvent, p
+        if !focused[]
+            return false
         end
 
-        for c in char_array
-            if is_allowed(c, restriction[])
-                insertchar!(c, cursorindex[] + 1)
-            end
+        if is_allowed(event.char, restriction[])
+            insertchar!(event.char, cursorindex[] + 1)
         end
+        return true
     end
-
 
     function submit()
         if displayed_is_valid[]
@@ -219,32 +235,61 @@ function LTextbox(parent::Scene; bbox = nothing, kwargs...)
     end
 
 
-    on(events(scene).keyboardbuttons) do button_set
-        if !focused[] || isempty(button_set)
-            return
+    # on(events(scene).keyboardbuttons) do button_set
+    #     if !focused[] || isempty(button_set)
+    #         return
+    #     end
+
+    #     for key in button_set
+    #         if key == Keyboard.backspace
+    #             removechar!(cursorindex[])
+    #         elseif key == Keyboard.delete
+    #             removechar!(cursorindex[] + 1)
+    #         elseif key == Keyboard.enter
+    #             submit()
+    #             if defocus_on_submit[]
+    #                 defocus!(ltextbox)
+    #             end
+    #         elseif key == Keyboard.escape
+    #             if reset_on_defocus[]
+    #                 reset_to_stored()
+    #             end
+    #             defocus!(ltextbox)
+    #         elseif key == Keyboard.right
+    #             cursor_forward()
+    #         elseif key == Keyboard.left
+    #             cursor_backward()
+    #         end
+    #     end
+    # end
+
+    register!(box, :on_key, DEFAULT_UI_PRIORITY) do event::KeyEvent, p
+        if !focused[]
+            return false
         end
 
-        for key in button_set
-            if key == Keyboard.backspace
-                removechar!(cursorindex[])
-            elseif key == Keyboard.delete
-                removechar!(cursorindex[] + 1)
-            elseif key == Keyboard.enter
-                submit()
-                if defocus_on_submit[]
-                    defocus!(ltextbox)
-                end
-            elseif key == Keyboard.escape
-                if reset_on_defocus[]
-                    reset_to_stored()
-                end
+        key = event.key
+        if key == Keyboard.backspace
+            removechar!(cursorindex[])
+        elseif key == Keyboard.delete
+            removechar!(cursorindex[] + 1)
+        elseif key == Keyboard.enter
+            submit()
+            if defocus_on_submit[]
                 defocus!(ltextbox)
-            elseif key == Keyboard.right
-                cursor_forward()
-            elseif key == Keyboard.left
-                cursor_backward()
             end
+        elseif key == Keyboard.escape
+            if reset_on_defocus[]
+                reset_to_stored()
+            end
+            defocus!(ltextbox)
+        elseif key == Keyboard.right
+            cursor_forward()
+        elseif key == Keyboard.left
+            cursor_backward()
         end
+
+        return true
     end
 
     ltextbox
