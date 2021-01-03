@@ -355,7 +355,7 @@ const Atomic{Arg} = Union{map(x-> Combined{x, Arg}, atomic_functions)...}
 
 
 function (PT::Type{<: Combined})(parent, transformation, attributes, input_args, converted)
-    PT(parent, transformation, attributes, input_args, converted, AbstractPlot[])
+    PT(parent, transformation, attributes, input_args, converted, Interactions(), AbstractPlot[])
 end
 
 plotsym(::Type{<:AbstractPlot{F}}) where F = Symbol(typeof(F).name.mt.name)

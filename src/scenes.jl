@@ -139,11 +139,11 @@ function Scene(;clear=true, transform_func=identity, scene_attributes...)
     px_area = lift(attributes.resolution) do res
         IRect(0, 0, res)
     end
-    on(events.window_area) do w_area
-        if !any(x -> x ≈ 0.0, widths(w_area)) && px_area[] != w_area
-            px_area[] = w_area
-        end
-    end
+    # on(events.window_area) do w_area
+    #     if !any(x -> x ≈ 0.0, widths(w_area)) && px_area[] != w_area
+    #         px_area[] = w_area
+    #     end
+    # end
     scene = Scene(
         events,
         px_area,
@@ -158,6 +158,12 @@ function Scene(;clear=true, transform_func=identity, scene_attributes...)
         Scene[],
         AbstractScreen[]
     )
+    register!(scene, :resize, DEFAULT_BACKEND_PRIORITY) do event::WindowResizeEvent, scene
+        if !any(x -> x ≈ 0.0, widths(event.area)) && px_area[] != event.area
+            px_area[] = event.area
+        end
+        false
+    end
     # Set the transformation parent
     scene.transformation.parent[] = scene
     current_global_scene[] = scene
@@ -615,129 +621,13 @@ end
 #   - events can be consumed by returning true
 # - if an event has not been processed consumed, it will be forwarded to child scenes
 
-# maybe even Interactions()[:my_interaction] = MyInteraction()?
-Base.setindex!(col::Interactions, key, value) = register!(col, key, value)
-register!(f::Function, col, key, priority = 0) = register!(col, key, f, priority)
-function register!(col::Interactions, key, interaction, priority=0)
-    priorities = col.priorities
-    keymap = col.keymap
-    interactions = col.interactions
+const DEFAULT_BACKEND_PRIORITY = Int8(50)
+const DEFAULT_PRIORITY = Int8(0)
 
-    if haskey(keymap, key)
-        # KeyError()  maybe?
-        error("Interaction with name $key already exists.")
-    end
-
-    # Insert priority-ordered interaction
-    idx = priority_to_index(priorities, priority)
-    insert!(priorities, idx, priority)
-    insert!(interactions, idx, interaction)
-    for (k, v) in keymap
-        v >= idx && (keymap[k] += 1)
-    end
-    push!(keymap, key => idx)
-
-    nothing
-end
-
-# Find index based on priority
-function priority_to_index(priorities, priority)
-    if isempty(priorities) || (first(priorities) > priority)
-        1
-    elseif last(priorities) < priority
-        length(priorities)+1
-    else
-        findfirst(p -> p > priority, priorities)
-    end
-end
-
-
-# removing - follow Dict?
-deregister!(col::Interactions, key::Symbol) = delete!(col, key)
-function Base.delete!(col::Interactions, key::Symbol)
-    idx = col.keymap[key]
-    deleteat!(col.interactions, idx)
-    deleteat!(col.priorities, idx)
-    delete!(col.keymap, key)
-    for (k, v) in col.keymap
-        v > idx && (col.keymap[k] -= 1)
-    end
-    nothing
-end
-
-# get/set priority
-priority(col::Interactions, key::Symbol) = col.priorities[col.keymap[key]]
-function priorities(col::Interactions)
-    output = Dict{Int64, Vector{Symbol}}()
-    for (k, v) in col.keymap
-        priority = col.priorities[v]
-        if haskey(output, priority)
-            output[priority] = Symbol[k]
-        else
-            push!(output[priority], k)
-        end
-    end
-    output
-end
-function priority!(col::Interactions, key::Symbol, priority)
-    old = col.keymap[key]
-    new = priority_to_index(priorities, priority)
-    
-    # Same position, nothing to do
-    col.priorities[old] == new-1 && return nothing
-
-    # Otherwise remove and insert elsewhere
-    interaction = col.interactions[old]
-    deleteat!(col.interactions, old)
-    deleteat!(col.priorities, old)
-    insert!(col.interactions, new-1, interaction)
-    insert!(col.priorities, new-1, priority)
-
-    col.keymap[key] = new-1
-    for (k, v) in col.keymap
-        (old < v < new-1) && (col.keymap[k] -= 1)
-    end
-
-    nothing
-end
-
-# dispatch events to interactions
-function process!(col::Interactions, @nospecialize(event), parent::Scene)
-    for interaction in reverse(col.interactions)
-        process!(interaction, event, parent) && return true
-    end
-    return false
-end
-
-# Default
-process!(@nospecialize args...) = false
-
-# For functions
-function process!(f::Function, @nospecialize(event), parent::Scene)
-    if applicable(f, event, parent)
-        # Make this error if the returntype is not a Bool
-        return ifelse(f(event, parent), true, false)
-    end
-    return false
-end
-
-
-
-function process!(scene::Scene, @nospecialize(event))
-    t = time()
-    process!(scene.interactions, event, scene) && return true
-    t1 = time()
-    for child in scene.children
-        process!(child, event) && return true
-    end
-    t2 = time()
-    @info "$(t2-t) = $(t1-t) + $(t2-t1) $(typeof(event))"
-    return false
-end
 
 """
-    register!(scene, key::Symbol, interaction::Any[, priority=0])
-    register!(scene, key[, priority]) do event, scene ... end
+    register!(scene_or_plot, key::Symbol, interaction::Any[, priority=0])
+    register!(scene_or_plot, key[, priority]) do event, scene ... end
 
 Register an interaction (function or object) with the given key.
 
@@ -777,38 +667,274 @@ AbstractEvent
     RenderTickEvent
 ```
 """
-function register!(scene::Scene, key, int, prirority=0)
-    register!(scene.interactions, key, int, priority)
+function register!(f::Function, target::Union{SceneLike, AbstractPlot}, key, _priority = DEFAULT_PRIORITY)
+    register!(target, key, f, _priority)
 end
-function register!(f::Function, scene::Scene, key, prirority=0)
-    register!(f, scene.interactions, key, priority)
+function register!(target::Union{SceneLike, AbstractPlot}, key, int, _priority = DEFAULT_PRIORITY)
+    register!(target.interactions, key, int, _priority)
+    add_priority!(target, _priority)
+    nothing
 end
+function register!(col::Interactions, key, interaction, _priority = DEFAULT_PRIORITY)
+    active = col.active
+    prioritymap = col.prioritymap
+    keymap = col.keymap
+    interactions = col.interactions
+
+    if haskey(keymap, key)
+        # KeyError() maybe?
+        error("Interaction with name $key already exists.")
+    end
+
+    # Insert priority-ordered interaction
+
+    # find index into interactions and add it
+    if haskey(prioritymap, _priority)
+        idx = last(prioritymap[_priority])+1
+        # Update larger indices
+        for indices in values(prioritymap)
+            if first(indices) >= idx
+                indices .+= 1
+            end
+        end
+        push!(prioritymap[_priority], idx)
+        idx
+    elseif isempty(prioritymap)
+        push!(prioritymap, _priority => Int[1])
+        idx = 1
+    else
+        priorities = sort(collect(keys(prioritymap)))
+        idx = if _priority < first(priorities)
+            1
+        elseif last(priorities) < _priority
+            lastindex(interactions) + 1
+        else
+            i = findfirst(p -> p > _priority, priorities)
+            first(prioritymap[i])
+        end
+        # Update larger indices
+        for indices in values(prioritymap)
+            if first(indices) >= idx
+                indices .+= 1
+            end
+        end
+        push!(prioritymap, _priority => Int[idx])
+    end
+
+    for (k, v) in keymap
+        if v[2] >= idx
+            keymap[k] = (v[1], v[2]+1)
+        end
+    end
+    push!(keymap, key => (_priority, idx))
+    insert!(interactions, idx, interaction)
+
+    nothing
+end
+
+# register priority in all parent plots and scenes
+add_priority!(target::Nothing, _priority) = nothing
+function add_priority!(target, _priority)
+    if !(_priority in target.interactions.active)
+        push!(target.interactions.active, _priority)
+        sort!(target.interactions.active)
+        return add_priority!(target.parent, _priority)
+    end
+    return nothing
+end
+
+
 
 """
     deregister!(scene, key)
 
 Removes the interaction associated with the given key.
 """
-function deregister!(scene::Scene, key)
-    deregister!(scene.interactions, key)
+function deregister!(target::Union{SceneLike, AbstractPlot}, key)
+    need_update, _priority = deregister!(target.interactions, key)
+    if need_update
+        maybe_remove_priority!(target, _priority)
+    end
+    nothing
 end
 
-"""
-    priority(scene, key)
+# removing - follow Dict?
+function deregister!(col::Interactions, key::Symbol)
+    _priority, idx = col.keymap[key]
+    deleteat!(col.interactions, idx)
+    
+    i = findfirst(i -> i == idx, col.prioritymap[_priority])
+    deleteat!(col.prioritymap[_priority], i)
+    need_update = if isempty(col.prioritymap[_priority])
+        deleteat!(col.prioritymap, _priority)
+        true
+    else
+        col.prioritymap[_priority][i:end] -= 1
+        false
+    end
+    for (k, v) in col.prioritymap
+        (k > _priority) && (v .-= 1)
+    end
 
-Get the priority of an interaction associated with a given key.
-"""
-priority(scene::Scene, key) = priority(scene.interactions, key)
-"""
-    priority!(scene, key, priority)
+    delete!(col.keymap, key)
+    for (k, v) in col.keymap
+        (v[2] > idx) && (col.keymap[k] = (v[1], v[2]-1))
+    end
 
-Sets the priority of an interaction associated with a given key.
-"""
-priority!(scene::Scene, key, priority) = priority!(scene.interactions, key, priority)
+    return need_update, _priority
+end
 
-"""
-    priorities(scene)
+function has_other_source(scene::Scene, _priority)
+    for child in scene.children
+        _priority in child.interactions.active && return true
+    end
+    for plot in scene.plots
+        _priority in plot.interactions.active && return true
+    end
+    false
+end
+function has_other_source(scene::AbstractPlot, _priority)
+    for plot in scene.plots
+        _priority in plot.interactions.active && return true
+    end
+    false
+end
 
-Returns a `Dict(priority => keys)`` of all priority values and their associated keys.
-"""
-priorities(scene::Scene) = priorities(scene.interactions)
+maybe_remove_priority!(::Nothing, _priority) = nothing
+function maybe_remove_priority!(target, _priority)
+    if any(p == _priority for p in keys(target.interactions.prioritymap))
+        # interaction with _priority exists here
+        return nothing
+    elseif has_other_source(target, _priority)
+        # interaction with _priority exists in a child
+        return nothing
+    else
+        # doesn't exist, can be removed here, maybe also in parent
+        idx = findfirst(==(_priority), target.interactions.active)
+        deleteat!(target.interactions.active, idx)
+        return maybe_remove_priority(target.parent, _priority)
+    end
+end
+
+
+
+# event dispatch
+function process!(scene::Scene, @nospecialize(event))
+    # process by priority first, reverse rende rorder second
+    for _priority in reverse(scene.interactions.active)
+        for plot in reverse(scene.plots)
+            process!(plot, event, _priority) && return true
+        end
+        for child in reverse(scene.children)
+            process!(child, event, _priority) && return true
+        end        
+        # Should this happen before plots?
+        process!(scene.interactions, event, scene, _priority) && return true
+    end
+    return false
+end
+
+function process!(scene::Scene, @nospecialize(event), _priority)
+    (_priority in scene.interactions.active) || return false
+    for plot in reverse(scene.plots)
+        process!(plot, event, _priority) && return true
+    end
+    for child in reverse(scene.children)
+        process!(child, event, _priority) && return true
+    end        
+    return process!(scene.interactions, event, scene, _priority)
+end
+
+function process!(plot::AbstractPlot, @nospecialize(event), _priority)
+    (_priority in plot.interactions.active) || return false
+    for child in reverse(plot.plots)
+        process!(child, event, _priority) && return true
+    end
+    return process!(plot.interactions, event, plot, _priority)
+end
+
+# dispatch events to interactions
+function process!(col::Interactions, @nospecialize(event), parent::Union{SceneLike, AbstractPlot}, _priority)
+    haskey(col.prioritymap, _priority) || return false 
+    for idx in col.prioritymap[_priority]
+        x = process!(col.interactions[idx], event, parent) 
+        x && return true
+    end
+    return false
+end
+
+# Default - do nothing
+process!(@nospecialize args...) = false
+
+# For functions
+function process!(f::Function, @nospecialize(event), parent::Union{SceneLike, AbstractPlot})
+    if applicable(f, event, parent)
+        # To make this error if the returntype is not a Bool
+        return ifelse(f(event, parent), true, false)
+    end
+    return false
+end
+
+
+
+
+
+
+
+
+# """
+#     priority(scene, key)
+
+# Get the priority of an interaction associated with a given key.
+# """
+# priority(scene::Scene, key) = priority(scene.interactions, key)
+# """
+#     priority!(scene, key, priority)
+
+# Sets the priority of an interaction associated with a given key.
+# """
+# priority!(scene::Scene, key, _priority) = priority!(scene.interactions, key, _priority)
+
+# """
+#     priorities(scene)
+
+# Returns a `Dict(priority => keys)`` of all priority values and their associated keys.
+# """
+# priorities(scene::Scene) = priorities(scene.interactions)
+
+
+# # get/set priority
+# priority(col::Interactions, key::Symbol) = col.priorities[col.keymap[key]]
+# function priorities(col::Interactions)
+#     output = Dict{Int64, Vector{Symbol}}()
+#     for (k, v) in col.keymap
+#         _priority = col.priorities[v]
+#         if haskey(output, _priority)
+#             output[_priority] = Symbol[k]
+#         else
+#             push!(output[_priority], k)
+#         end
+#     end
+#     output
+# end
+# function priority!(col::Interactions, key::Symbol, _priority)
+#     old = col.keymap[key]
+#     new = priority_to_index(priorities, _priority)
+    
+#     # Same position, nothing to do
+#     col.priorities[old] == new-1 && return nothing
+
+#     # Otherwise remove and insert elsewhere
+#     interaction = col.interactions[old]
+#     deleteat!(col.interactions, old)
+#     deleteat!(col.priorities, old)
+#     insert!(col.interactions, new-1, interaction)
+#     insert!(col.priorities, new-1, _priority)
+
+#     col.keymap[key] = new-1
+#     for (k, v) in col.keymap
+#         (old < v < new-1) && (col.keymap[k] -= 1)
+#     end
+
+#     nothing
+# end

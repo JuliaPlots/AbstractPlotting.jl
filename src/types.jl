@@ -150,11 +150,13 @@ end
 struct RenderTickEvent <: AbstractEvent end
 
 struct Interactions
-    keymap::Dict{Symbol, Int64}
-    priorities::Vector{Int64}
+    # active here or in child scenes/plots
+    active::Vector{Int8}
+    prioritymap::Dict{Int8, Vector{Int}}
+    keymap::Dict{Symbol, Tuple{Int8, Int}}
     interactions::Vector{Any}
 end
-Interactions() = Interactions(Dict{Symbol, Int64}(), Int64[], Any[])
+Interactions() = Interactions(Vector{Int8}(), Dict{Int8, Vector{Int}}(), Dict{Symbol, Tuple{Int8, Int}}(), Any[])
 
 
 mutable struct Camera
@@ -197,6 +199,7 @@ struct Combined{Typ, T} <: ScenePlot{Typ}
     attributes::Attributes
     input_args::Tuple
     converted::Tuple
+    interactions::Interactions
     plots::Vector{AbstractPlot}
 end
 

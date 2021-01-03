@@ -187,6 +187,7 @@ export MouseButtonEvent, MouseMovedEvent, MouseScrolledEvent
 export WindowResizeEvent, WindowDPIEvent, WindowOpenEvent, DroppedFilesEvent, 
         WindowFocusEvent, WindowEnteredEvent
 export RenderTickEvent
+export register!, deregister!
 
 # currently special-cased functions (`textslider`) for example
 export textslider
