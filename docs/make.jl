@@ -367,6 +367,7 @@ makedocs(
             "backends.md",
             "troubleshooting.md",
             "API Reference AbstractPlotting" => "abstractplotting_api.md",
+            "precompilation.md",
         ],
         "MakieLayout" => [
             "Tutorial" => "makielayout/tutorial.md",
