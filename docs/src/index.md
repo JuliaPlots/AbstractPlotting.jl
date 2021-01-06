@@ -28,6 +28,7 @@ CairoMakie.activate!()
 - Learn the basics of plotting with Makie in the [Tutorial](@ref)
 - Check out how to make more complex plots and layouts in the [MakieLayout Tutorial](@ref)
 - See example plots in the [Gallery](http://juliaplots.org/MakieReferenceImages/gallery/index.html).
+- Speed up time to first plot by learning about [Precompilation](@ref)
 
 
 ## Makie Ecosystem
