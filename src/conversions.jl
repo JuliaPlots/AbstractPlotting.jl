@@ -680,19 +680,8 @@ convert_attribute(A::AbstractVector, ::key"linestyle") = A
 function convert_attribute(ls::Symbol, ::key"linestyle")
     return if ls == :solid
         nothing
-    elseif ls == :dash
-        [0.0, 1.0, 2.0, 3.0, 4.0]
-    elseif ls == :dot
-        tick, gap = 1/2, 1/4
-        [0.0, tick, tick+gap, 2tick+gap, 2tick+2gap]
-    elseif ls == :dashdot
-        dtick, dgap = 1.0, 1.0
-        ptick, pgap = 1/2, 1/4
-        [0.0, dtick, dtick+dgap, dtick+dgap+ptick, dtick+dgap+ptick+pgap]
-    elseif ls == :dashdotdot
-        dtick, dgap = 1.0, 1.0
-        ptick, pgap = 1/2, 1/4
-        [0.0, dtick, dtick+dgap, dtick+dgap+ptick, dtick+dgap+ptick+pgap, dtick+dgap+ptick+pgap+ptick,  dtick+dgap+ptick+pgap+ptick+pgap]
+    elseif ls in [:dash, :dot, :dashdot, :dashdotdot]
+        pattern(ls)
     else
         error(
             """
@@ -702,6 +691,32 @@ function convert_attribute(ls::Symbol, ::key"linestyle")
             This sequence of numbers must be cumulative; 1 unit corresponds to 1 line width.
             """
         )
+    end
+end
+
+function pattern(linestyle, modifier=:normal; kwargs...)
+    float.([0; cumsum(_pattern(linestyle, modifier; kwargs...))])
+end
+
+"The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
+function _pattern(linestyle, modifier=:normal;
+                  dot = 1,  dot_gap  = (normal = 2, dense = 1, loose = 4),
+                  dash = 3, dash_gap = (normal = 3, dense = 2, loose = 6)
+                  )
+
+    if linestyle == :dash
+        gap = getproperty(dash_gap, modifier)
+        [dash, gap]
+    elseif linestyle == :dot
+        gap = getproperty(dot_gap, modifier)
+        [dot, gap]
+    elseif linestyle == :dashdot
+        gap = getproperty(dash_gap, modifier)
+        [dash, gap, dot, gap]
+    elseif linestyle == :dashdotdot
+        dash_gap = getproperty(dash_gap, modifier)
+        dot_gap  = getproperty(dot_gap,  modifier)
+        [dash, dash_gap, dot, dot_gap, dot, dash_gap]
     end
 end
 
