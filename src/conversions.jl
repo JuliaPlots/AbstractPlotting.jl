@@ -677,11 +677,31 @@ convert_attribute(A::AbstractVector, ::key"linestyle") = A
 """
     A `Symbol` equal to `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
 """
-function convert_attribute(ls::Symbol, ::key"linestyle")
-    return if ls == :solid
+convert_attribute(ls::Union{Symbol,AbstractString}, ::key"linestyle") = diff_pattern(ls, :normal)
+
+function convert_attribute(ls::Tuple{<:Union{Symbol,AbstractString},<:Any}, ::key"linestyle")
+    diff_pattern(ls[1], ls[2])
+end
+
+using UnPack
+
+function diff_pattern(linestyle, gaps)
+    float.([0.0; cumsum(pattern(linestyle, gaps))])
+end
+
+"The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
+
+function pattern(ls::Symbol, gaps = :normal)
+    if ls == :solid
         nothing
-    elseif ls in [:dash, :dot, :dashdot, :dashdotdot]
-        pattern(ls)
+    elseif ls == :dash
+        pattern("-", gaps)
+    elseif ls == :dot
+        pattern(".", gaps)
+    elseif ls == :dashdot
+        pattern("-.", gaps)
+    elseif ls == :dashdotdot
+        pattern("-..", gaps)
     else
         error(
             """
@@ -694,30 +714,56 @@ function convert_attribute(ls::Symbol, ::key"linestyle")
     end
 end
 
-function pattern(linestyle, modifier=:normal; kwargs...)
-    float.([0; cumsum(_pattern(linestyle, modifier; kwargs...))])
+function pattern(ls_str::AbstractString, gaps = :normal)
+    dot = 1
+    dash = 3
+    check_pattern(ls_str)
+    
+    @unpack dot_gap, dash_gap = convert_gaps(gaps)
+    
+    pattern = Float64[]
+    for i in 1:length(ls_str)
+        # push dash or dot
+        if ls_str[i] == '-'
+            push!(pattern, dash)
+        else
+            push!(pattern, dot)
+        end
+        # push the gap (use dot_gap only between two dots)
+        next_char = i == lastindex(ls_str) ? ls_str[begin] : ls_str[i+1]
+        if (ls_str[i] == '.') && (next_char == '.')
+            push!(pattern, dot_gap)
+        else
+            push!(pattern, dash_gap)
+        end
+    end
+    pattern
 end
 
-"The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
-function _pattern(linestyle, modifier=:normal;
-                  dot = 1,  dot_gap  = (normal = 2, dense = 1, loose = 4),
-                  dash = 3, dash_gap = (normal = 3, dense = 2, loose = 6)
-                  )
-
-    if linestyle == :dash
-        gap = getproperty(dash_gap, modifier)
-        [dash, gap]
-    elseif linestyle == :dot
-        gap = getproperty(dot_gap, modifier)
-        [dot, gap]
-    elseif linestyle == :dashdot
-        gap = getproperty(dash_gap, modifier)
-        [dash, gap, dot, gap]
-    elseif linestyle == :dashdotdot
-        dash_gap = getproperty(dash_gap, modifier)
-        dot_gap  = getproperty(dot_gap,  modifier)
-        [dash, dash_gap, dot, dot_gap, dot, dash_gap]
+"Checks if the linestyle format provided as a string contains only dashes and dots"
+function check_pattern(ls_str)
+    for i in 1:length(ls_str)
+        ls_str[i] == '-' || ls_str[i] == '.' ||
+        throw(ArgumentError("If you provide a string as linestyle, it must only consist of dashes (-) and dots (.)"))
     end
+end
+
+function convert_gaps(gaps)
+  if gaps isa Symbol
+      dot_gaps  = (normal = 2, dense = 1, loose = 4)
+      dash_gaps = (normal = 3, dense = 2, loose = 6)
+  
+      dot_gap  = getproperty(dot_gaps, gaps)
+      dash_gap = getproperty(dash_gaps, gaps)
+  elseif gaps isa Real
+      dot_gap = gaps
+      dash_gap = gaps
+  elseif length(gaps) == 2 && eltype(gaps) <: Real
+      dot_gap, dash_gap = gaps
+  else
+      throw(ArgumentError("gaps keyword must be in([:normal, :dense, :loose]) a number of a collection of two numbers."))
+  end
+  (; dot_gap, dash_gap)
 end
 
 function convert_attribute(f::Symbol, ::key"frames")
