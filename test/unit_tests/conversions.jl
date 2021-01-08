@@ -114,4 +114,9 @@ import AbstractPlotting: check_pattern, diff_pattern
     @test diff_pattern("-",   (0.4, 0.6)) == [dash, 0.6]
     @test diff_pattern(:dot,  (0.4, 0.6)) == [dot, 0.4]
     @test diff_pattern("-..", (0.4, 0.6)) == [dash, 0.6, dot, 0.4, dot, 0.6]
+
+    # gaps must be Symbol, a number, or two numbers
+    @test_throws ArgumentError diff_pattern(:dash, :NORMAL)
+    @test_throws ArgumentError diff_pattern(:dash, ()) 
+    @test_throws ArgumentError diff_pattern(:dash, (1, 2, 3))
 end

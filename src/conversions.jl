@@ -750,7 +750,9 @@ function check_pattern(ls_str)
 end
 
 function convert_gaps(gaps)
+  error_msg = "You provided the gaps modifier $gaps when specifying the linestyle. The modifier must be `∈ ([:normal, :dense, :loose])`, a real number or a collection of two real numbers."
   if gaps isa Symbol
+      gaps in [:normal, :dense, :loose] || throw(ArgumentError(error_msg))
       dot_gaps  = (normal = 2, dense = 1, loose = 4)
       dash_gaps = (normal = 3, dense = 2, loose = 6)
   
@@ -762,7 +764,7 @@ function convert_gaps(gaps)
   elseif length(gaps) == 2 && eltype(gaps) <: Real
       dot_gap, dash_gap = gaps
   else
-      throw(ArgumentError("gaps keyword must be in([:normal, :dense, :loose]) a number of a collection of two numbers."))
+      throw(ArgumentError(error_msg))
   end
   (; dot_gap, dash_gap)
 end
