@@ -743,6 +743,8 @@ end
 function check_line_pattern(ls_str)
     isnothing(match(r"^[.-]+$", ls_str)) &&
         throw(ArgumentError("If you provide a string as linestyle, it must only consist of dashes (-) and dots (.)"))
+    
+    nothing
 end
 
 function convert_gaps(gaps)
