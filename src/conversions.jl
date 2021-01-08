@@ -677,29 +677,29 @@ convert_attribute(A::AbstractVector, ::key"linestyle") = A
 """
     A `Symbol` equal to `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
 """
-convert_attribute(ls::Union{Symbol,AbstractString}, ::key"linestyle") = pattern(ls, :normal)
+convert_attribute(ls::Union{Symbol,AbstractString}, ::key"linestyle") = line_pattern(ls, :normal)
 
 function convert_attribute(ls::Tuple{<:Union{Symbol,AbstractString},<:Any}, ::key"linestyle")
-    pattern(ls[1], ls[2])
+    line_pattern(ls[1], ls[2])
 end
 
-function pattern(linestyle, gaps)
-    float.([0.0; cumsum(diff_pattern(linestyle, gaps))])
+function line_pattern(linestyle, gaps)
+    float.([0.0; cumsum(diff_line_pattern(linestyle, gaps))])
 end
 
 "The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
 
-function diff_pattern(ls::Symbol, gaps = :normal)
+function diff_line_pattern(ls::Symbol, gaps = :normal)
     if ls == :solid
         nothing
     elseif ls == :dash
-        diff_pattern("-", gaps)
+        diff_line_pattern("-", gaps)
     elseif ls == :dot
-        diff_pattern(".", gaps)
+        diff_line_pattern(".", gaps)
     elseif ls == :dashdot
-        diff_pattern("-.", gaps)
+        diff_line_pattern("-.", gaps)
     elseif ls == :dashdotdot
-        diff_pattern("-..", gaps)
+        diff_line_pattern("-..", gaps)
     else
         error(
             """
@@ -712,10 +712,10 @@ function diff_pattern(ls::Symbol, gaps = :normal)
     end
 end
 
-function diff_pattern(ls_str::AbstractString, gaps = :normal)
+function diff_line_pattern(ls_str::AbstractString, gaps = :normal)
     dot = 1
     dash = 3
-    check_pattern(ls_str)
+    check_line_pattern(ls_str)
     
     dot_gap, dash_gap = convert_gaps(gaps)
     
@@ -740,7 +740,7 @@ function diff_pattern(ls_str::AbstractString, gaps = :normal)
 end
 
 "Checks if the linestyle format provided as a string contains only dashes and dots"
-function check_pattern(ls_str)
+function check_line_pattern(ls_str)
     isnothing(match(r"^[\.\-]+$", ls_str)) &&
         throw(ArgumentError("If you provide a string as linestyle, it must only consist of dashes (-) and dots (.)"))
 end
