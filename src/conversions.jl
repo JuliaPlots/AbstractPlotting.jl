@@ -683,8 +683,6 @@ function convert_attribute(ls::Tuple{<:Union{Symbol,AbstractString},<:Any}, ::ke
     pattern(ls[1], ls[2])
 end
 
-using UnPack
-
 function pattern(linestyle, gaps)
     float.([0.0; cumsum(diff_pattern(linestyle, gaps))])
 end
