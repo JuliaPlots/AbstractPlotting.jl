@@ -677,31 +677,31 @@ convert_attribute(A::AbstractVector, ::key"linestyle") = A
 """
     A `Symbol` equal to `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
 """
-convert_attribute(ls::Union{Symbol,AbstractString}, ::key"linestyle") = diff_pattern(ls, :normal)
+convert_attribute(ls::Union{Symbol,AbstractString}, ::key"linestyle") = pattern(ls, :normal)
 
 function convert_attribute(ls::Tuple{<:Union{Symbol,AbstractString},<:Any}, ::key"linestyle")
-    diff_pattern(ls[1], ls[2])
+    pattern(ls[1], ls[2])
 end
 
 using UnPack
 
-function diff_pattern(linestyle, gaps)
-    float.([0.0; cumsum(pattern(linestyle, gaps))])
+function pattern(linestyle, gaps)
+    float.([0.0; cumsum(diff_pattern(linestyle, gaps))])
 end
 
 "The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
 
-function pattern(ls::Symbol, gaps = :normal)
+function diff_pattern(ls::Symbol, gaps = :normal)
     if ls == :solid
         nothing
     elseif ls == :dash
-        pattern("-", gaps)
+        diff_pattern("-", gaps)
     elseif ls == :dot
-        pattern(".", gaps)
+        diff_pattern(".", gaps)
     elseif ls == :dashdot
-        pattern("-.", gaps)
+        diff_pattern("-.", gaps)
     elseif ls == :dashdotdot
-        pattern("-..", gaps)
+        diff_pattern("-..", gaps)
     else
         error(
             """
@@ -714,24 +714,25 @@ function pattern(ls::Symbol, gaps = :normal)
     end
 end
 
-function pattern(ls_str::AbstractString, gaps = :normal)
+function diff_pattern(ls_str::AbstractString, gaps = :normal)
     dot = 1
     dash = 3
     check_pattern(ls_str)
     
-    @unpack dot_gap, dash_gap = convert_gaps(gaps)
+    dot_gap, dash_gap = convert_gaps(gaps)
     
     pattern = Float64[]
     for i in 1:length(ls_str)
+        curr_char = ls_str[i]
+        next_char = i == lastindex(ls_str) ? ls_str[begin] : ls_str[i+1]
         # push dash or dot
-        if ls_str[i] == '-'
+        if curr_char == '-'
             push!(pattern, dash)
         else
             push!(pattern, dot)
         end
         # push the gap (use dot_gap only between two dots)
-        next_char = i == lastindex(ls_str) ? ls_str[begin] : ls_str[i+1]
-        if (ls_str[i] == '.') && (next_char == '.')
+        if (curr_char == '.') && (next_char == '.')
             push!(pattern, dot_gap)
         else
             push!(pattern, dash_gap)
