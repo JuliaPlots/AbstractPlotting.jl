@@ -741,10 +741,8 @@ end
 
 "Checks if the linestyle format provided as a string contains only dashes and dots"
 function check_pattern(ls_str)
-    for i in 1:length(ls_str)
-        ls_str[i] == '-' || ls_str[i] == '.' ||
+    isnothing(match(r"^[\.\-]+$", ls_str)) &&
         throw(ArgumentError("If you provide a string as linestyle, it must only consist of dashes (-) and dots (.)"))
-    end
 end
 
 function convert_gaps(gaps)
