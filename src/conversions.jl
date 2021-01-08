@@ -741,7 +741,7 @@ end
 
 "Checks if the linestyle format provided as a string contains only dashes and dots"
 function check_line_pattern(ls_str)
-    isnothing(match(r"^[\.\-]+$", ls_str)) &&
+    isnothing(match(r"^[.-]+$", ls_str)) &&
         throw(ArgumentError("If you provide a string as linestyle, it must only consist of dashes (-) and dots (.)"))
 end
 

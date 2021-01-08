@@ -86,7 +86,7 @@ end
     @test AbstractPlotting.categoric_position.(a, Ref(ilabels)) == [1, 1, 2]
 end
 
-import AbstractPlotting: check_pattern, diff_pattern
+using AbstractPlotting: check_line_pattern, line_diff_pattern
 
 @testset "Linetype" begin
     @test isnothing(check_line_pattern("-."))
