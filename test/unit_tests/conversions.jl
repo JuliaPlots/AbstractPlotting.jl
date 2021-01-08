@@ -85,3 +85,33 @@ end
     @test ilabels == [1, 2]
     @test AbstractPlotting.categoric_position.(a, Ref(ilabels)) == [1, 1, 2]
 end
+
+import AbstractPlotting: check_pattern, diff_pattern
+
+@testset "Linetype" begin
+    @test isnothing(check_pattern("-."))
+    @test isnothing(check_pattern("--"))
+    @test_throws ArgumentError check_pattern("-.*")
+
+    # for readability, the length of dash and dot
+    dash, dot = 3.0, 1.0
+    
+    @test diff_pattern(:dash)             ==
+          diff_pattern("-",   :normal)    == [dash, 3.0]
+    @test diff_pattern(:dot)              == 
+          diff_pattern(".",   :normal)    == [dot, 2.0]
+    @test diff_pattern(:dashdot)          ==
+          diff_pattern("-.",  :normal)    == [dash, 3.0, dot, 3.0]
+    @test diff_pattern(:dashdotdot)       == 
+          diff_pattern("-..", :normal)    == [dash, 3.0, dot, 2.0, dot, 3.0]
+        
+    @test diff_pattern(:dash, :loose)     == [dash, 6.0]
+    @test diff_pattern(:dot,  :loose)     == [dot, 4.0]
+    @test diff_pattern("-",   :dense)     == [dash, 2.0]
+    @test diff_pattern(".",   :dense)     == [dot, 1.0]
+    @test diff_pattern(:dash, 0.5)        == [dash, 0.5]
+    @test diff_pattern(:dot,  0.5)        == [dot, 0.5]
+    @test diff_pattern("-",   (0.4, 0.6)) == [dash, 0.6]
+    @test diff_pattern(:dot,  (0.4, 0.6)) == [dot, 0.4]
+    @test diff_pattern("-..", (0.4, 0.6)) == [dash, 0.6, dot, 0.4, dot, 0.6]
+end
