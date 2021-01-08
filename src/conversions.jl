@@ -684,22 +684,22 @@ function convert_attribute(ls::Tuple{<:Union{Symbol,AbstractString},<:Any}, ::ke
 end
 
 function line_pattern(linestyle, gaps)
-    float.([0.0; cumsum(diff_line_pattern(linestyle, gaps))])
+    float.([0.0; cumsum(line_diff_pattern(linestyle, gaps))])
 end
 
 "The linestyle patterns are inspired by the LaTeX package tikZ as seen here https://tex.stackexchange.com/questions/45275/tikz-get-values-for-predefined-dash-patterns."
 
-function diff_line_pattern(ls::Symbol, gaps = :normal)
+function line_diff_pattern(ls::Symbol, gaps = :normal)
     if ls == :solid
         nothing
     elseif ls == :dash
-        diff_line_pattern("-", gaps)
+        line_diff_pattern("-", gaps)
     elseif ls == :dot
-        diff_line_pattern(".", gaps)
+        line_diff_pattern(".", gaps)
     elseif ls == :dashdot
-        diff_line_pattern("-.", gaps)
+        line_diff_pattern("-.", gaps)
     elseif ls == :dashdotdot
-        diff_line_pattern("-..", gaps)
+        line_diff_pattern("-..", gaps)
     else
         error(
             """
@@ -712,7 +712,7 @@ function diff_line_pattern(ls::Symbol, gaps = :normal)
     end
 end
 
-function diff_line_pattern(ls_str::AbstractString, gaps = :normal)
+function line_diff_pattern(ls_str::AbstractString, gaps = :normal)
     dot = 1
     dash = 3
     check_line_pattern(ls_str)
