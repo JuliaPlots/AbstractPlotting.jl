@@ -309,7 +309,7 @@ function plot!(plot::Text{<:Tuple{<:AbstractArray{<:Tuple{String, <:Point}}}})
     attrs = plot.attributes
     pop!(attrs, :position)
 
-    t = text!(plot, strings; position = positions, attrs...).plots[1]
+    t = text!(plot, strings; position = positions, attrs...)
 
     # update both text and positions together
     on(strings_and_positions) do str_pos

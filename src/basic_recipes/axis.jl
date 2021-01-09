@@ -306,6 +306,17 @@ function draw_axis3d(textbuffer, linebuffer, scale, limits, ranges_labels, args.
     return
 end
 
+function text_bb(str, font, size)
+    layout = layout_text(str, size, font, Vec2f0(0), Quaternionf0(0,0,0,1), Mat4f0(I), 0.5, 1.0)
+    @assert typeof(layout.bboxes) <: Vector{FRect2D}
+
+    bbs = map(layout.origins, layout.bboxes) do o, bb
+        bb3 = FRect3D(bb)
+        FRect3D(bb3.origin + o * size, bb3.widths * size)
+    end
+    bb = reduce(union, bbs[2:end], init = bbs[1])
+end
+
 
 function plot!(scene::SceneLike, ::Type{<: Axis3D}, attributes::Attributes, args...)
     axis = Axis3D(scene, attributes, args)
