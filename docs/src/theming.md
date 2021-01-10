@@ -3,7 +3,7 @@
 Makie allows you to change almost every visual aspect of your plots via attributes.
 You can set attributes whenever you create an object, or you define a general style that is then used as the default by all following objects.
 
-You can call `set_theme!(theme)` to change the current default theme.
+You can call `set_theme!(theme; kwargs...)` to change the current default theme to `theme` and override or add attributes given by `kwargs`.
 You can also reset your changes by calling `set_theme!()` without arguments.
 
 Let's create a plot with the default theme:
