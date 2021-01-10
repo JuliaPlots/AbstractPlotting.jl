@@ -414,7 +414,7 @@ function Base.push!(scene::Scene, child::Scene)
     return scene
 end
 
-events(scene::Scene) = begin @warn "Deprecate me!"; scene.events end
+events(scene::Scene) = scene.events
 events(scene::SceneLike) = events(scene.parent)
 
 camera(scene::Scene) = scene.camera

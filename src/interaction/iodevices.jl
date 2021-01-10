@@ -140,6 +140,12 @@ module Keyboard
     """
     """
 
+
+    @enum Action begin
+        press   = 0
+        repeat  = 1
+        release = 2
+    end
 end
 
 """
@@ -160,6 +166,11 @@ module Mouse
         left = 0
         middle = 2
         right = 1 # Conform to GLFW
+    end
+
+    @enum Action begin
+        press   = 1
+        release = 0
     end
 
     # TODO Does this still have a reason to exist?
@@ -183,11 +194,7 @@ end
 const ButtonTypes = Union{Nothing, Mouse.Button, Keyboard.Button}
 
 
-@enum ButtonState begin
-    press   = 0
-    repeat  = 1
-    release = 2
-end
+
 
 # This would need to be split into a bunch of different things...
 # might as well just query `ispressed(scene, left_shift)` etc

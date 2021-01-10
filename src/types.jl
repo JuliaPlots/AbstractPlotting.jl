@@ -101,7 +101,7 @@ abstract type AbstractWindowEvent <: AbstractEvent end
 # all the key presses (== keyboardbuttons)
 struct KeyEvent <: AbstractKeyboardEvent
     key::Keyboard.Button
-    state::ButtonState
+    state::Keyboard.Action
     # mod::ButtonModifier
 end
 
@@ -113,7 +113,7 @@ end
 # all the mouse button presses (== mousebuttons)
 struct MouseButtonEvent <: AbstractMouseEvent
     button::Mouse.Button
-    state::ButtonState
+    state::Mouse.Action
     # mod::ButtonModifier
 end
 
