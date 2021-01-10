@@ -127,7 +127,7 @@ end
 function with_theme(f, theme = Theme(); kwargs...)
     previous_theme = AbstractPlotting.current_default_theme()
     try
-        set_theme!(temp_theme; kwargs...)
+        set_theme!(theme; kwargs...)
         f()
     catch e
         rethrow(e)
