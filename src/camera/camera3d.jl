@@ -138,49 +138,63 @@ end
 
 function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
     last_mousepos = RefValue(Vec2f0(0, 0))
-    on(camera(scene), scene.events.mousedrag) do drag
-        mp = mouseposition_px(scene)
-        if ispressed(scene, key[]) && ispressed(scene, button[]) && is_mouseinside(scene)
-            if drag == Mouse.down
-                #just started pressing, nothing to do yet
+    e = events(scene)
+    drag_diff = Node(Vec3f0(0))
+    on(delta -> translate_cam!(scene, cam, delta), camera(scene), drag_diff)
+
+    register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
+        dragstate = e.mousedrag[]
+        if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
+            mp = mouseposition_px(scene)
+            if dragstate == Mouse.down
                 last_mousepos[] = mp
-            elseif drag == Mouse.pressed
+            elseif dragstate == Mouse.pressed
                 mousepos = mp
                 diff = (last_mousepos[] - mousepos) * cam.translationspeed[]
                 last_mousepos[] = mousepos
-                translate_cam!(scene, cam, Vec3f0(0f0, diff[1], diff[2]))
+                drag_diff[] = Vec3f0(0f0, diff[1], diff[2])
             end
         end
-        return
+        return false
     end
-    on(camera(scene), scene.events.scroll) do scroll
+
+    scroll = Node(Vec2f0(0.0, 0.0))
+    on(camera(scene), scroll) do zoom_step
+        cam_res = Vec2f0(widths(scene.px_area[]))
+        mouse_pos_normalized = mouseposition_px(scene) ./ cam_res
+        mouse_pos_normalized = 2*mouse_pos_normalized .- 1f0
+        zoom!(scene, mouse_pos_normalized, zoom_step[2], zoom_shift_lookat)
+    end
+
+    register!(scene, :camera_zoom, DEFAULT_BACKEND_PRIORITY) do event::MouseScrolledEvent, scene
         if ispressed(scene, button[]) && is_mouseinside(scene)
-            cam_res = Vec2f0(widths(scene.px_area[]))
-            mouse_pos_normalized = mouseposition_px(scene) ./ cam_res
-            mouse_pos_normalized = 2*mouse_pos_normalized .- 1f0
-            zoom_step = scroll[2]
-            zoom!(scene, mouse_pos_normalized, zoom_step, zoom_shift_lookat)
+            scroll[] = event.delta
         end
-        return
+        return false
     end
 end
 
 function add_rotation!(scene, cam, button, key, fixed_axis::Bool)
     last_mousepos = RefValue(Vec2f0(0, 0))
     e = events(scene)
-    on(camera(scene), e.mousedrag) do drag
+
+    drag_diff = Node(Vec3f0(0))
+    on(delta -> rotate_cam!(scene, cam, delta, fixed_axis), camera(scene), drag_diff)
+
+    register!(scene, :camera_rotation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
+        dragstate = e.mousedrag[]
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
-            if drag == Mouse.down
+            if dragstate == Mouse.down
                 last_mousepos[] = mouseposition_px(scene)
-            elseif drag == Mouse.pressed
+            elseif dragstate == Mouse.pressed
                 mousepos = mouseposition_px(scene)
                 rot_scaling = cam.rotationspeed[] * (e.window_dpi[] * 0.005)
                 mp = (last_mousepos[] - mousepos) * rot_scaling
                 last_mousepos[] = mousepos
-                rotate_cam!(scene, cam, Vec3f0(mp[1], -mp[2], 0f0), fixed_axis)
+                drag_diff[] = Vec3f0(mp[1], -mp[2], 0f0)
             end
         end
-        return
+        return false
     end
 end
 
