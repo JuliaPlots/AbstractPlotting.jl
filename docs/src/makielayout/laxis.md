@@ -78,7 +78,7 @@ nothing # hide
 
 ![axis limits](example_axis_limits.svg)
 
-## Modifying ticks
+## Modifying Ticks
 
 To control ticks, you can set the axis attributes `xticks/yticks` and `xtickformat/ytickformat`.
 
@@ -101,7 +101,7 @@ You can also pass a tuple with tick values and tick labels directly, bypassing t
 For formatting, you can pass a function which takes a vector of numbers and outputs a vector of strings.
 You can also pass a format string which is passed to `Formatting.format` from [Formatting.jl](https://github.com/JuliaIO/Formatting.jl), where you can mix the formatted numbers with other text like in `"{:.2f}ms"`.
 
-### Predefined ticks
+### Predefined Ticks
 
 The default tick type is `LinearTicks(n)`, where `n` is the target number of ticks which the algorithm tries to return.
 
