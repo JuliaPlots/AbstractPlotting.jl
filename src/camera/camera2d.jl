@@ -29,6 +29,7 @@ function cam2d!(scene::SceneLike; kw_args...)
     cam = from_dict(Camera2D, cam_attributes)
     # remove previously connected camera
     disconnect!(camera(scene))
+    cleanup!(scene, cameracontrols(scene))
     add_zoom!(scene, cam)
     add_pan!(scene, cam)
     correct_ratio!(scene, cam)
@@ -104,38 +105,36 @@ function correct_ratio!(scene, cam)
     end
 end
 
+
 function add_pan!(scene::SceneLike, cam::Camera2D)
-    startpos = RefValue((0.0, 0.0))
+    last_mousepos = RefValue(Vec2f0(0, 0))
     e = events(scene)
-    on(
-        camera(scene),
-        Node.((scene, cam, startpos))...,
-        e.mousedrag
-    ) do scene, cam, startpos, dragging
+    register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         pan = cam.panbutton[]
-        mp = e.mouseposition[]
         if ispressed(scene, pan) && is_mouseinside(scene)
+            mp = e.mouseposition[]
+            dragstate = e.mousedrag[]
             window_area = pixelarea(scene)[]
-            if dragging == Mouse.down
-                startpos[] = mp
-            elseif dragging == Mouse.pressed && ispressed(scene, pan)
-                diff = startpos[] .- mp
-                startpos[] = mp
+            if dragstate == Mouse.down
+                last_mousepos[] = mp
+            elseif dragstate == Mouse.pressed && ispressed(scene, pan)
+                diff = last_mousepos[] .- mp
+                last_mousepos[] = mp
                 area = cam.area[]
                 diff = Vec(diff) .* wscale(window_area, area)
                 cam.area[] = FRect(minimum(area) .+ diff, widths(area))
                 update_cam!(scene, cam)
             end
         end
-        return
+        return false
     end
 end
 
 function add_zoom!(scene::SceneLike, cam::Camera2D)
     e = events(scene)
-    on(camera(scene), e.scroll) do x
+    register!(scene, :camera_zoom, DEFAULT_BACKEND_PRIORITY) do event::MouseScrolledEvent, scene
         @extractvalue cam (zoomspeed, zoombutton, area)
-        zoom = Float32(x[2])
+        zoom = Float32(event.delta[2])
         if zoom != 0 && ispressed(scene, zoombutton) && is_mouseinside(scene)
             pa = pixelarea(scene)[]
             z = 1f0 + (zoom * zoomspeed)
@@ -148,7 +147,7 @@ function add_zoom!(scene::SceneLike, cam::Camera2D)
             cam.area[] = FRect(p1, p2 - p1)
             update_cam!(scene, cam)
         end
-        return
+        return false
     end
 end
 
@@ -294,4 +293,10 @@ function campixel!(scene)
     cameracontrols!(scene, cam)
     update_once[] = true
     cam
+end
+
+function cleanup!(scene, cam::Camera2D)
+    hasinteraction(scene, :camera_translation) && deregister!(scene, :camera_translation)
+    hasinteraction(scene, :camera_zoom) && deregister!(scene, :camera_zoom)
+    nothing
 end

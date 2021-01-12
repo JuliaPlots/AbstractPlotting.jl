@@ -143,8 +143,8 @@ function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
     e = events(scene)
 
     register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
-        dragstate = e.mousedrag[]
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
+            dragstate = e.mousedrag[]
             mp = mouseposition_px(scene)
             if dragstate == Mouse.down
                 last_mousepos[] = mp

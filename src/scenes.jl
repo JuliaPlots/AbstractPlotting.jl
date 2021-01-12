@@ -911,9 +911,7 @@ end
 function process!(col::Interactions, @nospecialize(event), parent::Union{SceneLike, AbstractPlot}, _priority)
     haskey(col.prioritymap, _priority) || return false 
     for idx in col.prioritymap[_priority]
-        @timeit "interaction callback" begin
         x = process!(col.interactions[idx], event, parent) 
-        end
         x && return true
     end
     return false
