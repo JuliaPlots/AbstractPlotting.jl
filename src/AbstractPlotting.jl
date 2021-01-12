@@ -185,7 +185,7 @@ export AbstractEvent, AbstractKeyboardEvent, AbstractMouseEvent, AbstractWindowE
 export KeyEvent, UnicodeInputEvent
 export MouseButtonEvent, MouseMovedEvent, MouseScrolledEvent
 export WindowResizeEvent, WindowDPIEvent, WindowOpenEvent, DroppedFilesEvent, 
-        WindowFocusEvent, WindowEnteredEvent
+        WindowFocusEvent, WindowHoverEvent
 export RenderTickEvent
 export register!, deregister!
 

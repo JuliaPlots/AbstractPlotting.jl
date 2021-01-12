@@ -142,10 +142,10 @@ struct DroppedFilesEvent <: AbstractWindowEvent
     files::Vector{String}
 end
 struct WindowFocusEvent <: AbstractWindowEvent
-    has_focus::Bool
+    is_focused::Bool
 end
-struct WindowEnteredEvent <: AbstractWindowEvent
-    entered_window::Bool
+struct WindowHoverEvent <: AbstractWindowEvent
+    is_hovered::Bool
 end
 
 # ticks once per render - might be useful for animations?
