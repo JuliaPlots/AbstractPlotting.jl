@@ -758,7 +758,6 @@ function deregister!(target::Union{SceneLike, AbstractPlot}, key)
     nothing
 end
 
-# removing - follow Dict?
 function deregister!(col::Interactions, key::Symbol)
     _priority, idx = col.keymap[key]
     deleteat!(col.interactions, idx)
@@ -769,7 +768,7 @@ function deregister!(col::Interactions, key::Symbol)
         deleteat!(col.prioritymap, _priority)
         true
     else
-        col.prioritymap[_priority][i:end] -= 1
+        col.prioritymap[_priority][i:end] .-= 1
         false
     end
     for (k, v) in col.prioritymap
@@ -818,18 +817,73 @@ end
 
 
 
+# Could probably be optimized, but I don't think it's worth it.
+function Base.replace!(
+        f::Function, target::Union{SceneLike, AbstractPlot}, key, 
+        _priority = DEFAULT_PRIORITY
+    )
+    replace!(target, key, f, _priority)
+end
+function Base.replace!(
+        target::Union{SceneLike, AbstractPlot}, key, @nospecialize(int), 
+        _priority = DEFAULT_PRIORITY
+    )
+    if haskey(target.interactions.keymap, key)
+        deregister!(target.interactions, key)
+    end
+    register!(target.interactions, key, int, _priority)
+    add_priority!(target, _priority)
+    nothing
+end
+
+
+
+hasinteraction(target, key) = haskey(target.interactions.keymap, key)
+hasinteraction(col::Interactions, key) = haskey(col.keymap, key)
+function hasinteraction(target::Scene, key, recursive)
+    result = haskey(target.interactions.keymap, key)
+    if recusive
+        result && return true
+        for plot in target.plots
+            hasinteraction(plot, key, true) && return true
+        end
+        for child in target.children
+            hasinteraction(plot, key, true) && return true
+        end
+    else
+        return result
+    end
+end
+function hasinteraction(target::AbstractPlot, key, recursive)
+    result = haskey(target.interactions.keymap, key)
+    if recusive
+        result && return true
+        for plot in target.plots
+            hasinteraction(plot, key, true) && return true
+        end
+    else
+        return result
+    end
+end
+
+
 # event dispatch
-function process!(scene::Scene, @nospecialize(event))
+# It should go:
+# Backend -> process!(root_scene, event)
+#         -> process!(child_or_plot, event, priority) ... (recursively)
+#         -> process!(interactions, event, priority)
+#         -> process!(interaction, event, parent_plot_or_scene)
+function process!(root::Scene, @nospecialize(event))
     # process by priority first, reverse rende rorder second
-    for _priority in reverse(scene.interactions.active)
-        for plot in reverse(scene.plots)
+    for _priority in reverse(root.interactions.active)
+        for plot in reverse(root.plots)
             process!(plot, event, _priority) && return true
         end
-        for child in reverse(scene.children)
+        for child in reverse(root.children)
             process!(child, event, _priority) && return true
         end        
         # Should this happen before plots?
-        process!(scene.interactions, event, scene, _priority) && return true
+        process!(root.interactions, event, root, _priority) && return true
     end
     return false
 end
@@ -857,7 +911,9 @@ end
 function process!(col::Interactions, @nospecialize(event), parent::Union{SceneLike, AbstractPlot}, _priority)
     haskey(col.prioritymap, _priority) || return false 
     for idx in col.prioritymap[_priority]
+        @timeit "interaction callback" begin
         x = process!(col.interactions[idx], event, parent) 
+        end
         x && return true
     end
     return false
