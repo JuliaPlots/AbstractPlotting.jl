@@ -58,10 +58,15 @@ begin
 
     const _default_font = NativeFont[]
     const _alternative_fonts = NativeFont[]
+    const defaultfont_lock = ReentrantLock()
 
     function defaultfont()
         if isempty(_default_font)
-            push!(_default_font, to_font("Dejavu Sans"))
+            lock(defaultfont_lock) do
+                if isempty(_default_font)
+                    push!(_default_font, to_font("Dejavu Sans"))
+                end
+            end
         end
         _default_font[]
     end
@@ -131,12 +136,18 @@ begin
     end
 
     const global_texture_atlas = RefValue{TextureAtlas}()
+    const cached_load_lock = ReentrantLock()
 
     function get_texture_atlas()
         if isassigned(global_texture_atlas) && size(global_texture_atlas[]) == TEXTURE_RESOLUTION[]
             global_texture_atlas[]
         else
-            global_texture_atlas[] = cached_load() # initialize only on demand
+            lock(cached_load_lock) do
+                # check the array again. make sure it is initialize only once.
+                if !(isassigned(global_texture_atlas) && size(global_texture_atlas[]) == TEXTURE_RESOLUTION[])
+                    global_texture_atlas[] = cached_load() # initialize only on demand
+                end
+            end
             global_texture_atlas[]
         end
     end
