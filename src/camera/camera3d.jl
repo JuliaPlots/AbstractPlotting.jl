@@ -43,6 +43,7 @@ function cam3d_cad!(scene; kw_args...)
     cam = from_dict(Camera3D, cam_attributes)
     # remove previously connected camera
     disconnect!(scene.camera)
+    cleanup!(scene, cameracontrols(scene))
     add_translation!(scene, cam, cam.pan_button, cam.move_key, false)
     add_rotation!(scene, cam, cam.rotate_button, cam.move_key, false)
     cameracontrols!(scene, cam)
@@ -79,6 +80,7 @@ function cam3d_turntable!(scene; kw_args...)
     cam = from_dict(Camera3D, cam_attributes)
     # remove previously connected camera
     disconnect!(scene.camera)
+    cleanup!(scene, cameracontrols(scene))
     add_translation!(scene, cam, cam.pan_button, cam.move_key, true)
     add_rotation!(scene, cam, cam.rotate_button, cam.move_key, true)
     cameracontrols!(scene, cam)
@@ -139,8 +141,6 @@ end
 function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
     last_mousepos = RefValue(Vec2f0(0, 0))
     e = events(scene)
-    drag_diff = Node(Vec3f0(0))
-    on(delta -> translate_cam!(scene, cam, delta), camera(scene), drag_diff)
 
     register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         dragstate = e.mousedrag[]
@@ -152,23 +152,18 @@ function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
                 mousepos = mp
                 diff = (last_mousepos[] - mousepos) * cam.translationspeed[]
                 last_mousepos[] = mousepos
-                drag_diff[] = Vec3f0(0f0, diff[1], diff[2])
+                translate_cam!(scene, cam, Vec3f0(0f0, diff[1], diff[2]))
             end
         end
         return false
     end
 
-    scroll = Node(Vec2f0(0.0, 0.0))
-    on(camera(scene), scroll) do zoom_step
-        cam_res = Vec2f0(widths(scene.px_area[]))
-        mouse_pos_normalized = mouseposition_px(scene) ./ cam_res
-        mouse_pos_normalized = 2*mouse_pos_normalized .- 1f0
-        zoom!(scene, mouse_pos_normalized, zoom_step[2], zoom_shift_lookat)
-    end
-
     register!(scene, :camera_zoom, DEFAULT_BACKEND_PRIORITY) do event::MouseScrolledEvent, scene
         if ispressed(scene, button[]) && is_mouseinside(scene)
-            scroll[] = event.delta
+            cam_res = Vec2f0(widths(scene.px_area[]))
+            mouse_pos_normalized = mouseposition_px(scene) ./ cam_res
+            mouse_pos_normalized = 2*mouse_pos_normalized .- 1f0
+            zoom!(scene, mouse_pos_normalized, event.delta[2], zoom_shift_lookat)
         end
         return false
     end
@@ -177,9 +172,6 @@ end
 function add_rotation!(scene, cam, button, key, fixed_axis::Bool)
     last_mousepos = RefValue(Vec2f0(0, 0))
     e = events(scene)
-
-    drag_diff = Node(Vec3f0(0))
-    on(delta -> rotate_cam!(scene, cam, delta, fixed_axis), camera(scene), drag_diff)
 
     register!(scene, :camera_rotation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         dragstate = e.mousedrag[]
@@ -191,7 +183,7 @@ function add_rotation!(scene, cam, button, key, fixed_axis::Bool)
                 rot_scaling = cam.rotationspeed[] * (e.window_dpi[] * 0.005)
                 mp = (last_mousepos[] - mousepos) * rot_scaling
                 last_mousepos[] = mousepos
-                drag_diff[] = Vec3f0(mp[1], -mp[2], 0f0)
+                rotate_cam!(scene, cam, Vec3f0(mp[1], -mp[2], 0f0), fixed_axis)
             end
         end
         return false
@@ -337,4 +329,11 @@ function update_cam!(scene::Scene, camera::Camera3D, eyeposition, lookat, up = V
     camera.upvector[] = Vec3f0(up)
     update_cam!(scene, camera)
     return
+end
+
+function cleanup!(scene, cam::Camera3D)
+    hasinteraction(scene, :camera_translation) && deregister!(scene, :camera_translation)
+    hasinteraction(scene, :camera_zoom) && deregister!(scene, :camera_zoom)
+    hasinteraction(scene, :camera_rotation) && deregister!(scene, :camera_rotation)
+    nothing
 end

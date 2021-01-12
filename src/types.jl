@@ -2,6 +2,8 @@ abstract type AbstractCamera end
 
 # placeholder if no camera is present
 struct EmptyCamera <: AbstractCamera end
+cleanup!(scene, ::EmptyCamera) = nothing
+cleanup!(scene, c::AbstractCamera) = @warn "Missing `cleanup!(scene, ::$(typeof(c)))`"
 
 @enum RaymarchAlgorithm begin
     IsoValue # 0
