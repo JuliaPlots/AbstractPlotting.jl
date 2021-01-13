@@ -139,21 +139,10 @@ function rotate_cam(
 end
 
 function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
-    last_mousepos = RefValue(Vec2f0(0, 0))
-    e = events(scene)
-
     register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
-            dragstate = e.mousedrag[]
-            mp = mouseposition_px(scene)
-            if dragstate == Mouse.down
-                last_mousepos[] = mp
-            elseif dragstate == Mouse.pressed
-                mousepos = mp
-                diff = (last_mousepos[] - mousepos) * cam.translationspeed[]
-                last_mousepos[] = mousepos
-                translate_cam!(scene, cam, Vec3f0(0f0, diff[1], diff[2]))
-            end
+            diff = (scene.input_state.mouse_position .- event.position) * cam.translationspeed[]
+            translate_cam!(scene, cam, Vec3f0(0f0, diff[1], diff[2]))
         end
         return false
     end
@@ -170,21 +159,11 @@ function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
 end
 
 function add_rotation!(scene, cam, button, key, fixed_axis::Bool)
-    last_mousepos = RefValue(Vec2f0(0, 0))
-    e = events(scene)
-
     register!(scene, :camera_rotation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
-        dragstate = e.mousedrag[]
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
-            if dragstate == Mouse.down
-                last_mousepos[] = mouseposition_px(scene)
-            elseif dragstate == Mouse.pressed
-                mousepos = mouseposition_px(scene)
-                rot_scaling = cam.rotationspeed[] * (e.window_dpi[] * 0.005)
-                mp = (last_mousepos[] - mousepos) * rot_scaling
-                last_mousepos[] = mousepos
-                rotate_cam!(scene, cam, Vec3f0(mp[1], -mp[2], 0f0), fixed_axis)
-            end
+            rot_scaling = cam.rotationspeed[] * (scene.input_state.window_dpi * 0.005)
+            diff = (scene.input_state.mouse_position .- event.position) * rot_scaling
+            rotate_cam!(scene, cam, Vec3f0(diff[1], -diff[2], 0f0), fixed_axis)
         end
         return false
     end

@@ -105,40 +105,29 @@ function correct_ratio!(scene, cam)
     end
 end
 
-
 function add_pan!(scene::SceneLike, cam::Camera2D)
-    last_mousepos = RefValue(Vec2f0(0, 0))
-    e = events(scene)
-    register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
+    register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do ::MouseMovedEvent, scene
         pan = cam.panbutton[]
         if ispressed(scene, pan) && is_mouseinside(scene)
-            mp = e.mouseposition[]
-            dragstate = e.mousedrag[]
             window_area = pixelarea(scene)[]
-            if dragstate == Mouse.down
-                last_mousepos[] = mp
-            elseif dragstate == Mouse.pressed && ispressed(scene, pan)
-                diff = last_mousepos[] .- mp
-                last_mousepos[] = mp
-                area = cam.area[]
-                diff = Vec(diff) .* wscale(window_area, area)
-                cam.area[] = FRect(minimum(area) .+ diff, widths(area))
-                update_cam!(scene, cam)
-            end
+            area = cam.area[]
+            # mouse_position_after_click - mouse_position_during_click
+            diff = scene.input_state.mouse_movement .* wscale(window_area, area)
+            cam.area[] = FRect(minimum(area) .- diff, widths(area))
+            update_cam!(scene, cam)
         end
         return false
     end
 end
 
 function add_zoom!(scene::SceneLike, cam::Camera2D)
-    e = events(scene)
     register!(scene, :camera_zoom, DEFAULT_BACKEND_PRIORITY) do event::MouseScrolledEvent, scene
         @extractvalue cam (zoomspeed, zoombutton, area)
         zoom = Float32(event.delta[2])
         if zoom != 0 && ispressed(scene, zoombutton) && is_mouseinside(scene)
             pa = pixelarea(scene)[]
             z = 1f0 + (zoom * zoomspeed)
-            mp = Vec2f0(e.mouseposition[]) - minimum(pa)
+            mp = scene.input_state.mouse_position - minimum(pa)
             mp = (mp .* wscale(pa, area)) + minimum(area)
             p1, p2 = minimum(area), maximum(area)
             p1, p2 = p1 - mp, p2 - mp # translate to mouse position
@@ -271,6 +260,14 @@ function add_restriction!(cam, window, rarea::Rect2D, minwidths::Vec)
     restrict_action
 end
 
+function cleanup!(scene, cam::Camera2D)
+    hasinteraction(scene, :camera_translation) && deregister!(scene, :camera_translation)
+    hasinteraction(scene, :camera_zoom) && deregister!(scene, :camera_zoom)
+    nothing
+end
+
+
+
 struct PixelCamera <: AbstractCamera end
 """
     campixel!(scene)
@@ -293,10 +290,4 @@ function campixel!(scene)
     cameracontrols!(scene, cam)
     update_once[] = true
     cam
-end
-
-function cleanup!(scene, cam::Camera2D)
-    hasinteraction(scene, :camera_translation) && deregister!(scene, :camera_translation)
-    hasinteraction(scene, :camera_zoom) && deregister!(scene, :camera_zoom)
-    nothing
 end
