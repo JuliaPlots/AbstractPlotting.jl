@@ -83,6 +83,7 @@ f[1, 1] = Axis(f, title = "I'm not nested")
 f[1, 2][1, 1] = Axis(f, title = "I'm nested")
 # plotting into nested positions also works
 heatmap(f[1, 2][2, 1], randn(20, 20))
+f
 ```
 
 All nested grid layouts that don't exist yet, but are needed for a nested plotting call, are created in the background automatically.
