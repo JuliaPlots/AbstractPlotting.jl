@@ -356,6 +356,7 @@ makedocs(
         ],
         "Documentation" => [
             "plot_method_signatures.md",
+            "Figure" => "figure.md",
             "Axis" => "makielayout/laxis.md",
             "GridLayout" => "makielayout/grids.md",
             "Legend" => "makielayout/llegend.md",
