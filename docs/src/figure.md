@@ -38,6 +38,17 @@ You can pass arguments to the created figure in a dict-like object to the specia
 scatter(rand(100, 2), figure = (resolution = (600, 400),))
 ```
 
+## Placing Layoutables Into A Figure
+
+All layoutables take their parent figure as the first argument, then you can place them in the figure layout
+via indexing syntax.
+
+```julia
+f = Figure()
+ax = f[1, 1] = Axis(f)
+sl = f[2, 1] = Slider(f)
+```
+
 ## FigurePositions and FigureSubpositions
 
 The indexing syntax of `Figure` is implemented to work seamlessly with layouting.
@@ -73,6 +84,13 @@ f[1, 2][1, 1] = Axis(f, title = "I'm nested")
 # plotting into nested positions also works
 heatmap(f[1, 2][2, 1], randn(20, 20))
 ```
+
+All nested grid layouts that don't exist yet, but are needed for a nested plotting call, are created in the background automatically.
+
+!!! note
+    The `GridLayout`s that are implicitly created when using `FigureSubpositions` are not directly available in the return
+    value for further manipulation. You can instead retrieve them after the fact with the `content` function, for example,
+    as explained in the following section.
 
 ## Retrieving Objects From A Figure
 
