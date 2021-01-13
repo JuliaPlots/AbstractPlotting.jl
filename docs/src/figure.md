@@ -79,7 +79,7 @@ Often, a desired plot layout can only be achieved with nesting, and repeatedly i
 using GLMakie
 
 f = Figure()
-f[1, 1] = Axis(f, "I'm not nested")
+f[1, 1] = Axis(f, title = "I'm not nested")
 f[1, 2][1, 1] = Axis(f, title = "I'm nested")
 # plotting into nested positions also works
 heatmap(f[1, 2][2, 1], randn(20, 20))
