@@ -25,18 +25,19 @@ associated with a Scene.
 $(TYPEDFIELDS)
 """
 struct Events
+    # exists as ...
     """
     The area of the window in pixels, as a `Rect2D`.
     """
-    window_area::Node{IRect2D}
+    window_area::Node{IRect2D} # WindowResizeEvent, Node
     """
     The DPI resolution of the window, as a `Float64`.
     """
-    window_dpi::Node{Float64}
+    window_dpi::Node{Float64} # WindowDPIEvent
     """
     The state of the window (open => true, closed => false).
     """
-    window_open::Node{Bool}
+    window_open::Node{Bool} # WindowOpenEvent
 
     """
     The pressed mouse buttons.
@@ -44,52 +45,80 @@ struct Events
 
     See also [`ispressed`](@ref).
     """
-    mousebuttons::Node{Set{Mouse.Button}}
+    mousebuttons::Node{Set{Mouse.Button}} # MouseClickedEvent
     """
     The position of the mouse as a `NTuple{2, Float64}`.
     Updates whenever the mouse moves.
     """
-    mouseposition::Node{NTuple{2, Float64}}
+    mouseposition::Node{NTuple{2, Float64}} # MouseMovedEvent
     """
 The state of the mouse drag, represented by an enumerator of `DragEnum`.
     """
-    mousedrag::Node{Mouse.DragEnum}
+    mousedrag::Node{Mouse.DragEnum} # -
     """
     The direction of scroll
     """
-    scroll::Node{NTuple{2, Float64}}
+    scroll::Node{NTuple{2, Float64}} # MouseScrolledEvent
 
     """
     See also [`ispressed`](@ref).
     """
-    keyboardbuttons::Node{Set{Keyboard.Button}}
+    keyboardbuttons::Node{Set{Keyboard.Button}} # KeyEvent
 
-    unicode_input::Node{Vector{Char}}
-    dropped_files::Node{Vector{String}}
+    unicode_input::Node{Vector{Char}} # UnicodeInputEvent
+    dropped_files::Node{Vector{String}} # DroppedFilesEvent
     """
     Whether the Scene window is in focus or not.
     """
-    hasfocus::Node{Bool}
-    entered_window::Node{Bool}
+    hasfocus::Node{Bool} # WindowFocusEvent
+    entered_window::Node{Bool} # WindowEnteredEvent
 end
 
 function Events()
     return Events(
-        Node(IRect(0, 0, 0, 0)),
-        Node(100.0),
-        Node(false),
+        Node(IRect(0, 0, 0, 0)), # area
+        Node(100.0), # dpi
+        Node(false), #open
 
-        Node(Set{Mouse.Button}()),
-        Node((0.0, 0.0)),
-        Node(Mouse.notpressed),
-        Node((0.0, 0.0)),
+        Node(Set{Mouse.Button}()), # mosue buttons
+        Node((0.0, 0.0)), # psotion
+        Node(Mouse.notpressed), # drag
+        Node((0.0, 0.0)), # scroll
 
-        Node(Set{Keyboard.Button}()),
+        Node(Set{Keyboard.Button}()), # keys
 
-        Node(Char[]),
-        Node(String[]),
-        Node(false),
-        Node(false),
+        Node(Char[]), # unicode input
+        Node(String[]), # dropped_files
+        Node(false), # has focus
+        Node(false), # entered window
+    )
+end
+
+
+mutable struct InputState
+    window_area::IRect2D # exists in scene
+    window_dpi::Float64
+    window_open::Bool
+    window_focused::Bool
+    window_hovered::Bool # (entered_window)
+
+    mouse_buttons::Set{Mouse.Button}
+    mouse_position::Vec2f0
+    mouse_movement::Vec2f0 # current_position - old_position
+    # left/middle/right press/repeat/release
+    # should this really be here? Should keyboard have soemthing similar?
+    mouse_state::Set{Mouse.DragState}
+    # mouse_scroll::Vec2f0 # not persistent - not useful as state?
+
+    keyboard_buttons::Set{Keyboard.Button}
+    # unicode_input::Vector{Char} # not persistent - not useful as state
+    # dropped_files::Vector{String} # persistent, but not cummulative, makes more sense to process as event
+end
+function InputState()
+    InputState(
+        IRect(0,0,0,0), 100.0, false, false, false,
+        Set{Mouse.Button}(), Vec2f0(0), Vec2f0(0), Set{Mouse.DragState}(),
+        Set{Keyboard.Button}()
     )
 end
 

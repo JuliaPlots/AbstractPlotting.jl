@@ -15,6 +15,11 @@ mutable struct Scene <: AbstractScene
     "[`Events`](@ref) associated with the Scene."
     events::Events
 
+    # This is a slighty reduced version of events, without Node's
+    # To be used getting current state information, i.e. mouse position, 
+    # keys pressed, window_dpi, etc
+    input_state::InputState
+
     "Storage for interactions that may react to events"
     interactions::Interactions
 
@@ -105,9 +110,11 @@ function Scene(
     # indicates whether we can start updating the plot
     # will be set when displayed
     updated = Node(false)
+    input_state = parent === nothing ? InputState() : parent.input_state
 
     scene = Scene(
-        parent, events, Interactions(), px_area, clear, camera, camera_controls,
+        parent, events, input_state, Interactions(), px_area, clear, 
+        camera, camera_controls,
         Node{Union{Nothing,FRect3D}}(scene_limits),
         transformation, plots, theme, attributes,
         children, current_screens, updated
@@ -874,18 +881,36 @@ end
 #         -> process!(interactions, event, priority)
 #         -> process!(interaction, event, parent_plot_or_scene)
 function process!(root::Scene, @nospecialize(event))
-    # process by priority first, reverse rende rorder second
+    @assert isroot(root) "The event entrypoint should only be called using the root scene!"
+
+    # I don't see a point in having the old mouse position diff
+    # But that begs the question - should this even be a state?
+    # (This formula can be used by any MouseMovedEvent to get the delta)
+    if event isa MouseMovedEvent
+        root.input_state.mouse_movement = event.position - root.input_state.mouse_position
+    end
+
+    # process by priority first, reverse render order second
     for _priority in reverse(root.interactions.active)
         for plot in reverse(root.plots)
-            process!(plot, event, _priority) && return true
+            process!(plot, event, _priority) && @goto finalize
         end
         for child in reverse(root.children)
-            process!(child, event, _priority) && return true
+            process!(child, event, _priority) && @goto finalize
         end        
         # Should this happen before plots?
-        process!(root.interactions, event, root, _priority) && return true
+        process!(root.interactions, event, root, _priority) && @goto finalize
     end
-    return false
+
+    # Always update the current state
+    # State updates happen after an event has been processed, i.e. an event is
+    # a promise that the state will change. This means that both the last state
+    # and the next state is availble during event processing, which is more 
+    # useful than having the new state in two locations (input_state and event).
+    @label finalize
+    update_state!(root.input_state, event)
+
+    return nothing
 end
 
 function process!(scene::Scene, @nospecialize(event), _priority)
@@ -930,7 +955,68 @@ function process!(f::Function, @nospecialize(event), parent::Union{SceneLike, Ab
 end
 
 
+# Update input states
+update_state!(@nospecialize(args...)) = nothing
+update_state!(state, event::WindowResizeEvent) = state.window_area = event.area
+update_state!(state, event::WindowDPIEvent) = state.window_dpi = event.dpi
+update_state!(state, event::WindowOpenEvent) = state.window_open = event.is_open
+update_state!(state, event::WindowFocusEvent) = state.window_focused = event.is_focused
+update_state!(state, event::WindowHoverEvent) = state.window_hovered = event.is_hovered
 
+function update_state!(state, event::MouseButtonEvent)
+    if event.state == Mouse.press
+        push!(state.mouse_buttons, event.button)
+        event.button == Mouse.left   && push!(state.mouse_state, Mouse.left_press)
+        event.button == Mouse.middle && push!(state.mouse_state, Mouse.middle_press)
+        event.button == Mouse.right  && push!(state.mouse_state, Mouse.right_press)
+    else # release
+        delete!(state.mouse_buttons, event.button)
+        if event.button == Mouse.left   
+            delete!(state.mouse_state, Mouse.left_press)
+            delete!(state.mouse_state, Mouse.left_repeat)
+            push!(state.mouse_state, Mouse.left_release)
+        elseif event.button == Mouse.middle 
+            delete!(state.mouse_state, Mouse.middle_press)
+            delete!(state.mouse_state, Mouse.middle_repeat)
+            push!(state.mouse_state, Mouse.middle_release)
+        elseif event.button == Mouse.right  
+            delete!(state.mouse_state, Mouse.right_press)
+            delete!(state.mouse_state, Mouse.right_repeat)
+            push!(state.mouse_state, Mouse.right_release)
+        end
+    end
+    nothing
+end
+function update_state!(state, event::MouseMovedEvent)
+    state.mouse_position = event.position
+    if Mouse.left_press in state.mouse_state
+        delete!(state.mouse_state, Mouse.left_press)
+        push!(state.mouse_state, Mouse.left_repeat)
+    elseif Mouse.middle_press in state.mouse_state
+        delete!(state.mouse_state, Mouse.middle_press)
+        push!(state.mouse_state, Mouse.middle_repeat)
+    elseif Mouse.right_press in state.mouse_state
+        delete!(state.mouse_state, Mouse.right_press)
+        push!(state.mouse_state, Mouse.right_repeat)
+    end
+    nothing
+end
+
+function update_state!(state, event::KeyEvent)
+    if event.state == Keyboard.release
+        delete!(state.keyboard_buttons, event.key)
+    elseif event.state == Keyboard.press
+        push!(state.keyboard_buttons, event.key)
+    else # repeat
+        # This means a key <press> event wasn't caught. If that actually happens
+        # we should probably push!() here too
+        @assert(
+            event.key in state.keyboard_buttons,
+            "Key $(event.key) should be in state 'pressed' but isn't."
+        )
+    end
+    nothing
+end
 
 
 

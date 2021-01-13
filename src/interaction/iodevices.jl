@@ -138,13 +138,16 @@ module Keyboard
     )
 
     """
+        Keyboard.Action
+    
+    Enumerates all key states/actions in accordance with the GLFW spec.
+
+    $(INSTANCES)
     """
-
-
     @enum Action begin
-        press   = 0
-        repeat  = 1
-        release = 2
+        release = 0
+        press   = 1
+        repeat  = 2
     end
 end
 
@@ -158,7 +161,7 @@ module Mouse
     """
         Mouse.Button
 
-    Enumerates all mouse buttons, in accordance with the GLFW spec.
+    Enumerates all mouse buttons in accordance with the GLFW spec.
 
     $(INSTANCES)
     """
@@ -168,39 +171,37 @@ module Mouse
         right = 1 # Conform to GLFW
     end
 
+    """
+        Mouse.Action
+    
+    Enumerates all mouse states/actions in accordance with the GLFW spec.
+
+    $(INSTANCES)
+    """
     @enum Action begin
         press   = 1
         release = 0
     end
 
-    # TODO Does this still have a reason to exist?
-    """
-        Mouse.DragEnum
+    @enum DragState begin
+        left_press
+        left_repeat
+        left_release
+        middle_press
+        middle_repeat
+        middle_release
+        right_press
+        right_repeat
+        right_release
+    end
 
-    Enumerates the drag states of the mouse.
-
-    $(INSTANCES)
-    """
     @enum DragEnum begin
         down
         up
         pressed
         notpressed
     end
-
 end
 
 # Void for no button needs to be pressed,
 const ButtonTypes = Union{Nothing, Mouse.Button, Keyboard.Button}
-
-
-
-
-# This would need to be split into a bunch of different things...
-# might as well just query `ispressed(scene, left_shift)` etc
-# @enum ButtonModifier begin
-#     shift   = 1
-#     control = 2
-#     alt     = 4
-#     super   = 8
-# end

@@ -1,3 +1,6 @@
+#############
+# TODO deprecate (superseeded by input_state)
+
 function calc_drag(buttons, drag, indrag, tracked_mousebutton)
     # only track if still the same button is pressed
     if length(buttons) == 1 && (!indrag[] || tracked_mousebutton[] == first(buttons))
@@ -33,6 +36,10 @@ function mousedrag(scene::Scene, native_window)
     return
 end
 
+
+#############
+# Deprecate with events
+
 function disconnect!(window::AbstractScreen, signal)
     disconnect!(to_native(window), signal)
 end
@@ -65,9 +72,12 @@ function register_callbacks(scene::Scene, native_window)
 end
 
 
+#############
+
+
 button_key(x::Type{T}) where {T} = error("Must be a keyboard or mouse button. Found: $T")
-button_key(x::Type{Keyboard.Button}) = :keyboardbuttons
-button_key(x::Type{Mouse.Button}) = :mousebuttons
+button_key(x::Type{Keyboard.Button}) = :keyboard_buttons
+button_key(x::Type{Mouse.Button}) = :mouse_buttons
 button_key(x::Set{T}) where {T} = button_key(T)
 button_key(x::T) where {T} = button_key(T)
 
@@ -104,7 +114,8 @@ a `Keyboard` button (e.g. `Keyboard.a`), a `Mouse` button (e.g. `Mouse.left`)
 or `nothing`. In the latter case `true` is always returned.
 """
 function ispressed(scene::SceneLike, button)
-    buttons = getfield(events(scene), button_key(button))[]
+    # buttons = getfield(events(scene), button_key(button))[]
+    buttons = getfield(scene.input_state, button_key(button))
     ispressed(buttons, button)
 end
 
