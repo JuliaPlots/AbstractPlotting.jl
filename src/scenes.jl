@@ -873,6 +873,12 @@ function hasinteraction(target::AbstractPlot, key, recursive)
     end
 end
 
+function Base.getindex(col::Interactions, key::Symbol)
+    _, idx = col.keymap[key]
+    col.interactions[idx]
+end
+    
+
 
 # event dispatch
 # It should go:
@@ -881,7 +887,8 @@ end
 #         -> process!(interactions, event, priority)
 #         -> process!(interaction, event, parent_plot_or_scene)
 function process!(root::Scene, @nospecialize(event))
-    @assert isroot(root) "The event entrypoint should only be called using the root scene!"
+    # Nope, this should be the currently displayed scene instead
+    # @assert isroot(root) "The event entrypoint should only be called using the root scene!"
 
     # I don't see a point in having the old mouse position diff
     # But that begs the question - should this even be a state?
@@ -964,7 +971,7 @@ update_state!(state, event::WindowFocusEvent) = state.window_focused = event.is_
 update_state!(state, event::WindowHoverEvent) = state.window_hovered = event.is_hovered
 
 function update_state!(state, event::MouseButtonEvent)
-    if event.state == Mouse.press
+    if event.action == Mouse.press
         push!(state.mouse_buttons, event.button)
         event.button == Mouse.left   && push!(state.mouse_state, Mouse.left_press)
         event.button == Mouse.middle && push!(state.mouse_state, Mouse.middle_press)
@@ -1003,9 +1010,9 @@ function update_state!(state, event::MouseMovedEvent)
 end
 
 function update_state!(state, event::KeyEvent)
-    if event.state == Keyboard.release
+    if event.action == Keyboard.release
         delete!(state.keyboard_buttons, event.key)
-    elseif event.state == Keyboard.press
+    elseif event.action == Keyboard.press
         push!(state.keyboard_buttons, event.key)
     else # repeat
         # This means a key <press> event wasn't caught. If that actually happens

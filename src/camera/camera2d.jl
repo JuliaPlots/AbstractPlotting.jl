@@ -1,3 +1,5 @@
+#=
+
 struct Camera2D <: AbstractCamera
     area::Node{FRect2D}
     zoomspeed::Node{Float32}
@@ -266,7 +268,7 @@ function cleanup!(scene, cam::Camera2D)
     nothing
 end
 
-
+=#
 
 struct PixelCamera <: AbstractCamera end
 """
@@ -290,4 +292,272 @@ function campixel!(scene)
     cameracontrols!(scene, cam)
     update_once[] = true
     cam
+end
+
+
+################################################################################
+
+
+# Note:
+# From the controllers perspective most things don't need to be nodes
+struct Camera2DController <: AbstractCamera
+    area::Node{FRect2D}
+    zoomspeed::Node{Float32}
+    zoombutton::Node{ButtonTypes}
+    panbutton::Node{Union{ButtonTypes, Vector{ButtonTypes}}}
+    padding::Node{Float32}
+    last_area::Node{Vec{2, Int}}
+    update_limits::Node{Bool}
+
+    # extras
+    restricted::Node{Bool}
+    minwidths::Node{Vec2f0}
+
+    selectionbutton::Node{Tuple{ButtonTypes, Mouse.Button}}
+    sr_scene::Node{Scene}
+    sr_visible::Node{Bool}
+    sr_rect::Node{FRect2D}
+end
+const Camera2D = Camera2DController
+
+
+"""
+    cam2d!(scene::SceneLike, kwargs...)
+
+Creates a 2D camera for the given Scene.
+"""
+function cam2d!(scene::SceneLike; kw_args...)
+    scene_unscaled = Scene(
+        scene, transformation = Transformation(),
+        cam = copy(camera(scene)), clear = false, raw = true
+    )
+    
+    cam_attributes = merged_get!(:cam2d, scene, Attributes(kw_args)) do
+        Attributes(
+            area = Node(FRect(0, 0, 1, 1)),
+            zoomspeed = 0.10f0,
+            zoombutton = nothing,
+            panbutton = Mouse.right,
+            selectionbutton = (Keyboard.space, Mouse.left),
+            padding = 0.001,
+            last_area = Vec(size(scene)),
+            update_limits = false,
+            restricted = false,
+            minwidths = Vec2f0(0,0),
+            sr_scene = scene_unscaled,
+            sr_visible = false,
+            sr_rect = FRect2D(0,0,0,0)
+        )
+    end
+    cam = from_dict(Camera2DController, cam_attributes)
+
+    scene_unscaled.clear = false
+    scene_unscaled.updated = Node(false)
+    lines!(
+        scene_unscaled,
+        cam.sr_rect,
+        linestyle = :dot,
+        linewidth = 2f0,
+        color = (:black, 0.4),
+        visible = cam.sr_visible,
+        raw = true
+    )
+
+    # remove previously connected camera
+    disconnect!(camera(scene))
+    cleanup!(scene, cameracontrols(scene))
+
+    # add_zoom!(scene, cam)
+    # add_pan!(scene, cam)
+    # correct_ratio!(scene, cam)
+    # selection_rect!(scene, cam, cam_attributes.selectionbutton)
+    
+    # temporarily
+    cameracontrols!(scene, cam)
+
+    register!(scene, :camera_controller, cam, DEFAULT_BACKEND_PRIORITY)
+    
+    cam
+end
+
+wscale(screenrect, viewrect) = widths(viewrect) ./ widths(screenrect)
+
+
+"""
+    `update_cam!(scene::SceneLike, area)`
+
+Updates the camera for the given `scene` to cover the given `area` in 2d.
+"""
+update_cam!(scene::SceneLike, area) = update_cam!(scene, scene.interactions[:camera_controller], area)
+"""
+    `update_cam!(scene::SceneLike)`
+
+Updates the camera for the given `scene` to cover the limits of the `Scene`.
+Useful when using the `Node` pipeline.
+"""
+update_cam!(scene::SceneLike) = update_cam!(scene, scene.interactions[:camera_controller], limits(scene)[])
+
+function update_cam!(scene::Scene, cam::Camera2DController, area3d::Rect)
+    area = FRect2D(area3d)
+    area = positive_widths(area)
+    # ignore rects with width almost 0
+    any(x-> x ≈ 0.0, widths(area)) && return
+
+    pa = pixelarea(scene)[]
+    px_wh = normalize(widths(pa))
+    wh = normalize(widths(area))
+    ratio = px_wh ./ wh
+    if ratio ≈ Vec(1.0, 1.0)
+        cam.area[] = area
+    else
+        # we only want to make the area bigger, to at least show what was selected
+        # so we make the minimum 1.0, and grow in the other dimension
+        s = ratio ./ minimum(ratio)
+        newwh = s .* widths(area)
+        cam.area[] = FRect(minimum(area), newwh)
+    end
+    update_cam!(scene, cam)
+end
+
+function update_cam!(scene::SceneLike, cam::Camera2DController)
+    x, y = minimum(cam.area[])
+    wh = widths(cam.area[])
+    # Not sure if this is the best place for this
+    if cam.restricted[] && wh < cam.minwidths[]
+        cam.area[] = cam.last_area[]
+        return
+    end
+    w,h = wh ./ 2f0
+    view = translationmatrix(Vec3f0(-x - w, -y - h, 0))
+    projection = orthographicprojection(-w, w, -h, h, -10_000f0, 10_000f0)
+    camera(scene).view[] = view
+    camera(scene).projection[] = projection
+    camera(scene).projectionview[] = projection * view
+    cam.last_area[] = Vec(size(scene))
+    return
+end
+
+function correct_ratio!(scene, cam)
+    on(camera(scene), pixelarea(scene)) do area
+        neww = widths(area)
+        change = neww .- cam.last_area[]
+        if !(change ≈ Vec(0.0, 0.0))
+            s = 1.0 .+ (change ./ cam.last_area[])
+            camrect = FRect(minimum(cam.area[]), widths(cam.area[]) .* s)
+            cam.area[] = camrect
+            update_cam!(scene, cam)
+        end
+        return
+    end
+end
+
+
+function camspace(scene::SceneLike, cam::Camera2DController, point)
+    point = Vec(point) .* wscale(pixelarea(scene)[], cam.area[])
+    return Vec(point) .+ Vec(minimum(cam.area[]))
+end
+
+function absrect(rect)
+    xy, wh = minimum(rect), widths(rect)
+    xy = ntuple(Val(2)) do i
+        wh[i] < 0 ? xy[i] + wh[i] : xy[i]
+    end
+    return FRect(Vec2f0(xy), Vec2f0(abs.(wh)))
+end
+
+function reset!(cam, boundingbox, preserveratio = true)
+    w1 = widths(boundingbox)
+    if preserveratio
+        w2 = widths(cam[Screen][Area])
+        ratio = w2 ./ w1
+        w1 = if ratio[1] > ratio[2]
+            s = w2[1] ./ w2[2]
+            Vec2f0(s * w1[2], w1[2])
+        else
+            s = w2[2] ./ w2[1]
+            Vec2f0(w1[1], s * w1[1])
+        end
+    end
+    p = minimum(w1) .* 0.001 # 2mm padding
+    update_cam!(cam, FRect(-p, -p, w1 .+ 2p))
+    return
+end
+
+function cleanup!(scene, cam::Camera2DController)
+    idx = findfirst(==(cam.sr_scene[]), scene.children)
+    if idx === nothing
+        @warn "Failed to delete selection rectangle scene."
+    else
+        deleteat!(scene.children, idx)
+    end
+    hasinteraction(scene, :camera_controller) && deregister!(scene, :camera_controller)
+    nothing
+end
+
+
+function process!(cam::Camera2DController, event::MouseButtonEvent, scene)
+    if event.button == cam.selectionbutton[][2] &&
+        ispressed(scene, cam.selectionbutton[][1]) && is_mouseinside(scene)
+
+        # Start/finish a selection rectangle
+        if event.action == Mouse.press
+            x, y = camspace(scene, cam, scene.input_state.mouse_position)
+            cam.sr_rect[] = FRect2D(x, y, 0, 0)
+            cam.sr_visible[] = true
+        else # can only be Mouse.release
+            r = absrect(cam.sr_rect[])
+            w, h = widths(r)
+            if w > 0.0 && h > 0.0
+                update_cam!(scene, cam, r)
+            end
+            cam.sr_visible[] = false
+        end
+    
+        # A selection rectangle should consume events
+        return true
+    end
+
+    return false
+end
+
+
+function process!(cam::Camera2DController, event::MouseMovedEvent, scene)
+    # Selection rectangle in progress
+    if ispressed(scene, cam.selectionbutton[]) && cam.sr_visible[] && is_mouseinside(scene)
+        mx, my = mp = camspace(scene, cam, scene.input_state.mouse_position)
+        rx, ry = minimum(cam.sr_rect[])
+        cam.sr_rect[] = FRect2D(rx, ry, mx - rx, my - ry)
+        # A selection rectangle should consume events
+        return true
+    end
+
+    if ispressed(scene, cam.panbutton[]) && is_mouseinside(scene)
+        window_area = pixelarea(scene)[]
+        area = cam.area[]
+        # mouse_position_after_click - mouse_position_during_click
+        diff = scene.input_state.mouse_movement .* wscale(window_area, area)
+        cam.area[] = FRect(minimum(area) .- diff, widths(area))
+        update_cam!(scene, cam)
+    end
+
+    return false
+end
+
+function process!(cam::Camera2DController, event::MouseScrolledEvent, scene)
+    @extractvalue cam (zoomspeed, zoombutton, area)
+    zoom = Float32(event.delta[2])
+    if zoom != 0 && ispressed(scene, zoombutton) && is_mouseinside(scene)
+        pa = pixelarea(scene)[]
+        z = 1f0 + (zoom * zoomspeed)
+        mp = scene.input_state.mouse_position - minimum(pa)
+        mp = (mp .* wscale(pa, area)) + minimum(area)
+        p1, p2 = minimum(area), maximum(area)
+        p1, p2 = p1 - mp, p2 - mp # translate to mouse position
+        p1, p2 = z * p1, z * p2
+        p1, p2 = p1 + mp, p2 + mp
+        cam.area[] = FRect(p1, p2 - p1)
+        update_cam!(scene, cam)
+    end
+
+    return false
 end
