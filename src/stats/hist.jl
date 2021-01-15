@@ -11,7 +11,7 @@ end
 import StatsBase
 
 """
-    histplot(values; bins = 15, normalization = :none)
+    hist(values; bins = 15, normalization = :none)
 
 Plot a histogram of `values`. `bins` can be an `Int` to create that
 number of equal-width bins over the range of `values`.
@@ -31,7 +31,7 @@ can be normalized by setting `normalization`. Possible values are:
 ## Attributes
 $(ATTRIBUTES)
 """
-@recipe(Histplot, values) do scene
+@recipe(hist, values) do scene
     Attributes(
         bins = 15, # Int or iterable of edges
         normalization = :none
@@ -39,7 +39,7 @@ $(ATTRIBUTES)
 end
 
 
-function AbstractPlotting.plot!(plot::Histplot)
+function AbstractPlotting.plot!(plot::hist)
 
     values = plot[:values]
 
