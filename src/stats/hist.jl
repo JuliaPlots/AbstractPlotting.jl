@@ -31,7 +31,7 @@ can be normalized by setting `normalization`. Possible values are:
 ## Attributes
 $(ATTRIBUTES)
 """
-@recipe(hist, values) do scene
+@recipe(Hist, values) do scene
     Attributes(
         bins = 15, # Int or iterable of edges
         normalization = :none
@@ -39,7 +39,7 @@ $(ATTRIBUTES)
 end
 
 
-function AbstractPlotting.plot!(plot::hist)
+function AbstractPlotting.plot!(plot::Hist)
 
     values = plot[:values]
 
