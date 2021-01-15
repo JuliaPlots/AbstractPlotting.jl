@@ -151,6 +151,29 @@ zs = [cos(x) * sin(y) for x in xs, y in ys]
 heatmap(xs, ys, zs)
 ```
 
+## `histplot`
+
+```@docs
+histplot
+```
+
+### Examples
+
+```@example
+using GLMakie
+AbstractPlotting.inline!(true) # hide
+
+data = randn(1000)
+
+f = Figure()
+histplot(f[1, 1], data, bins = 10)
+histplot(f[1, 2], data, bins = 20, color = :red,
+    strokewidth = 1, strokecolor = :black)
+histplot(f[2, 1], data, bins = [-5, -2, -1, 0, 1, 2, 5], color = :gray) 
+histplot(f[2, 2], data, normalization = :pdf)
+f
+```
+
 ## `image`
 
 ```@docs
