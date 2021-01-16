@@ -47,6 +47,9 @@ function backend_display(::Missing, ::Scene)
     """)
 end
 
+Base.display(fap::FigureAxisPlot) = display(fap.figure)
+Base.display(fig::Figure) = display(fig.scene)
+
 function Base.display(scene::Scene)
 
     if !use_display[]
@@ -64,11 +67,18 @@ end
 function Base.showable(mime::MIME{M}, scene::Scene) where M
     backend_showable(current_backend[], mime, scene)
 end
-
 # ambig
 function Base.showable(mime::MIME"application/json", scene::Scene)
     backend_showable(current_backend[], mime, scene)
 end
+function Base.showable(mime::MIME{M}, fig::FigureLike) where M
+    backend_showable(current_backend[], mime, get_scene(fig))
+end
+# ambig
+function Base.showable(mime::MIME"application/json", fig::FigureLike)
+    backend_showable(current_backend[], mime, get_scene(fig))
+end
+
 
 function backend_showable(::Backend, ::Mime, ::Scene) where {Backend, Mime <: MIME}
     hasmethod(backend_show, Tuple{Backend, IO, Mime, Scene})
@@ -90,6 +100,9 @@ end
 function Base.show(io::IO, ::MIME"text/plain", scene::Scene)
     show(io, scene)
 end
+
+Base.show(io::IO, m::MIME, fap::FigureAxisPlot) = show(io, m, fap.figure)
+Base.show(io::IO, m::MIME, fig::Figure) = show(io, m, fig.scene)
 
 function Base.show(io::IO, m::MIME, scene::Scene)
     # set update to true, without triggering an event
@@ -141,12 +154,12 @@ mutable struct RamStepper
     format::Symbol
 end
 
-Stepper(scene::Scene, path::String, step::Int; format=:png) = FolderStepper(scene, path, format, step)
-Stepper(scene::Scene; format=:png) = RamStepper(scene, Matrix{RGBf0}[], format)
+Stepper(scene::FigureLike, path::String, step::Int; format=:png) = FolderStepper(get_scene(scene), path, format, step)
+Stepper(scene::FigureLike; format=:png) = RamStepper(get_scene(scene), Matrix{RGBf0}[], format)
 
-function Stepper(scene::Scene, path::String; format = :png)
+function Stepper(scene::FigureLike, path::String; format = :png)
     ispath(path) || mkpath(path)
-    FolderStepper(scene, path, format, 1)
+    FolderStepper(get_scene(scene), path, format, 1)
 end
 
 """
@@ -212,12 +225,12 @@ Save a `Scene` with the specified filename and format.
 - `px_per_unit`: The size of one scene unit in `px` when exporting to a bitmap format. This provides a mechanism to export the same scene with higher or lower resolution.
 """
 function FileIO.save(
-        f::FileIO.File, scene::Scene;
-        resolution = size(scene),
+        f::FileIO.File, fig::FigureLike;
+        resolution = size(get_scene(fig)),
         pt_per_unit = 1.0,
         px_per_unit = 1.0,
     )
-
+    scene = get_scene(fig)
     resolution != size(scene) && resize!(scene, resolution)
     # Delete previous file if it exists and query only the file string for type.
     # We overwrite existing files anyway, so this doesn't change the behavior.
@@ -333,6 +346,13 @@ function VideoStream(
     return VideoStream(process.in, process, screen, abspath(path))
 end
 
+function VideoStream(fig::FigureAxisPlot; kw...)
+    VideoStream(fig.figure; kw...)
+end
+function VideoStream(fig::Figure; kw...)
+    VideoStream(fig.scene; kw...)
+end
+
 # This has to be overloaded by the backend for its screen type.
 function colorbuffer(x::AbstractScreen)
     error("colorbuffer not implemented for screen $(typeof(x))")
@@ -403,7 +423,7 @@ Adds a video frame to the VideoStream `io`.
 """
 function recordframe!(io::VideoStream)
     frame = convert(Matrix{RGB{N0f8}}, colorbuffer(io.screen, GLNative))
-    _ydim, _xdim = size(frame)
+    _xdim, _ydim = size(frame)
     if isodd(_xdim) || isodd(_ydim)
         xdim = iseven(_xdim) ? _xdim : _xdim + 1
         ydim = iseven(_ydim) ? _ydim : _ydim + 1

@@ -1,11 +1,11 @@
 ```@eval
 using CairoMakie
-CairoMakie.activate!()
+CairoMakie.activate!(type = "png")
 ```
 
-## Creating an LAxis
+## Creating an Axis
 
-The `LAxis` is a 2D axis that works well with automatic layouts.
+The `Axis` is a 2D axis that works well with automatic layouts.
 Here's how you create one 
 
 ```@example laxis
@@ -13,7 +13,7 @@ using CairoMakie
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-ax = layout[1, 1] = LAxis(scene, xlabel = "x label", ylabel = "y label",
+ax = layout[1, 1] = Axis(scene, xlabel = "x label", ylabel = "y label",
     title = "Title")
 
 save("basic_axis.svg", scene) # hide
@@ -22,9 +22,9 @@ nothing # hide
 
 ![basic axis](basic_axis.svg)
 
-## Plotting Into an LAxis
+## Plotting Into an Axis
 
-You can use all the normal mutating 2D plotting functions with an `LAxis`.
+You can use all the normal mutating 2D plotting functions with an `Axis`.
 The only difference is, that they return the created plot object and not
 the axis (like Makie's base functions return the `Scene`). This is so
 that it is more convenient to save and manipulate the plot objects.
@@ -57,7 +57,7 @@ using CairoMakie
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-axes = layout[] = [LAxis(scene) for i in 1:2, j in 1:3]
+axes = layout[] = [Axis(scene) for i in 1:2, j in 1:3]
 
 xs = LinRange(0, 2pi, 50)
 for (i, ax) in enumerate(axes)
@@ -78,29 +78,52 @@ nothing # hide
 
 ![axis limits](example_axis_limits.svg)
 
-## Modifying ticks
+## Modifying Ticks
 
-Tick values are computed using `get_tickvalues(ticks, vmin, vmax)`, where `ticks` is either
-the `ax.xticks` or `ax.yticks` attribute
-and the limits of the respective axis are `vmin` and `vmax`.
+To control ticks, you can set the axis attributes `xticks/yticks` and `xtickformat/ytickformat`.
 
-To create the actual tick labels, `get_ticklabels(format, ticks, values)` is called, where `format` is
-`ax.xtickformat` or `ax.ytickformat`, `ticks` is the same as above, and `values` is the result
-of `get_tickvalues`.
+You can overload one or more of these three functions to implement custom ticks:
 
-The most common use cases are predefined. Additionally, custom tick finding behavior can be implemented
-by overloading `get_tickvalues` while custom formatting can be implemented by overloading `get_ticklabels`.
-
-Here are the existing methods for `get_tickvalues`:
-
-```@docs
-AbstractPlotting.MakieLayout.get_tickvalues
+```julia
+tickvalues, ticklabels = MakieLayout.get_ticks(ticks, formatter, vmin, vmax)
+tickvalues = MakieLayout.get_tickvalues(ticks, vmin, vmax)
+ticklabels = MakieLayout.get_ticklabels(formatter, tickvalues)
 ```
 
-And here are the existing methods for `get_ticklabels`:
+If you overload `get_ticks`, you have to compute both tickvalues and ticklabels directly as a vector of floats and strings, respectively.
+Otherwise the result of `get_tickvalues` is passed to `get_ticklabels` by default.
+The limits of the respective axis are passed as `vmin` and `vmax`.
 
-```@docs
-AbstractPlotting.MakieLayout.get_ticklabels
+A couple of behaviors are implemented by default.
+You can specify static ticks by passing an iterable of numbers.
+You can also pass a tuple with tick values and tick labels directly, bypassing the formatting step.
+
+For formatting, you can pass a function which takes a vector of numbers and outputs a vector of strings.
+You can also pass a format string which is passed to `Formatting.format` from [Formatting.jl](https://github.com/JuliaIO/Formatting.jl), where you can mix the formatted numbers with other text like in `"{:.2f}ms"`.
+
+### Predefined Ticks
+
+The default tick type is `LinearTicks(n)`, where `n` is the target number of ticks which the algorithm tries to return.
+
+```@example
+using CairoMakie
+
+fig = Figure(resolution = (1200, 900))
+for (i, n) in enumerate([2, 5, 9])
+    lines(fig[i, 1], 0..20, sin, axis = (xticks = LinearTicks(n),))
+end
+fig
+```
+
+There's also `WilkinsonTicks` which uses the alternative Wilkinson algorithm.
+
+`MultiplesTicks` can be used when an axis should be marked at multiples of a certain number.
+A common scenario is plotting a trigonometric function which should be marked at pi intervals.
+
+```@example
+using CairoMakie
+
+lines(0..20, sin, axis = (xticks = MultiplesTicks(4, pi, "π"),))
 ```
 
 Here are a couple of examples that show off different settings for ticks and formats.
@@ -110,7 +133,7 @@ using CairoMakie
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-axes = layout[] = [LAxis(scene) for i in 1:2, j in 1:2]
+axes = layout[] = [Axis(scene) for i in 1:2, j in 1:2]
 
 xs = LinRange(0, 2pi, 50)
 for (i, ax) in enumerate(axes)
@@ -148,8 +171,8 @@ using CairoMakie
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-ax1 = layout[1, 1] = LAxis(scene, title = "Axis 1")
-ax2 = layout[1, 2] = LAxis(scene, title = "Axis 2")
+ax1 = layout[1, 1] = Axis(scene, title = "Axis 1")
+ax2 = layout[1, 2] = Axis(scene, title = "Axis 2")
 
 hidespines!(ax1)
 hidespines!(ax2, :t, :r) # only top and right
@@ -187,7 +210,7 @@ Random.seed!(1) # hide
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-axes = [LAxis(scene) for i in 1:2, j in 1:3]
+axes = [Axis(scene) for i in 1:2, j in 1:3]
 tightlimits!.(axes)
 layout[1:2, 1:3] = axes
 
@@ -256,7 +279,7 @@ end
 scene = Scene(container_scene, scene_area, camera = campixel!)
 
 rect = poly!(scene, scene_area,
-    raw=true, color=RGBf0(0.97, 0.97, 0.97), strokecolor=:transparent, strokewidth=0)[end]
+    raw=true, color=RGBf0(0.97, 0.97, 0.97), strokecolor=:transparent, strokewidth=0)
 
 outer_layout = GridLayout(scene, alignmode = Outside(30))
 
@@ -269,7 +292,7 @@ outer_layout = GridLayout(scene, alignmode = Outside(30))
 layout = outer_layout[1, 1] = GridLayout()
 
 titles = ["aspect enforced\nvia layout", "axis aspect\nset directly", "no aspect enforced", "data aspect conforms\nto axis size"]
-axs = layout[1:2, 1:2] = [LAxis(scene, title = t) for t in titles]
+axs = layout[1:2, 1:2] = [Axis(scene, title = t) for t in titles]
 
 for a in axs
     lines!(a, Circle(Point2f0(0, 0), 100f0))
@@ -282,7 +305,7 @@ colsize!(layout, 1, Aspect(1, 1))
 axs[2].aspect = 1
 axs[4].autolimitaspect = 1
 
-rects = layout[1:2, 1:2] = [LRect(scene, color = (:black, 0.05),
+rects = layout[1:2, 1:2] = [Box(scene, color = (:black, 0.05),
     strokecolor = :transparent) for _ in 1:4]
 
 record(container_scene, "example_circle_aspect_ratios.mp4", 0:1/30:9; framerate=30) do ti
@@ -305,7 +328,7 @@ using CairoMakie
 
 scene, layout = layoutscene(resolution = (1200, 900))
 
-layout[1, 1:3] = axs = [LAxis(scene) for i in 1:3]
+layout[1, 1:3] = axs = [Axis(scene) for i in 1:3]
 linkxaxes!(axs[1:2]...)
 linkyaxes!(axs[2:3]...)
 
@@ -332,7 +355,7 @@ nothing # hide
 
 ## Axis interaction
 
-An LAxis has a couple of predefined interactions enabled.
+An Axis has a couple of predefined interactions enabled.
 
 ### Scroll Zoom
 
@@ -435,6 +458,38 @@ register_interaction!(ax, :left_and_right, MyInteraction(false, false))
 Some interactions might have more complex state involving plot objects that need to be setup or removed.
 For those purposes, you can overload the methods `registration_setup!(parent, interaction)` and `deregistration_cleanup!(parent, interaction)` which are called during registration and deregistration, respectively.
 
+
+## Special Plots
+
+A few special plot functions currently only work specifically with the `Axis` type.
+
+### Vertical / Horizontal Lines
+
+Often, it's useful to mark horizontal or vertical locations in a plot with lines that span
+a certain percentage of the axis, not the data. There are two functions `hlines!` and `vlines!`
+which work with `Axis` instances.
+
+The positional argument gives one or many locations in data coordinates, while
+the keyword arguments `xmin` and `xmax` (for hlines) or `ymin` and `ymax` (for vlines)
+specify the extent along the axis. These values can also be a single number or an iterable.
+
+```@example
+using CairoMakie
+
+scene, layout = layoutscene(resolution = (1400, 900))
+ax1 = layout[1, 1] = Axis(scene, title = "vlines")
+
+lines!(ax1, 0..4pi, sin)
+vlines!(ax1, [pi, 2pi, 3pi], color = :red)
+
+ax2 = layout[1, 2] = Axis(scene, title = "hlines")
+hlines!(ax2, [1, 2, 3, 4], xmax = [0.25, 0.5, 0.75, 1], color = :blue)
+
+scene
+save("example_vlines.svg", scene); nothing # hide
+```
+
+![example vlines](example_vlines.svg)
 
 ```@eval
 using GLMakie
