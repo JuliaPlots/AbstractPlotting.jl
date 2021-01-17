@@ -34,7 +34,17 @@ function _density(x; trim = false)
 end
 
 
+"""
+    density(values; npoints = 200, offset = 0.0, direction = :x)
 
+Plot a kernel density estimate of `values`.
+`npoints` controls the resolution of the estimate, the baseline can be
+shifted with `offset` and the `direction` set to :x or :y.
+`bandwidth` and `boundary` are determined automatically by default. 
+
+## Attributes
+$(ATTRIBUTES)
+"""
 @recipe(Density) do scene
     Theme(
         color = :gray85,
