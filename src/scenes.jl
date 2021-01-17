@@ -613,6 +613,7 @@ end
 #   - events can be consumed by returning true
 # - if an event has not been processed consumed, it will be forwarded to child scenes
 
+const MAX_PRIORITY = typemax(Int8)
 const DEFAULT_BACKEND_PRIORITY = Int8(50)
 const DEFAULT_PRIORITY = Int8(0)
 
@@ -875,32 +876,20 @@ function process!(root::Scene, @nospecialize(event))
     # Nope, this should be the currently displayed scene instead
     # @assert isroot(root) "The event entrypoint should only be called using the root scene!"
 
-    # I don't see a point in having the old mouse position diff
-    # But that begs the question - should this even be a state?
-    # (This formula can be used by any MouseMovedEvent to get the delta)
-    if event isa MouseMovedEvent
-        root.input_state.mouse_movement = event.position - root.input_state.mouse_position
-    end
+    # Update state first so that the state is always the current state
+    update_state!(root.input_state, event)
 
     # process by priority first, reverse render order second
     for _priority in reverse(root.interactions.active)
         for plot in reverse(root.plots)
-            process!(plot, event, _priority) && @goto finalize
+            process!(plot, event, _priority) && return nothing
         end
         for child in reverse(root.children)
-            process!(child, event, _priority) && @goto finalize
+            process!(child, event, _priority) && return nothing
         end        
         # Should this happen before plots?
-        process!(root.interactions, event, root, _priority) && @goto finalize
+        process!(root.interactions, event, root, _priority) && return nothing
     end
-
-    # Always update the current state
-    # State updates happen after an event has been processed, i.e. an event is
-    # a promise that the state will change. This means that both the last state
-    # and the next state is availble during event processing, which is more 
-    # useful than having the new state in two locations (input_state and event).
-    @label finalize
-    update_state!(root.input_state, event)
 
     return nothing
 end
@@ -980,6 +969,7 @@ function update_state!(state, event::MouseButtonEvent)
     nothing
 end
 function update_state!(state, event::MouseMovedEvent)
+    state.mouse_movement = event.position - state.mouse_position
     state.mouse_position = event.position
     if Mouse.left_press in state.mouse_state
         delete!(state.mouse_state, Mouse.left_press)
@@ -1009,7 +999,6 @@ function update_state!(state, event::KeyEvent)
     end
     nothing
 end
-
 
 
 

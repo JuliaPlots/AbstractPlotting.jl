@@ -141,7 +141,7 @@ end
 function add_translation!(scene, cam, key, button, zoom_shift_lookat::Bool)
     register!(scene, :camera_translation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
-            diff = (scene.input_state.mouse_position .- event.position) * cam.translationspeed[]
+            diff = - scene.input_state.mouse_movement * cam.translationspeed[]
             translate_cam!(scene, cam, Vec3f0(0f0, diff[1], diff[2]))
         end
         return false
@@ -162,7 +162,7 @@ function add_rotation!(scene, cam, button, key, fixed_axis::Bool)
     register!(scene, :camera_rotation, DEFAULT_BACKEND_PRIORITY) do event::MouseMovedEvent, scene
         if ispressed(scene, button[]) && ispressed(scene, key[]) && is_mouseinside(scene)
             rot_scaling = cam.rotationspeed[] * (scene.input_state.window_dpi * 0.005)
-            diff = (scene.input_state.mouse_position .- event.position) * rot_scaling
+            diff = - scene.input_state.mouse_movement * rot_scaling
             rotate_cam!(scene, cam, Vec3f0(diff[1], -diff[2], 0f0), fixed_axis)
         end
         return false
