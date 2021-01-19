@@ -35,6 +35,8 @@ function mousedrag(scene::Scene, native_window)
     end
     return
 end
+# I just want deprecation warning
+@deprecate mousedrag identity
 
 
 #############
@@ -72,9 +74,6 @@ function register_callbacks(scene::Scene, native_window)
 end
 
 
-#############
-
-
 button_key(x::Type{T}) where {T} = error("Must be a keyboard or mouse button. Found: $T")
 button_key(x::Type{Keyboard.Button}) = :keyboard_buttons
 button_key(x::Type{Mouse.Button}) = :mouse_buttons
@@ -105,7 +104,6 @@ function ispressed(buttons::Set{T}, button::Set{T}) where T <: Union{Keyboard.Bu
     return issubset(button, buttons)
 end
 
-# TODO: allow this to call GLFW.GetKey(...) or GLFW.GetMouseButton(...)?
 """
     ispressed(scene, button)
 

@@ -103,14 +103,16 @@ mutable struct InputState
     window_hovered::Bool # (entered_window)
 
     mouse_buttons::Set{Mouse.Button}
+    # mouse_button_change::Union{Nothing, MouseClickedEvent} # meh
     mouse_position::Vec2f0
     mouse_movement::Vec2f0 # current_position - old_position
     # left/middle/right press/repeat/release
     # should this really be here? Should keyboard have soemthing similar?
     mouse_state::Set{Mouse.DragState}
-    # mouse_scroll::Vec2f0 # not persistent - not useful as state?
+    # mouse_scroll::Vec2f0 # not persistent - not useful as state? maybe is_scolling?
 
     keyboard_buttons::Set{Keyboard.Button}
+    # keyboard_button_change::Union{Nothing, KeyPressedEvent}
     # unicode_input::Vector{Char} # not persistent - not useful as state
     # dropped_files::Vector{String} # persistent, but not cummulative, makes more sense to process as event
 end
