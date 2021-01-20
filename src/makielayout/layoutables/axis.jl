@@ -404,19 +404,51 @@ end
 
 
 function AbstractPlotting.plot!(
-        la::Axis, P::AbstractPlotting.PlotFunc,
+        ax::Axis, P::AbstractPlotting.PlotFunc,
         attributes::AbstractPlotting.Attributes, args...;
         kw_attributes...)
 
-    plot = AbstractPlotting.plot!(la.scene, P, attributes, args...; kw_attributes...)
+    cycleattrs = cycler_attributes(P)
+
+    cycler_applies = !isempty(cycleattrs) && all(cycleattrs) do attr
+        !haskey(attributes, attr) && !haskey(kw_attributes, attr)
+    end
+
+    if cycler_applies
+        attrs = get_cycled_attributes(ax.cycler[], P, ax.palette, cycleattrs)
+        merge!(attributes, attrs)
+    end
+
+    plot = AbstractPlotting.plot!(ax.scene, P, attributes, args...; kw_attributes...)
 
     # some area-like plots basically always look better if they cover the whole plot area.
     # adjust the limit margins in those cases automatically.
-    has_tight_limit_trait(P) && tightlimits!(la)
+    has_tight_limit_trait(P) && tightlimits!(ax)
 
-    autolimits!(la)
+    autolimits!(ax)
     plot
 end
+
+
+cycler_attributes(l::Type{<:Lines}) = [:color, :linestyle]
+cycler_attributes(s::Type{<:Scatter}) = [:color, :marker]
+cycler_attributes(s::Type{<:Union{AbstractPlotting.Text, Annotations}}) = Symbol[]
+cycler_attributes(any) = [:color]
+
+function get_cycled_attributes(c::MyCycler, P, palette, cycleattrs)
+    cycler = get!(c.d, P,
+        Iterators.Stateful(Iterators.cycle(Iterators.product(
+            [palette[ca][] for ca in cycleattrs]...
+        ))))
+    Attributes(cycleattrs .=> popfirst!(cycler))
+end
+
+# get_cycled_attributes(cycler, plot, attributes)
+# Iterators.cycle(Iterators.product(color, linestyle))
+
+
+
+
 
 function AbstractPlotting.plot!(P::AbstractPlotting.PlotFunc, ax::Axis, args...; kw_attributes...)
     attributes = AbstractPlotting.Attributes(kw_attributes)
