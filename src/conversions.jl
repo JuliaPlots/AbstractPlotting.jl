@@ -261,11 +261,11 @@ function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::Abs
     return (el32convert(x), el32convert(y), el32convert(z))
 end
 
-function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{Number})
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<: Number})
     return (el32convert(x), el32convert(y), el32convert(z))
 end
 
-function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<:Union{<:Number, Missing}})
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<: Union{<:Number, Missing}})
     return (el32convert(x), el32convert(y), el32convert(z))
 end
 
