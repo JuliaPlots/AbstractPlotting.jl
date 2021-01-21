@@ -260,7 +260,12 @@ outputs them in a Tuple.
 function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<: Union{Number, Colorant}})
     return (el32convert(x), el32convert(y), el32convert(z))
 end
-function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<:Union{Missing, Number}})
+
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{Number})
+    return (el32convert(x), el32convert(y), el32convert(z))
+end
+
+function convert_arguments(::SurfaceLike, x::AbstractVecOrMat{<: Number}, y::AbstractVecOrMat{<: Number}, z::AbstractMatrix{<:Union{<:Number, Missing}})
     return (el32convert(x), el32convert(y), el32convert(z))
 end
 
