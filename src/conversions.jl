@@ -796,11 +796,8 @@ function convert_attribute(x::Union{Symbol, String}, k::key"font")
     get!(_font_cache, str) do
         str == "default" && return to_font("Dejavu Sans")
 
-        # check if the string points to a font file and load that.
-        # let's assume fonts always have a dot extension so that normal font names
-        # would never accidentally be interpreted as files, because font names don't
-        # contain dots. this is pretty unlikely anyway.
-        if isfile(str) && occursin(".", basename(str))
+        # check if the string points to a font file and load that
+        if isfile(str)
             font = FreeTypeAbstraction.try_load(str)
             if isnothing(font)
                 error("Could not load font file $str")
