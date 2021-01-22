@@ -59,6 +59,7 @@ include("patterns.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
+include("interaction/interactions.jl")
 
 struct Figure
     scene::Scene

@@ -40,7 +40,7 @@ end
 
 
 #############
-# Deprecate with events
+
 
 function disconnect!(window::AbstractScreen, signal)
     disconnect!(to_native(window), signal)
