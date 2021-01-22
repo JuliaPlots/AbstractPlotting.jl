@@ -156,7 +156,7 @@ function deregister!(col::Interactions, key::Symbol)
     i = findfirst(i -> i == idx, col.prioritymap[_priority])
     deleteat!(col.prioritymap[_priority], i)
     need_update = if isempty(col.prioritymap[_priority])
-        deleteat!(col.prioritymap, _priority)
+        delete!(col.prioritymap, _priority)
         true
     else
         col.prioritymap[_priority][i:end] .-= 1
@@ -202,7 +202,7 @@ function maybe_remove_priority!(target, _priority)
         # doesn't exist, can be removed here, maybe also in parent
         idx = findfirst(==(_priority), target.interactions.active)
         deleteat!(target.interactions.active, idx)
-        return maybe_remove_priority(target.parent, _priority)
+        return maybe_remove_priority!(target.parent, _priority)
     end
 end
 
