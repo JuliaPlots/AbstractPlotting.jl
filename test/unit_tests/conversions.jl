@@ -1,5 +1,5 @@
 using AbstractPlotting: 
-    NoConversion, 
+    NoConversion,
     convert_arguments, 
     conversion_trait
 
@@ -119,4 +119,25 @@ using AbstractPlotting: check_line_pattern, line_diff_pattern
     @test_throws ArgumentError line_diff_pattern(:dash, :NORMAL)
     @test_throws ArgumentError line_diff_pattern(:dash, ()) 
     @test_throws ArgumentError line_diff_pattern(:dash, (1, 2, 3))
+end
+
+using AbstractPlotting: SurfaceLike, convert_arguments
+
+@testset "Surface" begin
+
+
+    a = Array{Union{Float64,Missing},2}(undef,10,10)
+    b = ones(Float32,10,10)
+    [a[1:10,i] .= 1.0 for i in [1,3,5,7,9]]
+    [b[1:10,i] .= NaN32 for i in [2,4,6,8,10]]
+
+    x = y = collect(1:10)
+
+    converted = convert_arguments(SurfaceLike(),x,y,a)
+
+    @test converted[1] == Float32.(x)
+    @test converted[2] == Float32.(x)
+    @test isequal(converted[3],b)
+    
+
 end
