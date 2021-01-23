@@ -44,26 +44,26 @@ macro Layoutable(name::Symbol, fields::Expr = Expr(:block))
     structdef
 end
 
-# intercept all layoutable constructors and divert to make_layoutable(T, ...)
+# intercept all layoutable constructors and divert to _layoutable(T, ...)
 function (::Type{T})(args...; kwargs...) where {T<:Layoutable}
-    make_layoutable(T, args...; kwargs...)
+    _layoutable(T, args...; kwargs...)
 end
 
-function make_layoutable(T::Type{<:Layoutable},
+function _layoutable(T::Type{<:Layoutable},
         fp::Union{AbstractPlotting.FigurePosition, AbstractPlotting.FigureSubposition}, args...; kwargs...)
 
     fig = AbstractPlotting.get_figure(fp)
-    l = fp[] = make_layoutable(T, fig, args...; kwargs...)
+    l = fp[] = _layoutable(T, fig, args...; kwargs...)
     l
 end
 
-function make_layoutable(T::Type{<:Layoutable}, fig::Figure, args...; kwargs...)
+function _layoutable(T::Type{<:Layoutable}, fig::Figure, args...; kwargs...)
     l = layoutable(T, fig, args...; kwargs...)
     register_in_figure!(fig, l)
     l
 end
 
-function make_layoutable(T::Type{<:Layoutable}, scene::Scene, args...; kwargs...)
+function _layoutable(T::Type{<:Layoutable}, scene::Scene, args...; kwargs...)
     layoutable(T, scene, args...; kwargs...)
 end
 
