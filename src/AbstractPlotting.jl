@@ -21,6 +21,7 @@ using Printf: @sprintf
 import Isoband
 import PolygonOps
 import GridLayoutBase
+using Match
 
 # Imports from Base which we don't want to have to qualify
 using Base: RefValue
@@ -60,6 +61,7 @@ include("patterns.jl")
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
 include("interaction/interactions.jl")
+include("interaction/mousestatemachine.jl")
 
 struct Figure
     scene::Scene

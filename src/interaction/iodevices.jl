@@ -169,6 +169,7 @@ module Mouse
         left = 0
         middle = 2
         right = 1 # Conform to GLFW
+        none = -1 # never in MouseButtonEvent, but can be useful
     end
 
     """

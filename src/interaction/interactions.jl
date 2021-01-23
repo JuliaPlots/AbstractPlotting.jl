@@ -12,7 +12,8 @@
 # - if an event has not been processed/consumed, it will be forwarded to child scenes
 
 const MAX_PRIORITY = typemax(Int8)
-const DEFAULT_BACKEND_PRIORITY = Int8(50)
+const DEFAULT_UI_PRIORITY = Int8(80)
+const DEFAULT_BACKEND_PRIORITY = Int8(40)
 const DEFAULT_PRIORITY = Int8(0)
 
 

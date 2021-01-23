@@ -11,6 +11,11 @@ function mouseover(scene::SceneLike, plots::AbstractPlot...)
     p, idx = mouse_selection(scene)
     return p in flatten_plots(plots)
 end
+function mouseover(scene, plots::Vector)
+    p, idx = mouse_selection(scene)
+    return p in flatten_plots(plots)
+end
+
 
 """
     onpick(f, scene::SceneLike, plots::AbstractPlot...)
