@@ -152,7 +152,7 @@ end
 
 # mousepositions -> mousedrag?
 struct MouseMovedEvent <: AbstractMouseEvent
-    position::Vec2f0
+    position::Point2f0
 end
 
 struct MouseScrolledEvent <: AbstractMouseEvent
