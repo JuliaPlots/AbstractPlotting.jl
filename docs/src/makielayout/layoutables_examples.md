@@ -9,7 +9,7 @@ CairoMakie.activate!()
     All examples here are presented as CairoMakie svg's for clarity of visuals, but keep in mind that CairoMakie is not interactive. Use GLMakie for interactive widgets, WGLMakie currently doesn't have picking implemented which is needed for them.
 
 ```@contents
-Pages = ["makielayout/layoutables_examples.md"]
+Pages = ["layoutables_examples.md"]
 Depth = 2
 ```
 
