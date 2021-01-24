@@ -128,7 +128,7 @@ using ColorSchemes
 
 fig = Figure(resolution = (1200, 900))
 
-rects = layout[1:4, 1:6] = [
+rects = fig[1:4, 1:6] = [
     Box(fig, color = c)
     for c in get.(Ref(ColorSchemes.rainbow), (0:23) ./ 23)]
 
