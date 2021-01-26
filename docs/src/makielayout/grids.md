@@ -294,19 +294,19 @@ columns respectively.
 ```@example spacing
 using CairoMakie
 
-scene, layout = layoutscene(resolution = (1200, 900))
+fig = Figure(resolution = (1200, 900))
 
-axs = layout[] = [Axis(scene) for i in 1:3, j in 1:3]
+axs = [Axis(fig[i, j]) for i in 1:3, j in 1:3]
 axs[1, 1].title = "Group A"
 axs[1, 2].title = "Group B.1"
 axs[1, 3].title = "Group B.2"
 
 hidedecorations!.(axs, grid=false)
 
-colgap!(layout, 1, Relative(0.15))
+colgap!(fig.layout, 1, Relative(0.15))
 
-scene
-save("example_spacing_1.svg", scene); nothing # hide
+fig
+save("example_spacing_1.svg", fig); nothing # hide
 ```
 
 ![spacing 1](example_spacing_1.svg)
@@ -314,10 +314,10 @@ save("example_spacing_1.svg", scene); nothing # hide
 All spaces can be changed at once by omitting the index of the gap to resize.
 
 ```@example spacing
-rowgap!(layout, 50)
+rowgap!(fig.layout, 50)
 
-scene
-save("example_spacing_2.svg", scene); nothing # hide
+fig
+save("example_spacing_2.svg", fig); nothing # hide
 ```
 
 ![spacing 2](example_spacing_2.svg)
