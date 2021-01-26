@@ -572,10 +572,9 @@ ax1.ylabel = "Maximum Velocity [m/sec]"
 
 
 # Adding a Legend
-leg = fig[1, end+1] = Legend(fig,
+leg = fig[2, 1:2] = Legend(fig,
     [line1, scat1, line2, scat2],
     ["f(x) = x", "Data", "f(x) = -x + 26", "Data"])
-fig[2, 1:2] = leg
 
 
 # Fixing Spacing Issues
