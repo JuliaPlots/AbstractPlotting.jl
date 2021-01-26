@@ -569,9 +569,6 @@ hideydecorations!(ax2, grid = false)
 ax1.xlabel = "Weight [kg]"
 ax2.xlabel = "Weight [kg]"
 ax1.ylabel = "Maximum Velocity [m/sec]"
-ax1.xlabel = "Weight [kg]"
-ax2.xlabel = "Weight [kg]"
-ax1.ylabel = "Maximum Velocity [m/sec]"
 
 
 # Adding a Legend
@@ -590,7 +587,7 @@ leg.tellheight = true
 hm_axes = fig[1:2, 3] = [Axis(fig, title = t) for t in ["Cell Assembly Pre", "Cell Assembly Post"]]
 heatmaps = [heatmap!(ax, i .+ rand(20, 20)) for (i, ax) in enumerate(hm_axes)]
 hm_sublayout = GridLayout()
-# fig[1:2, 3] = hm_sublayout
+fig[1:2, 3] = hm_sublayout
 
 # there is another shortcut for filling a GridLayout vertically with
 # a vector of content
