@@ -182,7 +182,7 @@ theme = Attributes(
     )
 )
 
-with_theme(theme) do
+fig = with_theme(theme) do
     fig = Figure(resolution = (800, 800))
     axs = [Axis(fig[fldmod1(n, 2)...],
         title = "IntervalsBetween($(n+1))",
