@@ -134,9 +134,9 @@ function default_attributes(::Type{Axis}, scene)
         "The linestyle of the y grid lines."
         ygridstyle = nothing
         "Controls if the x minor grid lines are visible."
-        xminorgridvisible = true
+        xminorgridvisible = false
         "Controls if the y minor grid lines are visible."
-        yminorgridvisible = true
+        yminorgridvisible = false
         "The width of the x minor grid lines."
         xminorgridwidth = 1f0
         "The width of the y minor grid lines."
@@ -223,7 +223,7 @@ function default_attributes(::Type{Axis}, scene)
         "Controls if the x axis goes rightwards (false) or leftwards (true)"
         xreversed = false
         "Controls if minor ticks on the x axis are visible"
-        xminorticksvisible = true
+        xminorticksvisible = false
         "The alignment of x minor ticks on the axis spine"
         xminortickalign = 0f0
         "The tick size of x minor ticks"
@@ -235,7 +235,7 @@ function default_attributes(::Type{Axis}, scene)
         "The tick locator for the x minor ticks"
         xminorticks = IntervalsBetween(2)
         "Controls if minor ticks on the y axis are visible"
-        yminorticksvisible = true
+        yminorticksvisible = false
         "The alignment of y minor ticks on the axis spine"
         yminortickalign = 0f0
         "The tick size of y minor ticks"
