@@ -126,9 +126,9 @@ function default_attributes(::Type{Axis}, scene)
         "The width of the y grid lines."
         ygridwidth = 1f0
         "The color of the x grid lines."
-        xgridcolor = RGBAf0(0, 0, 0, 0.1)
+        xgridcolor = RGBAf0(0, 0, 0, 0.12)
         "The color of the y grid lines."
-        ygridcolor = RGBAf0(0, 0, 0, 0.1)
+        ygridcolor = RGBAf0(0, 0, 0, 0.12)
         "The linestyle of the x grid lines."
         xgridstyle = nothing
         "The linestyle of the y grid lines."
