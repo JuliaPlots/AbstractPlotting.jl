@@ -56,6 +56,13 @@ const default_palettes = Attributes(
 
 const minimal_default = Attributes(
     palette = default_palettes,
+    cycler = Attributes(
+        default = [:color],
+        Lines = [:color, :linestyle],
+        Scatter = [:color, :marker],
+        Text = [],
+        Annotations = [],
+    ),
     font = "Dejavu Sans",
     backgroundcolor = :white,
     color = :black,
@@ -134,4 +141,50 @@ function with_theme(f, theme = Theme(); kwargs...)
     finally
         set_theme!(previous_theme)
     end
+end
+
+
+function default_cycler_attributes(any)
+    to_value(current_default_theme().cycler.default)
+end
+
+function cycler_attributes(P::Type{<:Combined})
+    plottype_symbol = capital_plotsym(P)
+    attrs = to_value(get(current_default_theme().cycler, plottype_symbol, nothing))
+    if isnothing(attrs)
+        default_cycler_attributes(P)
+    else
+        attrs
+    end
+end
+
+function capital_plotsym(P)
+    P |> plotsym |> String |> uppercasefirst |> Symbol
+end
+
+struct MyCycler
+    d::Dict{Type, Any}
+    function MyCycler()
+        d = Dict{Type, Any}()
+        new(d)
+    end
+end
+
+function get_cycled_attributes(c::MyCycler, P, attribute_palette::Attributes, cycleattrs)
+    I = Iterators
+    # Stateful so we can call `popfirst!` to get a new attribute set when needed
+    # cycle the product across attrs which are copied from the attribute_palette
+    new_cycler() = I.Stateful(I.cycle(I.product(
+        get_from_palette.(Ref(attribute_palette), cycleattrs)...
+    )))
+
+    # make a new cycler for the given Plot type P if none exists yet
+    cycler = get!(c.d, P, new_cycler())
+
+    # retrieve a new cycle of attribute values
+    Attributes(cycleattrs .=> popfirst!(cycler))
+end
+
+function get_from_palette(attribute_palette::Attributes, sym::Symbol)
+    attribute_palette[sym][]
 end

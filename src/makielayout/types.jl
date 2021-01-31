@@ -174,13 +174,3 @@ end
     cursorindex::Node{Int}
     cursoranimtask
 end
-
-
-struct MyCycler
-    d::Dict{Type, Any}
-    function MyCycler()
-        d = Dict{Type, Any}()
-        new(d)
-    end
-end
-

@@ -247,7 +247,7 @@ function default_attributes(::Type{Axis}, scene)
         "The tick locator for the y minor ticks"
         yminorticks = IntervalsBetween(2)
         "Cycler for plot attributes"
-        cycler = MyCycler()
+        cycler = AbstractPlotting.MyCycler()
         "Palette Attributes"
         palette = isnothing(scene) ? Attributes() : scene.palette
     end
