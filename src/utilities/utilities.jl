@@ -209,7 +209,10 @@ function merged_get!(defaults::Function, key, scene::SceneLike, input::Attribute
     if haskey(theme(scene), key)
         # we need to merge theme(scene) with the defaults, because it might be an incomplete theme
         # TODO have a mark that says "theme uncomplete" and only then get the defaults
-        merge!(d, to_value(theme(scene, key)))
+        plotattrs_via_theme = to_value(theme(scene, key))
+        # update defaults with plot attributes from theme which take priority
+        # because they are user-specified
+        d = merge(plotattrs_via_theme, d)
     end
     return merge!(input, d)
 end
