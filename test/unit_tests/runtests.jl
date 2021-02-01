@@ -14,4 +14,5 @@
     include("makielayout.jl")
     include("figures.jl")
     include("transformations.jl")
+    include("attributes_and_theming.jl")
 end
