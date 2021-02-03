@@ -13,7 +13,7 @@ There are three main backends which concretely implement all abstract rendering 
 
 ### Activating Backends
 
-You can activate any backend by `using` the appropriate package and calling it's `activate!` function.
+You can activate any backend by `using` the appropriate package and calling its `activate!` function.
 
 Example with WGLMakie:
 
