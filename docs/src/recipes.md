@@ -3,39 +3,42 @@
 Recipes allow you to extend `Makie` with your own custom types and plotting commands.
 
 There are two types of recipes:
-- _Type recipes_ define a simple mapping from a
-user defined type to an existing plot type
+- _Type recipes_ define a simple mapping from a user defined type to an existing plot type
 - _Full recipes_ define new custom plotting functions.
 
 ## Type recipes
 
-Type recipes are really simple and just overload the argument conversion
-pipeline, converting from one type to another, plottable type.
+Type recipes are mostly just conversions from one type or set of input argument types, yet unknown to Makie, to another which Makie can handle already.
 
 !!! warning
     `convert_arguments` must always return a Tuple.
 
-An example is:
+Plotting of a `Circle` for example can be defined via a conversion into a vector of points:
 
 ```julia
-convert_arguments(x::Circle) = (decompose(Point2f, x),)
+AbstractPlotting.convert_arguments(x::Circle) = (decompose(Point2f, x),)
 ```
 
-This can be done for all plot types or for a subset of plot types:
+You can restrict conversion to a subset of plot types, like only for scatter plots:
 
 ```julia
-# All plot types
-convert_arguments(P::Type{<:AbstractPlot}, x::MyType) = convert_arguments(P, rand(10, 10))
-# Only for scatter plots
-convert_arguments(P::Type{<:Scatter}, x::MyType) = convert_arguments(P, rand(10, 10))
-# For a group of plots, using a conversion trait for instance PointBased plots, which includes Lines and Scatter
-convert_arguments(P::PointBased, x::MyType)
-# It is also possible to convert multiple arguments
-convert_arguments(P::Type{<:Scatter}, x::MyType, y::MyOtherType)
+AbstractPlotting.convert_arguments(P::Type{<:Scatter}, x::MyType) = convert_arguments(P, rand(10, 10))
+```
+
+There are also conversion traits, which make it easier to define behavior for a group of plot types that share the same trait. `PointBased` for example applies to `Scatter`, `Lines`, etc.
+
+```julia
+AbstractPlotting.convert_arguments(P::PointBased, x::MyType) = ...
+```
+
+Lastly, it is also possible to convert multiple arguments together.
+
+```julia
+AbstractPlotting.convert_arguments(P::Type{<:Scatter}, x::MyType, y::MyOtherType) = ...
 ```
 
 Optionally you may define the default plot type so that `plot(x::MyType)` will
-use this:
+use it directly:
 
 ```julia
 plottype(::MyType) = Surface
@@ -43,8 +46,7 @@ plottype(::MyType) = Surface
 
 ## Full recipes with the `@recipe` macro
 
-A full recipe for `MyPlot` comes in two parts. First is the plot type name,
-arguments and theme definition which are defined using the `@recipe` macro.
+A full recipe comes in two parts. First is the plot type name, for example `MyPlot`, and then arguments and theme definition which are defined using the `@recipe` macro.
 
 Second is at least one custom `plot!` method for `MyPlot` which creates an actual visualization using other existing plotting functions.
 
@@ -64,17 +66,13 @@ This macro expands to several things. Firstly a type definition:
 const MyPlot{ArgTypes} = Combined{myplot, ArgTypes}
 ```
 
-The type parameter of `Combined` contains the function instead of e.g. a
-symbol. This way the mapping from `MyPlot` to `myplot` is safer and simpler.
-(The downside is we always need a function `myplot` - TODO: is this a problem?)
-The following signatures are defined to make `MyPlot` nice to use:
+The type parameter of `Combined` contains the function `myplot` instead of e.g. a
+symbol `MyPlot`. This way the mapping from `MyPlot` to `myplot` is safer and simpler.
+The following signatures are automatically defined to make `MyPlot` nice to use:
 
 ```julia
 myplot(args...; kw_args...) = ...
-myplot!(scene, args...; kw_args...) = ...
-myplot(kw_args::Dict, args...) = ...
-myplot!(scene, kw_args::Dict, args...) = ...
-#etc (not 100% settled what signatures there will be)
+myplot!(args...; kw_args...) = ...
 ```
 
 A specialization of `argument_names` is emitted if you have an argument list
@@ -108,7 +106,7 @@ plotting of the `MyPlot` object by specializing `plot!`:
 ```julia
 function plot!(myplot::MyPlot)
     # normal plotting code, building on any previously defined recipes
-    # or atomic plotting operations, and adding to the combined `plot`:
+    # or atomic plotting operations, and adding to the combined `myplot`:
     lines!(myplot, rand(10), color = myplot[:plot_color])
     plot!(myplot, myplot[:x], myplot[:y])
     myplot
