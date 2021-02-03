@@ -207,7 +207,7 @@ function AbstractPlotting.plot!(
             push!(bar_tos[], s.close)
         end
         append!(colors[], [x.close > x.open for x in stockvalues])
-        linesegs[] = linesegs[]
+        colors[] = colors[]
     end
 
     # connect `update_plot` so that it is called whenver `times`
@@ -276,7 +276,7 @@ This is easy if we use observables as input arguments which we then update frame
 
 ```@example stocks
 timestamps = Node(collect(1:100))
-stocknode = Node(copy(stockvalues))
+stocknode = Node(stockvalues)
 
 fig, ax, sc = stockchart(timestamps, stocknode)
 
