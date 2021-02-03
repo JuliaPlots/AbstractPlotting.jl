@@ -138,6 +138,7 @@ First, we make a struct to hold the stock's values for a given day:
 
 ```@example stocks
 using CairoMakie
+CairoMakie.activate!() # hide
 
 struct StockValue{T<:Real}
     open::T
@@ -301,6 +302,9 @@ record(fig, "stockchart_animation.mp4", 101:200, framerate = 30) do t
     autolimits!(ax)
 end
 nothing # hide
+
+using GLMakie # hide
+GLMakie.activate!() # hide
 ```
 
 ![stockchart animation](stockchart_animation.mp4)
