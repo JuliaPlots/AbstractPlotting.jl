@@ -276,7 +276,7 @@ This is easy if we use observables as input arguments which we then update frame
 
 ```@example stocks
 timestamps = Node(collect(1:100))
-stocknode = Node(stockvalues)
+stocknode = Node(copy(stockvalues))
 
 fig, ax, sc = stockchart(timestamps, stocknode)
 
