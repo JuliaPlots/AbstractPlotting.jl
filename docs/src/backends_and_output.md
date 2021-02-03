@@ -14,8 +14,13 @@ There are three main backends which concretely implement all abstract rendering 
 ### Activating Backends
 
 You can activate any backend by `using` the appropriate package and calling it's `activate!` function.
-To activate WGLMakie, you would do s`using WGLMakie; WGLMakie.activate!()`.
 
+Example with WGLMakie:
+
+```julia
+using WGLMakie
+WGLMakie.activate!()
+```
 
 ## [GLMakie](https://github.com/JuliaPlots/GLMakie.jl)
 
