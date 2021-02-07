@@ -53,6 +53,18 @@ function LineAxis(parent::Scene; kwargs...)
             else
                 (fl ? :left : :right, :center)
             end
+        elseif rot ≈ pi/2
+            if hor
+                (fl ? :left : :right, :center)
+            else
+                (:center, fl ? :top : :bottom)
+            end
+        elseif rot ≈ -pi/2
+            if hor
+                (fl ? :right : :left, :center)
+            else
+                (:center, fl ? :bottom : :top)
+            end
         elseif rot > 0
             if hor
                 (fl ? :left : :right, fl ? :bottom : :top)
