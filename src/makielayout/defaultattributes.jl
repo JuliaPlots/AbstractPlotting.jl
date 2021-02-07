@@ -302,7 +302,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The color of the tick marks."
         tickcolor = RGBf0(0, 0, 0)
         "The horizontal and vertical alignment of the tick labels."
-        ticklabelalign = (:left, :center)
+        ticklabelalign = AbstractPlotting.automatic
         "The line width of the spines."
         spinewidth = 1f0
         "Controls if the top spine is visible."

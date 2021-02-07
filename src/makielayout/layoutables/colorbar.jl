@@ -277,8 +277,19 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     end
 
+    realticklabelalign = lift(ticklabelalign, vertical, flipaxisposition, typ = Any) do al, v, fl
+        if al !== AbstractPlotting.automatic
+            return al
+        end
+        if v
+            (fl ? :left : :right, :center)
+        else
+            (:center, fl ? :bottom : :top)
+        end
+    end
+
     axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxisposition,
-        limits = limits, ticklabelalign = ticklabelalign, label = label,
+        limits = limits, ticklabelalign = realticklabelalign, label = label,
         labelpadding = labelpadding, labelvisible = labelvisible, labelsize = labelsize,
         labelcolor = labelcolor,
         labelfont = labelfont, ticklabelfont = ticklabelfont, ticks = ticks, tickformat = tickformat,
