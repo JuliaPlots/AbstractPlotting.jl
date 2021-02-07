@@ -168,19 +168,9 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
         yflip ? lc : rc
     end
 
-    realxticklabelalign = lift(xticklabelalign, xaxis_flipped, typ = Any) do al, fl
-        al !== AbstractPlotting.automatic && return al
-        (:center, fl ? :bottom : :top)
-    end
-
-    realyticklabelalign = lift(yticklabelalign, yaxis_flipped, typ = Any) do al, fl
-        al !== AbstractPlotting.automatic && return al
-        (fl ? :left : :right, :center)
-    end
-
     xaxis = LineAxis(topscene, endpoints = xaxis_endpoints, limits = lift(xlimits, limits),
         flipped = xaxis_flipped, ticklabelrotation = xticklabelrotation,
-        ticklabelalign = realxticklabelalign, labelsize = xlabelsize,
+        ticklabelalign = xticklabelalign, labelsize = xlabelsize,
         labelpadding = xlabelpadding, ticklabelpad = xticklabelpad, labelvisible = xlabelvisible,
         label = xlabel, labelfont = xlabelfont, ticklabelfont = xticklabelfont, ticklabelcolor = xticklabelcolor, labelcolor = xlabelcolor, tickalign = xtickalign,
         ticklabelspace = xticklabelspace, ticks = xticks, tickformat = xtickformat, ticklabelsvisible = xticklabelsvisible,
@@ -193,7 +183,7 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
 
     yaxis  =  LineAxis(topscene, endpoints = yaxis_endpoints, limits = lift(ylimits, limits),
         flipped = yaxis_flipped, ticklabelrotation = yticklabelrotation,
-        ticklabelalign = realyticklabelalign, labelsize = ylabelsize,
+        ticklabelalign = yticklabelalign, labelsize = ylabelsize,
         labelpadding = ylabelpadding, ticklabelpad = yticklabelpad, labelvisible = ylabelvisible,
         label = ylabel, labelfont = ylabelfont, ticklabelfont = yticklabelfont, ticklabelcolor = yticklabelcolor, labelcolor = ylabelcolor, tickalign = ytickalign,
         ticklabelspace = yticklabelspace, ticks = yticks, tickformat = ytickformat, ticklabelsvisible = yticklabelsvisible,

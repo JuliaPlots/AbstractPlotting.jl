@@ -48,7 +48,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     @extract attrs (
         label, labelcolor, labelsize, labelvisible, labelpadding, ticklabelsize,
-        ticklabelspace, labelfont, ticklabelfont, ticklabelcolor,
+        ticklabelspace, labelfont, ticklabelfont, ticklabelcolor, ticklabelrotation,
         ticklabelsvisible, ticks, tickformat, ticksize, ticksvisible, ticklabelpad, tickalign,
         tickwidth, tickcolor, spinewidth, topspinevisible,
         rightspinevisible, leftspinevisible, bottomspinevisible, topspinecolor,
@@ -277,24 +277,14 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     end
 
-    realticklabelalign = lift(ticklabelalign, vertical, flipaxis, typ = Any) do al, v, fl
-        if al !== AbstractPlotting.automatic
-            return al
-        end
-        if v
-            (fl ? :left : :right, :center)
-        else
-            (:center, fl ? :bottom : :top)
-        end
-    end
-
     axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxis,
-        limits = limits, ticklabelalign = realticklabelalign, label = label,
+        limits = limits, ticklabelalign = ticklabelalign, label = label,
         labelpadding = labelpadding, labelvisible = labelvisible, labelsize = labelsize,
         labelcolor = labelcolor,
         labelfont = labelfont, ticklabelfont = ticklabelfont, ticks = ticks, tickformat = tickformat,
         ticklabelsize = ticklabelsize, ticklabelsvisible = ticklabelsvisible, ticksize = ticksize,
         ticksvisible = ticksvisible, ticklabelpad = ticklabelpad, tickalign = tickalign,
+        ticklabelrotation = ticklabelrotation,
         tickwidth = tickwidth, tickcolor = tickcolor, spinewidth = spinewidth,
         ticklabelspace = ticklabelspace, ticklabelcolor = ticklabelcolor,
         spinecolor = :transparent, spinevisible = :false, flip_vertical_label = flip_vertical_label,

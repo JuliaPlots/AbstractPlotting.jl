@@ -303,6 +303,8 @@ function default_attributes(::Type{Colorbar}, scene)
         tickcolor = RGBf0(0, 0, 0)
         "The horizontal and vertical alignment of the tick labels."
         ticklabelalign = AbstractPlotting.automatic
+        "The rotation of the ticklabels"
+        ticklabelrotation = 0f0
         "The line width of the spines."
         spinewidth = 1f0
         "Controls if the top spine is visible."
