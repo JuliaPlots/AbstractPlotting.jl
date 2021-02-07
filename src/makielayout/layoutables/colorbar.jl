@@ -53,7 +53,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         tickwidth, tickcolor, spinewidth, topspinevisible,
         rightspinevisible, leftspinevisible, bottomspinevisible, topspinecolor,
         leftspinecolor, rightspinecolor, bottomspinecolor, colormap, limits,
-        halign, valign, vertical, flipaxisposition, ticklabelalign, flip_vertical_label,
+        halign, valign, vertical, flipaxis, ticklabelalign, flip_vertical_label,
         nsteps, highclip, lowclip,
         minorticksvisible, minortickalign, minorticksize, minortickwidth, minortickcolor, minorticks)
 
@@ -258,17 +258,17 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     decorations[:spines] = lines!(topscene, borderpoints, linewidth = spinewidth, color = topspinecolor)
 
-    axispoints = lift(barbox, vertical, flipaxisposition) do scenearea,
-            vertical, flipaxisposition
+    axispoints = lift(barbox, vertical, flipaxis) do scenearea,
+            vertical, flipaxis
 
         if vertical
-            if flipaxisposition
+            if flipaxis
                 (bottomright(scenearea), topright(scenearea))
             else
                 (bottomleft(scenearea), topleft(scenearea))
             end
         else
-            if flipaxisposition
+            if flipaxis
                 (topleft(scenearea), topright(scenearea))
             else
                 (bottomleft(scenearea), bottomright(scenearea))
@@ -277,7 +277,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     end
 
-    realticklabelalign = lift(ticklabelalign, vertical, flipaxisposition, typ = Any) do al, v, fl
+    realticklabelalign = lift(ticklabelalign, vertical, flipaxis, typ = Any) do al, v, fl
         if al !== AbstractPlotting.automatic
             return al
         end
@@ -288,7 +288,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         end
     end
 
-    axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxisposition,
+    axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxis,
         limits = limits, ticklabelalign = realticklabelalign, label = label,
         labelpadding = labelpadding, labelvisible = labelvisible, labelsize = labelsize,
         labelcolor = labelcolor,
@@ -304,20 +304,20 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         
     decorations[:axis] = axis
 
-    onany(axis.protrusion, vertical, flipaxisposition) do axprotrusion,
-            vertical, flipaxisposition
+    onany(axis.protrusion, vertical, flipaxis) do axprotrusion,
+            vertical, flipaxis
 
 
         left, right, top, bottom = 0f0, 0f0, 0f0, 0f0
 
         if vertical
-            if flipaxisposition
+            if flipaxis
                 right += axprotrusion
             else
                 left += axprotrusion
             end
         else
-            if flipaxisposition
+            if flipaxis
                 top += axprotrusion
             else
                 bottom += axprotrusion

@@ -328,7 +328,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "Controls if the colorbar is oriented vertically."
         vertical = true
         "Flips the axis to the right if vertical and to the top if horizontal."
-        flipaxisposition = true
+        flipaxis = true
         "Flips the colorbar label if the axis is vertical."
         flip_vertical_label = false
         "The width setting of the colorbar."
