@@ -80,9 +80,9 @@ function default_attributes(::Type{Axis}, scene)
         "The counterclockwise rotation of the yticklabels in radians."
         yticklabelrotation = 0f0
         "The horizontal and vertical alignment of the xticklabels."
-        xticklabelalign = (:center, :top)
+        xticklabelalign = AbstractPlotting.automatic
         "The horizontal and vertical alignment of the yticklabels."
-        yticklabelalign = (:right, :center)
+        yticklabelalign = AbstractPlotting.automatic
         "The size of the xtick marks."
         xticksize = 10f0
         "The size of the ytick marks."
