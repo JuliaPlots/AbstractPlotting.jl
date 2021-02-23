@@ -439,7 +439,8 @@ stem(f[1, 1], xs, sin.(xs))
 stem(f[1, 2], xs, sin,
     offset = 0.5, trunkcolor = :blue, marker = :rect,
     stemcolor = :red, color = :orange,
-    markersize = 15, strokecolor = :red, strokewidth = 3)
+    markersize = 15, strokecolor = :red, strokewidth = 3,
+    trunklinestyle = :dash, stemlinestyle = :dashdot)
 stem(f[2, 1], xs, sin.(xs),
     offset = LinRange(-0.5, 0.5, 30),
     color = LinRange(0, 1, 30), colorrange = (0, 0.5),

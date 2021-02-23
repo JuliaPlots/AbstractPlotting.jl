@@ -18,7 +18,9 @@ $(ATTRIBUTES)
         stemcolormap = :viridis,
         stemcolorrange = automatic,
         stemwidth = 1,
+        stemlinestyle = nothing,
         trunkwidth = 1,
+        trunklinestyle = nothing,
         trunkcolor = :black,
         trunkcolormap = :viridis,
         trunkcolorrange = automatic,
@@ -59,13 +61,15 @@ function plot!(s::Stem{<:Tuple{<:AbstractVector{<:Point}}})
         color = s.trunkcolor,
         colormap = s.trunkcolormap,
         colorrange = s.trunkcolorrange,
-        visible = s.visible)
+        visible = s.visible,
+        linestyle = s.trunklinestyle)
     linesegments!(s, stemtuples,
         linewidth = s.stemwidth,
         color = s.stemcolor,
         colormap = s.stemcolormap,
         colorrange = s.stemcolorrange,
-        visible = s.visible)
+        visible = s.visible,
+        linestyle = s.stemlinestyle)
     scatter!(s, s[1],
         color = s.color,
         colormap = s.colormap,
