@@ -949,3 +949,41 @@ $(let
 end)
 """
 Textbox
+
+
+
+function default_attributes(::Type{Axis3}, scene)
+    attrs, docdict, defaultdict = @documented_attributes begin
+        "The height setting of the scene."
+        height = nothing
+        "The width setting of the scene."
+        width = nothing
+        "Controls if the parent layout can adjust to this element's width"
+        tellwidth = true
+        "Controls if the parent layout can adjust to this element's height"
+        tellheight = true
+        "The horizontal alignment of the scene in its suggested bounding box."
+        halign = :center
+        "The vertical alignment of the scene in its suggested bounding box."
+        valign = :center
+        "The alignment of the scene in its suggested bounding box."
+        alignmode = Inside()
+        "The elevation angle of the camera"
+        elevation = pi/4
+        "The azimuth angle of the camera"
+        azimuth = 1.275 * pi
+        "A number between 0 and 1, where 0 is orthographic, and 1 full perspective"
+        perspectiveness = 0f0
+    end
+    (attributes = attrs, documentation = docdict, defaults = defaultdict)
+end
+
+@doc """
+Axis3 has the following attributes:
+
+$(let
+    _, docs, defaults = default_attributes(Axis3, nothing)
+    docvarstring(docs, defaults)
+end)
+"""
+Axis3
