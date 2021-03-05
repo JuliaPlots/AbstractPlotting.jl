@@ -59,7 +59,7 @@ function plot(P::PlotFunc, fp::FigurePosition, args...; axis = NamedTuple(), kwa
     if is2d(proxyscene)
         ax = Axis(fp.fig; axis...)
     else
-        ax = LScene(fp.fig; scenekw = (camera = cam3d!, show_axis = true, raw = false, axis...))
+        ax = Axis3(fp.fig; axis...)
     end
 
     fp[] = ax
