@@ -23,7 +23,7 @@ function plot(P::PlotFunc, args...; axis = NamedTuple(), figure = NamedTuple(), 
     if is2d(proxyscene)
         ax = Axis(fig; axis...)
     else
-        ax = LScene(fig; scenekw = (camera = cam3d!, axis...))
+        ax = Axis3(fig; axis...)
     end
 
     fig[1, 1] = ax
