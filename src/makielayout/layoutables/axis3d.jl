@@ -58,9 +58,9 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2)
     # wireframe!(scene, limits)
 
-    add_tick_labels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3)
-    add_tick_labels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3)
-    add_tick_labels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2)
+    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3)
+    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3)
+    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2)
 
 
     mouseeventhandle = addmouseevents!(scene)
@@ -290,29 +290,56 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
     nothing
 end
 
-function add_tick_labels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2)
+function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2)
     dpoint = (v, v1, v2) -> dimpoint(dim, v, v1, v2)
     d1 = dim1(dim)
     d2 = dim2(dim)
 
-    labels_positions = lift(scene.px_area, scene.camera.projectionview, limits, ticknode, miv, min1, min2) do pxa, pv, lims, ticks, miv, min1, min2
+    tick_segments = lift(limits, ticknode, miv, min1, min2) do lims, ticks, miv, min1, min2
 
         f1 = !min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
 
+        f1_oppo = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
+        f2_oppo = !min2 ? minimum(lims)[d2] : maximum(lims)[d2]
+
+        diff_f1 = f1 - f1_oppo
+        diff_f2 = f2 - f2_oppo
+
+        map(ticks) do t
+            p1 = dpoint(t, f1, f2)
+            p2 = if dim == 3
+                dpoint(t, f1, f2 + 0.03 * diff_f2)
+            else
+                dpoint(t, f1 + 0.03 * diff_f1, f2)
+            end
+            (p1, p2)
+        end
+    end
+
+    linesegments!(scene, tick_segments,
+        xautolimits = false, yautolimits = false, zautolimits = false)
+
+    labels_positions = lift(scene.px_area, scene.camera.projectionview, tick_segments) do pxa, pv, ticksegs
+
         o = pxa.origin
 
-        points = [
-            Point2f0(o + AbstractPlotting.project(scene, dpoint(t, f1, f2)))
-            for t in ticks
-        ]
+        points = map(ticksegs) do (tstart, tend)
+            tstartp = Point2f0(o + AbstractPlotting.project(scene, tstart))
+            tendp = Point2f0(o + AbstractPlotting.project(scene, tend))
 
-        ticklabels = get_ticklabels(AbstractPlotting.automatic, ticks)
+            offset = (dim == 3 ? 10 : 5) * AbstractPlotting.GeometryBasics.normalize(
+                Point2f0(tendp - tstartp))
+            tendp + offset
+        end
+
+        ticklabels = get_ticklabels(AbstractPlotting.automatic, ticknode[])
 
         v = collect(zip(ticklabels, points))
         v::Vector{Tuple{String, Point2f0}}
     end
-    al = lift(miv, min1, min2) do mv, m1, m2
+
+    align = lift(miv, min1, min2) do mv, m1, m2
         if dim == 1
             (mv ⊻ m1 ? :right : :left, m2 ? :top : :bottom)
         elseif dim == 2
@@ -321,7 +348,9 @@ function add_tick_labels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, 
             (m1 ⊻ m2 ? :left : :right, :center)
         end
     end
-    a = annotations!(pscene, labels_positions, align = al, show_axis = false)
+
+    a = annotations!(pscene, labels_positions, align = align, show_axis = false)
     translate!(a, 0, 0, 1000)
+
     nothing
 end
