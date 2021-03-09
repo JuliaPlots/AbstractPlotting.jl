@@ -139,10 +139,19 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness)
         Vec3{Float64}(0, 0, 0),
         Vec3{Float64}(0, 0, 1))
 
-    view = lookat * scale_to_unit_cube_matrix
-    projection = AbstractPlotting.perspectiveprojection(Float64, angle, 1f0, radius - sqrt(3), radius + 2 * sqrt(3))
+    # aspect_ratio = width(px_area) / height(px_area)
+    aspect_ratio = 1
 
-    view, projection, Vec3f0(inv(scale_to_unit_cube_matrix) * Vec4f0(eyepos..., 1))
+    view = lookat * scale_to_unit_cube_matrix
+    near = radius - sqrt(3)
+    far = radius + 2 * sqrt(3)
+    projection = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+
+    # for eyeposition dependent algorithms, we need to present the position as if
+    # there was no scaling applied
+    eyeposition = Vec3f0(inv(scale_to_unit_cube_matrix) * Vec4f0(eyepos..., 1))
+    
+    view, projection, eyeposition
 end
 
 
@@ -351,6 +360,59 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
     a = annotations!(pscene, labels_positions, align = align, show_axis = false)
     translate!(a, 0, 0, 1000)
+
+    label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview, limits, miv, min1, min2) do pxa, pv, lims, miv, min1, min2
+
+        o = pxa.origin
+
+        f1 = !min1 ? minimum(lims)[d1] : maximum(lims)[d1]
+        f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
+
+        p1 = dpoint(minimum(lims)[dim], f1, f2)
+        p2 = dpoint(maximum(lims)[dim], f1, f2)
+
+        pp1 = Point2f0(o + AbstractPlotting.project(scene, p1))
+        pp2 = Point2f0(o + AbstractPlotting.project(scene, p2))
+
+        midpoint = (pp1 + pp2) / 2
+
+        # f1_oppo = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
+        # f2_oppo = !min2 ? minimum(lims)[d2] : maximum(lims)[d2]
+
+        diff = pp2 - pp1
+
+        # rotsign = miv ? 1 : -1
+        diffsign = if dim == 1 || dim == 3
+            !(min1 ⊻ min2) ? 1 : -1
+        else
+            (min1 ⊻ min2) ? 1 : -1
+        end
+
+        a = pi/2
+
+        offset_vec = (AbstractPlotting.Mat2f0(cos(a), sin(a), -sin(a), cos(a)) *
+            AbstractPlotting.GeometryBasics.normalize(diffsign * diff))
+        # rot = rotsign * pi/2
+        plus_offset = midpoint + 40 * offset_vec
+            
+        offset_ang = atan(offset_vec[2], offset_vec[1])
+        offset_ang_90deg = offset_ang + pi/2
+        offset_ang_90deg_alwaysup = ((offset_ang + pi/2 + pi/2) % pi) - pi/2
+
+        # # prefer rotated left 90deg to rotated right 90deg
+        # if offset_ang_90deg_alwaysup < -deg2rad(88)
+        #     offset_ang_90deg_alwaysup += pi
+        # end
+
+        valign = offset_vec[2] > 0 ? :bottom : :top
+
+        plus_offset, offset_ang_90deg_alwaysup, valign
+    end
+
+    text!(pscene, "label $dim",
+        position = @lift($label_pos_rot_valign[1]),
+        rotation = @lift($label_pos_rot_valign[2]),
+        align = @lift((:center, $label_pos_rot_valign[3])))
 
     nothing
 end
