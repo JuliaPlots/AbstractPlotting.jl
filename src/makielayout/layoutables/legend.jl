@@ -67,7 +67,7 @@ function layoutable(::Type{Legend},
 
     # these arrays store all the plot objects that the legend entries need
     titletexts = Optional{Label}[]
-    entrytexts = [Label[]]
+    entrytexts = [[]]
     entryplots = [[AbstractPlot[]]]
     entryrects = [Box[]]
 
@@ -216,11 +216,15 @@ function layoutable(::Type{Legend},
                 # fill missing entry attributes with those carried by the legend
                 merge!(e.attributes, preset_attrs)
 
-                # create the label
-                push!(etexts, Label(scene,
-                    text = e.label, textsize = e.labelsize, font = e.labelfont,
-                    color = e.labelcolor, halign = e.labelhalign, valign = e.labelvalign
-                    ))
+                label = create_legend_label(scene, typeof(e.label[]),
+                    e.attributes)
+
+                push!(etexts, label)
+                    # create the label
+                # push!(etexts, Label(scene,
+                #     text = e.label, textsize = e.labelsize, font = e.labelfont,
+                #     color = e.labelcolor, halign = e.labelhalign, valign = e.labelvalign
+                #     ))
 
                 # create the patch rectangle
                 rect = Box(scene, color = e.patchcolor, strokecolor = e.patchstrokecolor,
@@ -256,6 +260,15 @@ function layoutable(::Type{Legend},
     leg
 end
 
+function create_legend_label(scene, ::Type{String}, attr)
+    Label(scene,
+        text = attr.label, textsize = attr.labelsize, font = attr.labelfont,
+        color = attr.labelcolor, halign = attr.labelhalign, valign = attr.labelvalign
+    )
+end
+    #     text = e.label, textsize = e.labelsize, font = e.labelfont,
+    #     color = e.labelcolor, halign = e.labelhalign, valign = e.labelvalign
+    #     )))
 
 function legendelement_plots!(scene, element::MarkerElement, bbox::Node{FRect2D}, defaultattrs::Attributes)
     merge!(element.attributes, defaultattrs)
@@ -318,7 +331,7 @@ legendelements(le::LegendElement) = LegendElement[le]
 legendelements(les::AbstractArray{<:LegendElement}) = LegendElement[les...]
 
 
-function LegendEntry(label::String, contentelements::AbstractArray; kwargs...)
+function LegendEntry(label, contentelements::AbstractArray; kwargs...)
     attrs = Attributes(label = label)
 
     kwargattrs = Attributes(kwargs)
@@ -328,7 +341,7 @@ function LegendEntry(label::String, contentelements::AbstractArray; kwargs...)
     LegendEntry(elems, attrs)
 end
 
-function LegendEntry(label::String, contentelement; kwargs...)
+function LegendEntry(label, contentelement; kwargs...)
     attrs = Attributes(label = label)
 
     kwargattrs = Attributes(kwargs)
@@ -404,7 +417,7 @@ end
     Legend(
         fig_or_scene,
         contents::AbstractArray,
-        labels::AbstractArray{String},
+        labels::AbstractArray,
         title::Optional{String} = nothing;
         kwargs...)
 
@@ -415,7 +428,7 @@ one content element. A content element can be an `AbstractPlot`, an array of
 """
 function layoutable(::Type{Legend}, fig_or_scene,
         contents::AbstractArray,
-        labels::AbstractArray{String},
+        labels::AbstractArray,
         title::Optional{String} = nothing;
         kwargs...)
 
@@ -481,7 +494,7 @@ function get_labeled_plots(ax)
         haskey(plot.attributes, :label)
     end
     labels = map(lplots) do l
-        convert(String, l.label[])
+        l.label[]
     end
     lplots, labels
 end
