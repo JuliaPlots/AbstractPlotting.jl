@@ -974,6 +974,10 @@ function default_attributes(::Type{Axis3}, scene)
         azimuth = 1.275 * pi
         "A number between 0 and 1, where 0 is orthographic, and 1 full perspective"
         perspectiveness = 0f0
+        "Aspects of the 3 axes with each other"
+        data_aspect = :same # :equal
+        "Projection"
+        projection = :fit # :fitzoom :stretch
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
