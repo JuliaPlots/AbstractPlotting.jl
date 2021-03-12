@@ -13,7 +13,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     theme_attrs = subtheme(topscene, :Axis3)
     attrs = merge!(merge!(Attributes(kwargs), theme_attrs), default_attrs)
 
-    @extract attrs (elevation, azimuth, perspectiveness
+    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, projection
     )
 
     decorations = Dict{Symbol, Any}()
@@ -28,7 +28,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     scene = Scene(topscene, scenearea, raw = true)
 
-    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness)
+    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, projection)
 
     on(matrices) do (view, proj, eyepos)
         pv = proj * view
@@ -107,13 +107,24 @@ end
 
 can_be_current_axis(ax3::Axis3) = true
 
-function calculate_matrices(limits, px_area, elev, azim, perspectiveness)
+function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_aspect,
+        projection)
     ws = widths(limits)
 
+
     t = AbstractPlotting.translationmatrix(-Float64.(limits.origin))
-    s = AbstractPlotting.scalematrix(2 ./ Float64.(ws))
-    t2 = AbstractPlotting.translationmatrix(Vec3(-1.0, -1.0, -1.0))
-    scale_to_unit_cube_matrix = t2 * s * t
+    s = if data_aspect == :equal
+        scales = 2 ./ Float64.(ws)
+    elseif data_aspect == :same
+        scales = 2 ./ max.(maximum(ws), Float64.(ws))
+    elseif data_aspect isa VecTypes{3}
+        scales = 2 ./ Float64.(ws) .* Float64.(data_aspect) ./ maximum(data_aspect)
+    else
+        error("Invalid data_aspect $data_aspect")
+    end |> AbstractPlotting.scalematrix
+
+    t2 = AbstractPlotting.translationmatrix(-0.5 .* ws .* scales)
+    scale_matrix = t2 * s * t
 
     ang_max = 70
     ang_min = 1
@@ -134,24 +145,39 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness)
 
     eyepos = Vec3{Float64}(x, y, z)
 
-    lookat = AbstractPlotting.lookat(
+    lookat_matrix = AbstractPlotting.lookat(
         eyepos,
         Vec3{Float64}(0, 0, 0),
         Vec3{Float64}(0, 0, 1))
 
-    # aspect_ratio = width(px_area) / height(px_area)
-    aspect_ratio = 1
+    w = width(px_area)
+    h = height(px_area)
 
-    view = lookat * scale_to_unit_cube_matrix
-    near = radius - sqrt(3)
-    far = radius + 2 * sqrt(3)
-    projection = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+    view_matrix = lookat_matrix * scale_matrix
+    
+    projection_matrix = projectionmatrix(eyepos, radius, azim, elev, angle, w, h, scales, projection)
 
     # for eyeposition dependent algorithms, we need to present the position as if
     # there was no scaling applied
-    eyeposition = Vec3f0(inv(scale_to_unit_cube_matrix) * Vec4f0(eyepos..., 1))
+    eyeposition = Vec3f0(inv(scale_matrix) * Vec4f0(eyepos..., 1))
     
-    view, projection, eyeposition
+    view_matrix, projection_matrix, eyeposition
+end
+
+function projectionmatrix(eyepos, radius, azim, elev, angle, width, height, scales, projection)
+    near = radius - sqrt(3)
+    far = radius + 2 * sqrt(3)
+
+    aspect_ratio = width / height
+
+    projection_matrix = if projection == :fit
+        AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+    # elseif projection isa Float64
+    #     aspect_ratio = projection * width / height
+    #     AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+    else
+        error("Invalid projection $projection")
+    end
 end
 
 
@@ -400,11 +426,12 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         offset_ang_90deg_alwaysup = ((offset_ang + pi/2 + pi/2) % pi) - pi/2
 
         # # prefer rotated left 90deg to rotated right 90deg
-        # if offset_ang_90deg_alwaysup < -deg2rad(88)
-        #     offset_ang_90deg_alwaysup += pi
-        # end
+        slight_flip = offset_ang_90deg_alwaysup < -deg2rad(88)
+        if slight_flip
+            offset_ang_90deg_alwaysup += pi
+        end
 
-        valign = offset_vec[2] > 0 ? :bottom : :top
+        valign = offset_vec[2] > 0 || slight_flip ? :bottom : :top
 
         plus_offset, offset_ang_90deg_alwaysup, valign
     end
