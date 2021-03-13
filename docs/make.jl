@@ -341,9 +341,6 @@ makedocs(
         ],
     ),
     sitename = "Makie Plotting Ecosystem",
-    expandfirst = [
-        "plotting_functions.md",
-    ],
     pages = Any[
         "Home" => "index.md",
         "Basics" => [
