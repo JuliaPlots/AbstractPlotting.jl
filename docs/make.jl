@@ -353,7 +353,7 @@ makedocs(
             "interaction.md",
             "Plotting Functions" =>
                 joinpath.(
-                    joinpath(srcpath, "plotting_functions"),
+                    "plotting_functions",
                     filter(
                         endswith(".md"),
                         readdir(joinpath(srcpath, "plotting_functions"),
