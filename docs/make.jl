@@ -351,7 +351,11 @@ makedocs(
             "Layout Tutorial" => "makielayout/tutorial.md",
             "animation.md",
             "interaction.md",
-            "plotting_functions.md",
+            "Plotting Functions" =>
+                filter(
+                    endswith(".md"),
+                    readdir(joinpath(srcpath, "plotting_functions"), sort = true)
+                ),
             "theming.md",
         ],
         "Documentation" => [

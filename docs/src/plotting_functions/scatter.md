@@ -1,0 +1,22 @@
+## `scatter`
+
+```@docs
+scatter
+```
+
+### Examples
+
+```@example
+using GLMakie
+AbstractPlotting.inline!(true) # hide
+
+xs = LinRange(0, 10, 20)
+ys = 0.5 .* sin.(xs)
+
+scatter(xs, ys, color = :red)
+scatter!(xs, ys .- 1, color = xs)
+scatter!(xs, ys .- 2, markersize = LinRange(5, 30, 20))
+scatter!(xs, ys .- 3, marker = 'a':'t', strokewidth = 0, color = :black)
+current_figure()
+```
+
