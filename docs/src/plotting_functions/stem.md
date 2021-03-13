@@ -1,4 +1,4 @@
-## `stem`
+# stem
 
 ```@docs
 stem

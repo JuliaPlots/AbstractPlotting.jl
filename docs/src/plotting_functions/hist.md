@@ -1,4 +1,4 @@
-## `hist`
+# hist
 
 ```@docs
 hist

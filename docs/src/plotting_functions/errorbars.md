@@ -1,4 +1,4 @@
-## `errorbars`
+# errorbars
 
 ```@docs
 errorbars

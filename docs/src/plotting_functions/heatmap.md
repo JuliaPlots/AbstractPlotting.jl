@@ -1,4 +1,4 @@
-## `heatmap`
+# heatmap
 
 ```@docs
 heatmap

@@ -1,4 +1,4 @@
-## `poly`
+# poly
 
 ```@docs
 poly

@@ -1,4 +1,4 @@
-## `contour`
+# contour
 
 ```@docs
 contour

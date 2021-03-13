@@ -1,4 +1,4 @@
-## `meshscatter`
+# meshscatter
 
 ```@docs
 meshscatter

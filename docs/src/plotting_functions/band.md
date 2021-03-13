@@ -1,4 +1,4 @@
-## `band`
+# band
 
 ```@docs
 band

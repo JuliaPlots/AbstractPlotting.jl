@@ -1,4 +1,4 @@
-## `barplot`
+# barplot
 
 ```@docs
 barplot

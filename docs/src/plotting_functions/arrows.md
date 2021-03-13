@@ -1,4 +1,4 @@
-## `arrows`
+# arrows
 
 ```@docs
 arrows

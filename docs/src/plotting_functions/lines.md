@@ -1,4 +1,4 @@
-## `lines`
+# lines
 
 ```@docs
 lines

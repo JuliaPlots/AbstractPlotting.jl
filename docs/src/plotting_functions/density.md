@@ -1,4 +1,4 @@
-## `density`
+# density
 
 ```@docs
 density

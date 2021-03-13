@@ -1,4 +1,4 @@
-## `image`
+# image
 
 ```@docs
 image

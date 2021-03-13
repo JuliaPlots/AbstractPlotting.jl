@@ -1,4 +1,4 @@
-## `rangebars`
+# rangebars
 
 ```@docs
 rangebars
