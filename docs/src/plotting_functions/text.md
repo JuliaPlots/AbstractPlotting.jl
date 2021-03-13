@@ -21,5 +21,7 @@ text!(scene, "AbstractPlotting\nMakie", position = Point2f0(300, 300),
     color = :blue, textsize = 30, align = (:center, :center), show_axis = false)
 text!(scene, "AbstractPlotting\nMakie", position = Point2f0(300, 200),
     color = :green, textsize = 30, align = (:center, :top), rotation = pi/4, show_axis = false)
+
+scene
 ```
 
