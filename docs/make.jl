@@ -352,10 +352,13 @@ makedocs(
             "animation.md",
             "interaction.md",
             "Plotting Functions" =>
-                filter(
-                    endswith(".md"),
-                    readdir(joinpath(srcpath, "plotting_functions"),
-                        sort = true, join = true)
+                joinpath.(
+                    joinpath(srcpath, "plotting_functions"),
+                    filter(
+                        endswith(".md"),
+                        readdir(joinpath(srcpath, "plotting_functions"),
+                            sort = true)
+                    )
                 ),
             "theming.md",
         ],
