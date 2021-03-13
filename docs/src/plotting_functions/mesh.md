@@ -6,6 +6,7 @@ mesh
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 vertices = [

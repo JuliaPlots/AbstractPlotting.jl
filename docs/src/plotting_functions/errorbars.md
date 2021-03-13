@@ -7,26 +7,81 @@ errorbars
 ### Examples
 
 ```@example
-using GLMakie
+using CairoMakie
+CairoMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
+f = Figure(resolution = (800, 600))
+Axis(f[1, 1])
+
 xs = 0:0.5:10
-ys1 = 0.5 .* sin.(xs)
-ys2 = ys1 .- 1
-ys3 = ys1 .- 2
+ys = 0.5 .* sin.(xs)
 
 lowerrors = fill(0.1, length(xs))
 higherrors = LinRange(0.1, 0.4, length(xs))
 
+errorbars!(xs, ys, higherrors, color = :red) # same low and high error
 
-errorbars(xs, ys1, higherrors, color = :red) # same low and high error
-errorbars!(xs, ys2, lowerrors, higherrors, color = LinRange(0, 1, length(xs)))
+# plot position scatters so low and high errors can be discriminated
+scatter!(xs, ys, markersize = 3, color = :black)
+
+f
+save("example_errorbars_1.svg", f); nothing # hide
+```
+
+
+
+![example_errorbars_1](example_errorbars_1.svg)
+
+```@example
+using CairoMakie
+CairoMakie.activate!() # hide
+AbstractPlotting.inline!(true) # hide
+
+f = Figure(resolution = (800, 600))
+Axis(f[1, 1])
+
+xs = 0:0.5:10
+ys = 0.5 .* sin.(xs)
+
+lowerrors = fill(0.1, length(xs))
+higherrors = LinRange(0.1, 0.4, length(xs))
+
+errorbars!(xs, ys, lowerrors, higherrors, color = LinRange(0, 1, length(xs)))
+
+# plot position scatters so low and high errors can be discriminated
+scatter!(xs, ys, markersize = 3, color = :black)
+
+f
+save("example_errorbars_2_.svg", f); nothing # hide
+```
+
+![example_errorbars_2_](example_errorbars_2_.svg)
+
+
+
+```@example
+using CairoMakie
+CairoMakie.activate!() # hide
+AbstractPlotting.inline!(true) # hide
+
+f = Figure(resolution = (800, 600))
+Axis(f[1, 1])
+
+xs = 0:0.5:10
+ys = 0.5 .* sin.(xs)
+
+lowerrors = fill(0.1, length(xs))
+higherrors = LinRange(0.1, 0.4, length(xs))
+
 errorbars!(xs, ys3, lowerrors, higherrors, whiskerwidth = 3, direction = :x)
 
 # plot position scatters so low and high errors can be discriminated
-scatter!(xs, ys1, markersize = 3, color = :black)
-scatter!(xs, ys2, markersize = 3, color = :black)
-scatter!(xs, ys3, markersize = 3, color = :black)
-current_figure()
+scatter!(xs, ys, markersize = 3, color = :black)
+
+f
+save("example_errorbars_3_.svg", f); nothing # hide
 ```
+
+![example_errorbars_3_](example_errorbars_3_.svg)
 

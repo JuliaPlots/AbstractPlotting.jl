@@ -8,6 +8,7 @@ stem
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 xs = LinRange(0, 4pi, 30)

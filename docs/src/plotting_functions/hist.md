@@ -8,6 +8,7 @@ hist
 
 ```julia
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 data = randn(1000)

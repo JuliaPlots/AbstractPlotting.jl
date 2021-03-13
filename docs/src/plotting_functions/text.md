@@ -8,6 +8,7 @@ text
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 scene = Scene(camera = campixel!, show_axis = false, resolution = (600, 600))

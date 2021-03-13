@@ -8,6 +8,7 @@ meshscatter
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 xs = cos.(1:0.5:20)

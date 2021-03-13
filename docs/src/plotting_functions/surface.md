@@ -8,6 +8,7 @@ surface
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 xs = LinRange(0, 10, 100)

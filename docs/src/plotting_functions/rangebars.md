@@ -8,6 +8,7 @@ rangebars
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 vals = -1:0.1:1

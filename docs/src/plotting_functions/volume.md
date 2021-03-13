@@ -8,6 +8,7 @@ volume
 
 ```@example
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
 r = LinRange(-1, 1, 100)
