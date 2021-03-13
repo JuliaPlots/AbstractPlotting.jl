@@ -79,11 +79,10 @@ using AbstractPlotting.GeometryBasics
 AbstractPlotting.inline!(true) # hide
 
 f = Figure(resolution = (800, 600))
-Axis(f[1, 1])
+Axis(f[1, 1], aspect = DataAspect())
 
 # shape decomposition
-poly!(Circle(Point2f0(0, 0), 15f0), color = :pink,
-    axis = (autolimitaspect = 1,))
+poly!(Circle(Point2f0(0, 0), 15f0), color = :pink)
 
 f
 save("example_poly_4.svg", f); nothing # hide
