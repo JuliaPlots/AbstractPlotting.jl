@@ -354,7 +354,8 @@ makedocs(
             "Plotting Functions" =>
                 filter(
                     endswith(".md"),
-                    readdir(joinpath(srcpath, "plotting_functions"), sort = true)
+                    readdir(joinpath(srcpath, "plotting_functions"),
+                        sort = true, join = true)
                 ),
             "theming.md",
         ],
