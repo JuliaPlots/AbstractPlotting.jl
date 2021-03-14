@@ -1,7 +1,7 @@
 # Layoutables
 
 !!! note
-    All examples in this section are presented as static CairoMakie vector graphics for clarity of visuals
+    All examples in this section are presented as static CairoMakie vector graphics for clarity of visuals.
     Keep in mind that CairoMakie is not interactive.
     Use GLMakie for interactive widgets, as WGLMakie currently doesn't have picking implemented.
 
