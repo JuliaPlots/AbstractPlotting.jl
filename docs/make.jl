@@ -363,6 +363,7 @@ makedocs(
             "plot_method_signatures.md",
             "Figure" => "figure.md",
             "Layoutables & Widgets" => [
+                "makielayout/layoutables.md",
                 "makielayout/axis.md",
                 "makielayout/box.md",
                 "makielayout/button.md",
