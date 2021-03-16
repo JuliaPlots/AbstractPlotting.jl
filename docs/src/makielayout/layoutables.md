@@ -10,6 +10,15 @@ A `Figure` has its own internal `GridLayout` and therefore offers simplified syn
 If you want to work with a bare `Scene`, you can attach a `GridLayout` to its pixel area.
 The `layoutscene` function is supplied for this purpose.
 
+!!! note
+    A layout only controls an object's position or bounding box.
+    A Layoutable can be controlled by the GridLayout of a Figure but not be added as a visual to the Figure.
+    A Layoutable can also be added to a Scene without being inside any GridLayout, if you specify the bounding box yourself.
+
+## Adding to a Figure
+
+Here's one way to add a Layoutable, in this case an `Axis`, to a Figure.
+
 ```@example
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -22,6 +31,12 @@ save("layoutables_figure.svg", f); nothing # hide
 ```
 
 ![layoutables_figure](layoutables_figure.svg)
+
+## Adding to a Scene
+
+And here's how you can add the same Layoutable to a Scene, which is the primitive object underlying a Figure.
+As discussed above, `layoutscene` is an older convenience method to create a Scene with an attached GridLayout that tracks its size.
+This is mostly not needed anymore since Figures were added.
 
 ```@example
 using CairoMakie
@@ -36,6 +51,28 @@ save("layoutables_scene.svg", scene); nothing # hide
 
 ![layoutables_scene](layoutables_scene.svg)
 
+## Specifying a boundingbox directly
+
+Sometimes you just want to place a Layoutable in a specific location, without it being controlled by a dynamic layout.
+You can do this by setting the `bbox` parameter, which is usually controlled by the layout, manually.
+The boundingbox should be a 2D `Rect`, and can also be an Observable if you plan to change it dynamically.
+The function `BBox` creates an `FRect2D`, but instead of passing origin and widths, you pass left, right, bottom and top boundaries directly.
+
+Here's an example where two axes are placed manually:
+
+```@example
+using CairoMakie
+CairoMakie.activate!() # hide
+AbstractPlotting.inline!(true) # hide
+
+f = Figure(resolution = (800, 600))
+Axis(f, bbox = BBox(100, 300, 100, 500), title = "Axis 1")
+Axis(f, bbox = BBox(400, 700, 200, 400), title = "Axis 2")
+f
+save("layoutables_manual_bbox.svg", f); nothing # hide
+```
+
+![layoutables_manual_bbox](layoutables_manual_bbox.svg)
 
 ## Deleting Layoutables
 
