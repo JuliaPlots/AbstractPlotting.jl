@@ -84,15 +84,18 @@ function Base.setindex!(fig::Figure, obj, rows, cols, side = GridLayoutBase.Inne
     obj
 end
 
+function Base.setindex!(fig::Figure, obj::AbstractArray, rows, cols)
+    fig.layout[rows, cols] = obj
+    obj
+end
+
 Base.lastindex(f::Figure, i) = lastindex(f.layout, i)
 Base.lastindex(f::FigurePosition, i) = lastindex(f.fig, i)
 
 # for now just redirect figure display/show to the internal scene
 Base.show(io::IO, fig::Figure) = show(io, fig.scene)
-Base.display(fig::Figure) = display(fig.scene)
 Base.show(io::IO, ::MIME"text/plain", fig::Figure) = print(io, "Figure()")
 # Base.show(io::IO, ::MIME"image/svg+xml", fig::Figure) = show(io, MIME"image/svg+xml"(), fig.scene)
-Base.show(io::IO, ::MIME"image/png", fig::Figure) = show(io, MIME"image/png"(), fig.scene)
 
 # a FigureSubposition is just a deeper nested position in a figure's layout, and it doesn't
 # necessarily have to refer to an existing layout either, because those can be created
@@ -152,32 +155,14 @@ function get_layout_at!(fp::FigurePosition; createmissing = false)
     end
 end
 
-function get_layout_at!(layout::GridLayoutBase.GridLayout, fsp::FigureSubposition; createmissing = false)
-    gp = layout[fsp.rows, fsp.cols, fsp.side]
-    c = contents(gp, exact = true)
-    layouts = filter(x -> x isa GridLayoutBase.GridLayout, c)
-    if isempty(layouts)
-        if createmissing
-            return gp[] = GridLayoutBase.GridLayout()
-        else
-            error("No layout found but `createmissing` is false.")
-        end
-    elseif length(layouts) == 1
-        return only(layouts)
-    else
-        error("Found more than zero or one GridLayouts at $(gp)")
-    end
-end
-
 function get_layout_at!(fsp::FigureSubposition; createmissing = false)
     layout = get_layout_at!(fsp.parent; createmissing = createmissing)
-    get_layout_at!(layout, fsp; createmissing = createmissing)
+    gp = layout[fsp.rows, fsp.cols, fsp.side]
+    get_layout_at!(gp; createmissing = createmissing)
 end
-
 
 get_figure(fsp::FigureSubposition) = get_figure(fsp.parent)
 get_figure(fp::FigurePosition) = fp.fig
-
 
 function GridLayoutBase.contents(f::FigurePosition; exact = false)
     GridLayoutBase.contents(f.gp, exact = exact)
@@ -188,16 +173,11 @@ function GridLayoutBase.contents(f::FigureSubposition; exact = false)
     GridLayoutBase.contents(layout[f.rows, f.cols, f.side], exact = exact)
 end
 
-function content(f::FigurePosition)
-    cs = contents(f, exact = true)
-    if length(cs) == 1
-        return cs[1]
-    else
-        error("There is not exactly one object at the given FigurePosition")
-    end
+function GridLayoutBase.content(f::FigurePosition)
+    content(f.gp)
 end
 
-function content(f::FigureSubposition)
+function GridLayoutBase.content(f::FigureSubposition)
     cs = contents(f, exact = true)
     if length(cs) == 1
         return cs[1]

@@ -47,6 +47,9 @@ function backend_display(::Missing, ::Scene)
     """)
 end
 
+Base.display(fap::FigureAxisPlot) = display(fap.figure)
+Base.display(fig::Figure) = display(fig.scene)
+
 function Base.display(scene::Scene)
 
     if !use_display[]
@@ -64,11 +67,18 @@ end
 function Base.showable(mime::MIME{M}, scene::Scene) where M
     backend_showable(current_backend[], mime, scene)
 end
-
 # ambig
 function Base.showable(mime::MIME"application/json", scene::Scene)
     backend_showable(current_backend[], mime, scene)
 end
+function Base.showable(mime::MIME{M}, fig::FigureLike) where M
+    backend_showable(current_backend[], mime, get_scene(fig))
+end
+# ambig
+function Base.showable(mime::MIME"application/json", fig::FigureLike)
+    backend_showable(current_backend[], mime, get_scene(fig))
+end
+
 
 function backend_showable(::Backend, ::Mime, ::Scene) where {Backend, Mime <: MIME}
     hasmethod(backend_show, Tuple{Backend, IO, Mime, Scene})
@@ -90,6 +100,9 @@ end
 function Base.show(io::IO, ::MIME"text/plain", scene::Scene)
     show(io, scene)
 end
+
+Base.show(io::IO, m::MIME, fap::FigureAxisPlot) = show(io, m, fap.figure)
+Base.show(io::IO, m::MIME, fig::Figure) = show(io, m, fig.scene)
 
 function Base.show(io::IO, m::MIME, scene::Scene)
     # set update to true, without triggering an event
@@ -212,7 +225,7 @@ Save a `Scene` with the specified filename and format.
 - `px_per_unit`: The size of one scene unit in `px` when exporting to a bitmap format. This provides a mechanism to export the same scene with higher or lower resolution.
 """
 function FileIO.save(
-        f::FileIO.File, fig::FigureLike;
+        filename, fig::FigureLike;
         resolution = size(get_scene(fig)),
         pt_per_unit = 1.0,
         px_per_unit = 1.0,
@@ -224,7 +237,6 @@ function FileIO.save(
     # But otherwise we could get a filetype :UNKNOWN from a corrupt existing file
     # (from an error during save, e.g.), therefore we don't want to rely on the
     # type readout from an existing file.
-    filename = FileIO.filename(f)
     isfile(filename) && rm(filename)
     # query the filetype only from the file extension
     F = filetype(FileIO.query(filename))

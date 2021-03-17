@@ -26,9 +26,14 @@ import GridLayoutBase
 using Base: RefValue
 using Base.Iterators: repeated, drop
 import Base: getindex, setindex!, push!, append!, parent, get, get!, delete!, haskey
-using Observables: listeners, notify!, to_value
-# Imports from Observables which we use a lot
-using Observables: notify!, listeners
+using Observables: listeners, to_value
+
+# Backwards compatability for Observables 0.3
+if hasmethod(Observables.notify, Tuple{Observable})
+    using Observables: notify
+else
+    Base.notify(obs::Observable) = Observables.notify!(obs)
+end
 
 module ContoursHygiene
     import Contour
@@ -112,6 +117,7 @@ include("basic_recipes/poly.jl")
 include("basic_recipes/scatterlines.jl")
 include("basic_recipes/series.jl")
 include("basic_recipes/spy.jl")
+include("basic_recipes/stem.jl")
 include("basic_recipes/streamplot.jl")
 include("basic_recipes/timeseries.jl")
 include("basic_recipes/title.jl")
@@ -126,7 +132,7 @@ include("layouting/boundingbox.jl")
 # more default recipes
 # statistical recipes
 include("stats/conversions.jl")
-include("stats/histogram.jl")
+include("stats/hist.jl")
 include("stats/density.jl")
 include("stats/distributions.jl")
 include("stats/crossbar.jl")
@@ -149,7 +155,7 @@ export AbstractScene, SceneLike, Scene, AbstractScreen
 export AbstractPlot, Combined, Atomic, OldAxis
 
 # Theming, working with Plots
-export Attributes, Theme, attributes, default_theme, theme, set_theme!
+export Attributes, Theme, attributes, default_theme, theme, set_theme!, with_theme
 export title
 export xlims!, ylims!, zlims!
 export xlabel!, ylabel!, zlabel!
@@ -161,7 +167,7 @@ export xtickrotation, ytickrotation, ztickrotation
 export xtickrotation!, ytickrotation!, ztickrotation!
 
 # Node/Signal related
-export Node, Observable, lift, map_once, to_value, on, @lift
+export Node, Observable, lift, map_once, to_value, on, onany, @lift, off, connect!
 
 # utilities and macros
 export @recipe, @extract, @extractvalue, @key_str, @get_attribute

@@ -7,16 +7,13 @@ struct AxisPlot
     plot::AbstractPlot
 end
 
-Base.display(fap::FigureAxisPlot) = display(fap.figure)
 Base.show(io::IO, fap::FigureAxisPlot) = show(io, fap.figure)
 Base.show(io::IO, ::MIME"text/plain", fap::FigureAxisPlot) = print(io, "FigureAxisPlot()")
-# Base.show(io::IO, ::MIME"image/svg+xml", fap::FigureAxisPlot) = show(io, MIME"image/svg+xml"(), fap.figure)
-Base.show(io::IO, ::MIME"image/png", fap::FigureAxisPlot) = show(io, MIME"image/png"(), fap.figure)
 
 Base.iterate(fap::FigureAxisPlot, args...) = iterate((fap.figure, fap.axis, fap.plot), args...)
 Base.iterate(ap::AxisPlot, args...) = iterate((ap.axis, ap.plot), args...)
 
-function plot(P::PlotFunc, args...; axis = (;), figure = (;), kw_attributes...)
+function plot(P::PlotFunc, args...; axis = NamedTuple(), figure = NamedTuple(), kw_attributes...)
     # scene_attributes = extract_scene_attributes!(attributes)
     fig = Figure(; figure...)
 
@@ -42,7 +39,7 @@ function plot!(P::PlotFunc, args...; kw_attributes...)
     plot!(P, ax, args...; kw_attributes...)
 end
 
-function plot(P::PlotFunc, fp::FigurePosition, args...; axis = (;), kwargs...)
+function plot(P::PlotFunc, fp::FigurePosition, args...; axis = NamedTuple(), kwargs...)
 
     @assert isempty(contents(fp.gp, exact = true))
 
@@ -70,7 +67,7 @@ function plot!(P::PlotFunc, fp::FigurePosition, args...; kwargs...)
     plot!(P, ax, args...; kwargs...)
 end
 
-function plot(P::PlotFunc, fsp::FigureSubposition, args...; axis = (;), kwargs...)
+function plot(P::PlotFunc, fsp::FigureSubposition, args...; axis = NamedTuple(), kwargs...)
 
     fig = get_figure(fsp)
 

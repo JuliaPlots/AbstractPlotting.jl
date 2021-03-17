@@ -1,4 +1,4 @@
-# Tutorial
+# Basic Tutorial
 
 Here is a quick tutorial to get you started. We assume you have [Julia](https://julialang.org/) and `GLMakie.jl` (or one of the other backends) installed already.
 
@@ -8,6 +8,7 @@ Otherwise, an interactive window will open when you return a `Figure`.
 
 ```@example 1
 using GLMakie
+GLMakie.activate!() # hide
 AbstractPlotting.inline!(true)
 nothing # hide
 ```
@@ -134,7 +135,7 @@ save("sineplot.png", figure)
     only output bitmaps like `png`. `CairoMakie` can output high-quality vector graphics such as `svg` and
     `pdf`, on the other hand those formats don't work as well (or at all) with 3D content.
 
-See [Output](@ref) for more information on this.
+See [Backends & Output](@ref) for more information on this.
 
 ## Creating Animations
 
@@ -167,5 +168,3 @@ For more information, see the [Animations](@ref) and the [Observables & Interact
 That concludes our short tutorial. We hope you have learned how to create basic plots
 with Makie and how easy it is to change and animate them using Observables.
 
-You can check out more examples that you can adapt
-in the [Example Gallery](http://juliaplots.org/MakieReferenceImages/gallery/index.html).

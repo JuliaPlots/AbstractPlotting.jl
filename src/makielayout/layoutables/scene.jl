@@ -14,7 +14,7 @@ function AbstractPlotting.plot!(P::AbstractPlotting.PlotFunc, ls::LScene, args..
 end
 
 
-function LScene(fig_or_scene; bbox = nothing, scenekw = NamedTuple(), kwargs...)
+function layoutable(::Type{LScene}, fig_or_scene; bbox = nothing, scenekw = NamedTuple(), kwargs...)
 
     topscene = get_topscene(fig_or_scene)
 
@@ -25,6 +25,12 @@ function LScene(fig_or_scene; bbox = nothing, scenekw = NamedTuple(), kwargs...)
     layoutobservables = LayoutObservables{LScene}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight,
         attrs.halign, attrs.valign, attrs.alignmode; suggestedbbox = bbox)
 
+    # Using `clear = false` (default for scenes constructed from other scenes)
+    # breaks SSAO, so we're using clear = true as a default here. This means
+    # that this LScene might draw over plot objects from other scenes.
+    # We also set `raw = false` because otherwise the scene will not automatically
+    # pick a camera and draw axis.
+    scenekw = merge((raw = false, clear = true), scenekw)
     scene = Scene(topscene, lift(round_to_IRect2D, layoutobservables.computedbbox); scenekw...)
 
     ls = LScene(fig_or_scene, layoutobservables, attrs, Dict{Symbol, Any}(), scene)

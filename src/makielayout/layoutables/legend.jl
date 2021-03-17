@@ -1,4 +1,4 @@
-function Legend(
+function layoutable(::Type{Legend},
         fig_or_scene,
         entry_groups::Node{Vector{Tuple{Optional{String}, Vector{LegendEntry}}}};
         bbox = nothing, kwargs...)
@@ -164,7 +164,7 @@ function Legend(
         # translate the legend forward so it is above the standard axis content
         # which is at zero. this will not really work if the legend should be
         # above a 3d plot, but for now this hack is ok.
-        # translate!(scene, (0, 0, 10))
+        translate!(scene, (0, 0, 10))
     end
 
     onany(title, nbanks, titleposition, rowgap, colgap, patchlabelgap, groupgap, titlegap,
@@ -402,7 +402,7 @@ end
 
 """
     Legend(
-        scene,
+        fig_or_scene,
         contents::AbstractArray,
         labels::AbstractArray{String},
         title::Optional{String} = nothing;
@@ -413,7 +413,7 @@ one content element. A content element can be an `AbstractPlot`, an array of
 `AbstractPlots`, a `LegendElement`, or any other object for which the
 `legendelements` method is defined.
 """
-function Legend(scene,
+function layoutable(::Type{Legend}, fig_or_scene,
         contents::AbstractArray,
         labels::AbstractArray{String},
         title::Optional{String} = nothing;
@@ -425,14 +425,14 @@ function Legend(scene,
 
     entries = [LegendEntry(label, content) for (content, label) in zip(contents, labels)]
     entrygroups = Node{Vector{EntryGroup}}([(title, entries)])
-    legend = Legend(scene, entrygroups; kwargs...)
+    legend = layoutable(Legend, fig_or_scene, entrygroups; kwargs...)
 end
 
 
 
 """
     Legend(
-        scene,
+        fig_or_scene,
         contentgroups::AbstractArray{<:AbstractArray},
         labelgroups::AbstractArray{<:AbstractArray},
         titles::AbstractArray{<:Optional{String}};
@@ -446,7 +446,7 @@ Within each group, each content element is associated with one label. A content
 element can be an `AbstractPlot`, an array of `AbstractPlots`, a `LegendElement`,
 or any other object for which the `legendelements` method is defined.
 """
-function Legend(scene,
+function layoutable(::Type{Legend}, fig_or_scene,
         contentgroups::AbstractArray{<:AbstractArray},
         labelgroups::AbstractArray{<:AbstractArray},
         titles::AbstractArray{<:Optional{String}};
@@ -460,5 +460,84 @@ function Legend(scene,
         for (labelgroup, contentgroup) in zip(labelgroups, contentgroups)]
 
     entrygroups = Node{Vector{EntryGroup}}([(t, en) for (t, en) in zip(titles, entries)])
-    legend = Legend(scene, entrygroups; kwargs...)
+    legend = layoutable(Legend, fig_or_scene, entrygroups; kwargs...)
+end
+
+
+"""
+    Legend(fig_or_scene, axis::Union{Axis, Scene, LScene}, title = nothing; kwargs...)
+
+Create a single-group legend with all plots from `axis` that have the
+attribute `label` set.
+"""
+function layoutable(::Type{Legend}, fig_or_scene, axis::Union{Axis, Scene, LScene}, title = nothing; kwargs...)
+    plots, labels = get_labeled_plots(axis)
+    isempty(plots) && error("There are no plots with labels in the given axis that can be put in the legend. Supply labels to plotting functions like `plot(args...; label = \"My label\")`")
+    layoutable(Legend, fig_or_scene, plots, labels, title; kwargs...)
+end
+
+function get_labeled_plots(ax)
+    lplots = filter(get_plots(ax)) do plot
+        haskey(plot.attributes, :label)
+    end
+    labels = map(lplots) do l
+        convert(String, l.label[])
+    end
+    lplots, labels
+end
+
+get_plots(ax::Axis) = ax.scene.plots
+get_plots(scene::Scene) = scene.plots
+get_plots(lscene::LScene) = lscene.scene.plots
+
+
+# convenience constructor for axis legend
+
+axislegend(ax = current_axis(); kwargs...) = axislegend(ax, ax; kwargs...)
+
+axislegend(title::String; kwargs...) = axislegend(current_axis(), current_axis(), title; kwargs...)
+
+"""
+    axislegend(ax, args...; position = :rt, kwargs...)
+    axislegend(ax = current_axis(); kwargs...)
+    axislegend(title::String; kwargs...)
+
+Create a legend that sits inside an Axis's plot area.
+
+The position can be a Symbol where the first letter controls the horizontal
+alignment and can be l, r or c, and the second letter controls the vertical
+alignment and can be t, b or c. Or it can be a tuple where the first
+element is set as the Legend's halign and the second element as its valign.
+"""
+function axislegend(ax, args...; position = :rt, kwargs...)
+    Legend(ax.parent, args...;
+        bbox = ax.scene.px_area,
+        margin = (10, 10, 10, 10),
+        legend_position_to_aligns(position)...,
+        kwargs...)
+end
+
+function legend_position_to_aligns(s::Symbol)
+    p = string(s)
+    length(p) != 2 && throw(ArgumentError("Position symbol must have length == 2"))
+
+    haligns = Dict(
+        'l' => :left,
+        'r' => :right,
+        'c' => :center,
+    )
+    haskey(haligns, p[1]) || throw(ArgumentError("First letter can be l, r or c, not $(p[1])."))
+
+    valigns = Dict(
+        't' => :top,
+        'b' => :bottom,
+        'c' => :center,
+    )
+    haskey(valigns, p[2]) || throw(ArgumentError("Second letter can be b, t or c, not $(p[2])."))
+
+    (halign = haligns[p[1]], valign = valigns[p[2]])
+end
+
+function legend_position_to_aligns(t::Tuple{Any, Any})
+    (halign = t[1], valign = t[2])
 end

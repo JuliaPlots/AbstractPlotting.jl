@@ -1,7 +1,9 @@
 ```@eval
 using CairoMakie
-CairoMakie.activate!()
+CairoMakie.activate!(type = "png")
 ```
+
+# Axis
 
 ## Creating an Axis
 
@@ -78,29 +80,54 @@ nothing # hide
 
 ![axis limits](example_axis_limits.svg)
 
-## Modifying ticks
+## Modifying Ticks
 
-Tick values are computed using `get_tickvalues(ticks, vmin, vmax)`, where `ticks` is either
-the `ax.xticks` or `ax.yticks` attribute
-and the limits of the respective axis are `vmin` and `vmax`.
+To control ticks, you can set the axis attributes `xticks/yticks` and `xtickformat/ytickformat`.
 
-To create the actual tick labels, `get_ticklabels(format, ticks, values)` is called, where `format` is
-`ax.xtickformat` or `ax.ytickformat`, `ticks` is the same as above, and `values` is the result
-of `get_tickvalues`.
+You can overload one or more of these three functions to implement custom ticks:
 
-The most common use cases are predefined. Additionally, custom tick finding behavior can be implemented
-by overloading `get_tickvalues` while custom formatting can be implemented by overloading `get_ticklabels`.
-
-Here are the existing methods for `get_tickvalues`:
-
-```@docs
-AbstractPlotting.MakieLayout.get_tickvalues
+```julia
+tickvalues, ticklabels = MakieLayout.get_ticks(ticks, formatter, vmin, vmax)
+tickvalues = MakieLayout.get_tickvalues(ticks, vmin, vmax)
+ticklabels = MakieLayout.get_ticklabels(formatter, tickvalues)
 ```
 
-And here are the existing methods for `get_ticklabels`:
+If you overload `get_ticks`, you have to compute both tickvalues and ticklabels directly as a vector of floats and strings, respectively.
+Otherwise the result of `get_tickvalues` is passed to `get_ticklabels` by default.
+The limits of the respective axis are passed as `vmin` and `vmax`.
 
-```@docs
-AbstractPlotting.MakieLayout.get_ticklabels
+A couple of behaviors are implemented by default.
+You can specify static ticks by passing an iterable of numbers.
+You can also pass a tuple with tick values and tick labels directly, bypassing the formatting step.
+
+As a third option you can pass a function taking minimum and maximum axis value as arguments and returning either a vector of tickvalues which are then passed to the current formatter, or a tuple with tickvalues and ticklabels which are then used directly.
+
+For formatting, you can pass a function which takes a vector of numbers and outputs a vector of strings.
+You can also pass a format string which is passed to `Formatting.format` from [Formatting.jl](https://github.com/JuliaIO/Formatting.jl), where you can mix the formatted numbers with other text like in `"{:.2f}ms"`.
+
+### Predefined Ticks
+
+The default tick type is `LinearTicks(n)`, where `n` is the target number of ticks which the algorithm tries to return.
+
+```@example
+using CairoMakie
+
+fig = Figure(resolution = (1200, 900))
+for (i, n) in enumerate([2, 5, 9])
+    lines(fig[i, 1], 0..20, sin, axis = (xticks = LinearTicks(n),))
+end
+fig
+```
+
+There's also `WilkinsonTicks` which uses the alternative Wilkinson algorithm.
+
+`MultiplesTicks` can be used when an axis should be marked at multiples of a certain number.
+A common scenario is plotting a trigonometric function which should be marked at pi intervals.
+
+```@example
+using CairoMakie
+
+lines(0..20, sin, axis = (xticks = MultiplesTicks(4, pi, "π"),))
 ```
 
 Here are a couple of examples that show off different settings for ticks and formats.
@@ -136,6 +163,42 @@ nothing # hide
 
 ![axis ticks](example_axis_ticks.svg)
 
+## Minor Ticks and Grids
+
+You can show minor ticks and grids by setting `x/yminorticksvisible = true` and `x/yminorgridvisible = true` which are off by default.
+You can set size, color, width, align etc. like for the normal ticks, but there are no labels.
+The `x/yminorticks` attributes control how minor ticks are computed given major ticks and axis limits.
+For that purpose you can create your own minortick type and overload `MakieLayout.get_minor_tickvalues(minorticks, tickvalues, vmin, vmax)`.
+
+The default minor tick type is `IntervalsBetween(n, mirror = true)` where `n` gives the number of intervals each gap between major ticks is divided into with minor ticks, and `mirror` decides if outside of the major ticks there are more minor ticks with the same intervals as the adjacent gaps.
+
+```@example
+using CairoMakie
+
+theme = Attributes(
+    Axis = (
+        xminorticksvisible = true,
+        yminorticksvisible = true,
+        xminorgridvisible = true,
+        yminorgridvisible = true,
+    )
+)
+
+fig = with_theme(theme) do
+    fig = Figure(resolution = (800, 800))
+    axs = [Axis(fig[fldmod1(n, 2)...],
+        title = "IntervalsBetween($(n+1))",
+        xminorticks = IntervalsBetween(n+1),
+        yminorticks = IntervalsBetween(n+1)) for n in 1:4]
+    fig
+end
+save("example_minor_ticks.svg", fig) # hide
+nothing # hide
+```
+
+![minor ticks](example_minor_ticks.svg)
+
+
 ## Hiding Axis Spines and Decorations
 
 You can hide all axis elements manually, by setting their specific visibility attributes to `false`, like
@@ -161,7 +224,7 @@ nothing # hide
 ![axis hide spines](example_axis_hidespines.svg)
 
 To hide decorations, you can use `hidedecorations!`, or the specific `hidexdecorations!` and `hideydecorations!`.
-When hiding, you can set `label = false`, `ticklabels = false`, `ticks = false` or `grid = false` as keyword
+When hiding, you can set `label = false`, `ticklabels = false`, `ticks = false`, `grid = false`, `minorgrid = false` or `minorticks = false` as keyword
 arguments if you want to keep those elements.
 It's common, e.g., to hide everything but the grid lines in facet plots.
 
@@ -435,6 +498,38 @@ register_interaction!(ax, :left_and_right, MyInteraction(false, false))
 Some interactions might have more complex state involving plot objects that need to be setup or removed.
 For those purposes, you can overload the methods `registration_setup!(parent, interaction)` and `deregistration_cleanup!(parent, interaction)` which are called during registration and deregistration, respectively.
 
+
+## Special Plots
+
+A few special plot functions currently only work specifically with the `Axis` type.
+
+### Vertical / Horizontal Lines
+
+Often, it's useful to mark horizontal or vertical locations in a plot with lines that span
+a certain percentage of the axis, not the data. There are two functions `hlines!` and `vlines!`
+which work with `Axis` instances.
+
+The positional argument gives one or many locations in data coordinates, while
+the keyword arguments `xmin` and `xmax` (for hlines) or `ymin` and `ymax` (for vlines)
+specify the extent along the axis. These values can also be a single number or an iterable.
+
+```@example
+using CairoMakie
+
+scene, layout = layoutscene(resolution = (1400, 900))
+ax1 = layout[1, 1] = Axis(scene, title = "vlines")
+
+lines!(ax1, 0..4pi, sin)
+vlines!(ax1, [pi, 2pi, 3pi], color = :red)
+
+ax2 = layout[1, 2] = Axis(scene, title = "hlines")
+hlines!(ax2, [1, 2, 3, 4], xmax = [0.25, 0.5, 0.75, 1], color = :blue)
+
+scene
+save("example_vlines.svg", scene); nothing # hide
+```
+
+![example vlines](example_vlines.svg)
 
 ```@eval
 using GLMakie
