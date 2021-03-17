@@ -1,14 +1,12 @@
-using AbstractPlotting
-using AbstractPlotting.MakieLayout
 using CairoMakie
 
 ##
 function heatmap_with_labels()
-    scene, layout = layoutscene(resolution = (600, 600))
-    ax = layout[1, 1] = LAxis(scene)
+    fig = Figure(resolution = (600, 600))
+    ax = fig[1, 1] = Axis(fig)
     tightlimits!(ax)
     values = randn(100)
-    
+
     poly!(ax, [FRect2D(x, y, 1, 1) for x in 1:10 for y in 1:10], color = values,
         strokecolor = :black, strokewidth = 1)
 
@@ -18,7 +16,7 @@ function heatmap_with_labels()
         space = :screen,
         align = (:center, :center),
         textsize = 10)
-    scene
+    display(fig)
 end
 
 heatmap_with_labels()
@@ -32,7 +30,7 @@ end
 
 function single_strings_single_positions()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
-    
+
     points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3]
     scatter!(scene, points, marker = :circle, markersize = 10px)
 
@@ -58,7 +56,7 @@ single_strings_single_positions()
 
 function multi_strings_multi_positions()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
-    
+
     angles = (-pi/6, 0.0, pi/6)
     points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3 for angle in angles]
     aligns = [(halign, valign) for halign in
@@ -71,7 +69,7 @@ function multi_strings_multi_positions()
             for halign in (:right, :center, :left)
             for valign in (:top, :center, :bottom)
             for rotation in angles]
-    
+
     scatter!(scene, points, marker = :circle, markersize = 10px)
 
 
@@ -89,7 +87,7 @@ function single_string_multi_positions()
 
     str = "multistring"
     points = decompose(Point2f0, Circle(Point2f0(400, 400), 200f0), length(str))
-    
+
     text!(scene, str, position = points)
 
     scene
@@ -100,7 +98,7 @@ single_string_multi_positions()
 
 function single_strings_single_positions_justification()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
-    
+
     points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3]
     scatter!(scene, points, marker = :circle, markersize = 10px)
 

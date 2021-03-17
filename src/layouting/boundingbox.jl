@@ -95,7 +95,7 @@ function boundingbox(x::Text, text::String, position::VecTypes)
 
             # TODO: Correct BBox
             charbb = FRect3D(glyphbb) + charo + pos
-            if !isfinite(bb)
+            if !isfinite_rect(bb)
                 bb = charbb
             else
                 bb = union(bb, charbb)
