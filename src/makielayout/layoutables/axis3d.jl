@@ -13,7 +13,8 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     theme_attrs = subtheme(topscene, :Axis3)
     attrs = merge!(merge!(Attributes(kwargs), theme_attrs), default_attrs)
 
-    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, projection
+    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, projection,
+        xlabel, ylabel, zlabel,
     )
 
     decorations = Dict{Symbol, Any}()
@@ -26,7 +27,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     scenearea = lift(round_to_IRect2D, layoutobservables.computedbbox)
 
-    scene = Scene(topscene, scenearea, raw = true)
+    scene = Scene(topscene, scenearea, raw = true, clear = false)
 
     matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, projection)
 
@@ -56,11 +57,10 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     add_gridlines_and_frames!(scene, 1, limits, ticknode_1, mi1, mi2, mi3)
     add_gridlines_and_frames!(scene, 2, limits, ticknode_2, mi2, mi1, mi3)
     add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2)
-    # wireframe!(scene, limits)
-
-    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3)
-    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3)
-    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2)
+    
+    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, xlabel)
+    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, ylabel)
+    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, zlabel)
 
 
     mouseeventhandle = addmouseevents!(scene)
@@ -325,7 +325,7 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
     nothing
 end
 
-function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2)
+function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2, label)
     dpoint = (v, v1, v2) -> dimpoint(dim, v, v1, v2)
     d1 = dim1(dim)
     d2 = dim2(dim)
@@ -436,7 +436,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         plus_offset, offset_ang_90deg_alwaysup, valign
     end
 
-    text!(pscene, "label $dim",
+    text!(pscene, label,
         position = @lift($label_pos_rot_valign[1]),
         rotation = @lift($label_pos_rot_valign[2]),
         align = @lift((:center, $label_pos_rot_valign[3])))

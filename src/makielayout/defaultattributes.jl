@@ -978,6 +978,18 @@ function default_attributes(::Type{Axis3}, scene)
         data_aspect = :same # :equal
         "Projection"
         projection = :fit # :fitzoom :stretch
+        "The x label"
+        xlabel = ""
+        "The y label"
+        ylabel = ""
+        "The z label"
+        zlabel = ""
+        "The x label color"
+        xlabelcolor = :black
+        "The y label color"
+        ylabelcolor = :black
+        "The z label color"
+        zlabelcolor = :black
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
