@@ -473,11 +473,7 @@ because the left two axes will grow to fill the remaining space.
 colsize!(hm_sublayout, 1, Aspect(1, 1))
 
 fig
-save("layout_tutorial_final.svg", fig) # hide
-nothing # hide
 ```
-
-![layout_tutorial_final](layout_tutorial_final.svg)
 
 And there we have it! Hopefully this tutorial has given you an overview how to
 approach the creation of a complex figure in Makie. Check the rest of the
