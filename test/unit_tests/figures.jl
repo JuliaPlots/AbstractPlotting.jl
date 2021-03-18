@@ -110,3 +110,22 @@ end
 
     @test_throws ErrorException content(fig[1, 2][1, 1])
 end
+
+@testset "Nested axis assignment" begin
+    fig = Figure()
+    @test Axis(fig[1, 1]) isa Axis
+    @test Axis(fig[1, 1][2, 3]) isa Axis
+    @test Axis(fig[1, 1][2, 3][4, 5]) isa Axis
+    @test_throws ErrorException scatter(fig[1, 1])
+    @test_throws ErrorException scatter(fig[1, 1][2, 3])
+    @test_throws ErrorException scatter(fig[1, 1][2, 3][4, 5])
+    @test scatter(fig[1, 2], 1:10) isa AbstractPlotting.AxisPlot
+    @test scatter(fig[1, 1][1, 1], 1:10) isa AbstractPlotting.AxisPlot
+    @test scatter(fig[1, 1][1, 1][1, 1], 1:10) isa AbstractPlotting.AxisPlot
+
+    fig = Figure()
+    fig[1, 1] = GridLayout()
+    @test Axis(fig[1, 1][1, 1]) isa Axis
+    fig[1, 1] = GridLayout()
+    @test_throws ErrorException Axis(fig[1, 1][1, 1])
+end
