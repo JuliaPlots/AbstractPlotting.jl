@@ -1,9 +1,0 @@
-# This file is machine-generated - editing it directly is not advised
-
-[[Documenter]]
-deps = ["Base64", "Dates", "DocStringExtensions", "IOCapture", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "REPL", "Test", "Unicode"]
-git-tree-sha1 = "c1293a38a09c0619fc31c52de64ff9dedd44bce8"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaDocs/Documenter.jl.git"
-uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-version = "0.26.1"
