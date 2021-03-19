@@ -38,14 +38,14 @@ using CairoMakie
 CairoMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
-f = Figure()
+f = Figure(resolution = (800, 600))
 LScene(f[1, 1])
 
 text!(
-    fill("hello", 10),
-    rotation = [i / 10 * 2pi for i in 1:10],
-    position = [Point3f0(0, 0, i/3) for i in 1:10],
-    color = rand(RGBf0, 10),
+    fill("Makie", 7),
+    rotation = [i / 7 * 1.5pi for i in 1:7],
+    position = [Point3f0(0, 0, i/2) for i in 1:7],
+    color = [cgrad(:viridis)[x] for x in LinRange(0, 1, 7)],
     align = (:left, :baseline),
     textsize = 1,
     space = :data
