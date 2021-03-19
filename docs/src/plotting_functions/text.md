@@ -31,3 +31,25 @@ text!(
 f
 ```
 
+Text in data space
+
+```@example
+using CairoMakie
+CairoMakie.activate!() # hide
+AbstractPlotting.inline!(true) # hide
+
+f = Figure()
+LScene(f[1, 1])
+
+text!(
+    fill("hello", 10),
+    rotation = [i / 10 * 2pi for i in 1:10],
+    position = [Point3f0(0, 0, i/3) for i in 1:10],
+    color = rand(RGBf0, 10),
+    align = (:left, :baseline),
+    textsize = 1,
+    space = :data
+)
+
+f
+```
