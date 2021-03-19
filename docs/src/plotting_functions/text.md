@@ -6,7 +6,7 @@ text
 
 ### Examples
 
-By default, text is drawn in screen space.
+By default, text is drawn in screen space (`space = :screen`).
 The text anchor is given in data coordinates, but the size of the glyphs is independent of data scaling.
 The boundingbox of the text will include every data point or every text anchor point.
 This also means that `autolimits!` might cut off your text, because the glyphs don't have a meaningful size in data coordinates, and you have to take some care to manually place it such that it is fully visible.
