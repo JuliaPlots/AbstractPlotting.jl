@@ -6,6 +6,11 @@ text
 
 ### Examples
 
+By default, text is drawn in screen space.
+The text anchor is given in data coordinates, but the size of the glyphs is independent of data scaling.
+The boundingbox of the text will include every data point or every text anchor point.
+This also means that `autolimits!` might cut off your text, because the glyphs don't have a meaningful size in data coordinates, and you have to take some care to manually place it such that it is fully visible.
+
 ```@example
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -31,7 +36,8 @@ text!(
 f
 ```
 
-Text in data space
+For text whose dimensions are meaningful in data space, set `space = :data`.
+This means that the boundingbox of the text in data coordinates will include every glyph.
 
 ```@example
 using CairoMakie
