@@ -1,4 +1,6 @@
 using CairoMakie
+using GLMakie
+GLMakie.activate!()
 
 ##
 function heatmap_with_labels()
@@ -13,20 +15,25 @@ function heatmap_with_labels()
     text!(ax,
         string.(round.(values, digits = 2)),
         position = [Point2f0(x, y) .+ 0.5 for x in 1:10 for y in 1:10],
-        space = :screen,
         align = (:center, :center),
-        textsize = 10)
+        textsize = 1)
     display(fig)
 end
 
 heatmap_with_labels()
 
-function scene_layout_ax(; kwargs...)
-    scene, layout = layoutscene(; kwargs...)
-    ax = layout[1, 1] = LAxis(scene)
-    scene, layout, ax
+begin
+    pos = [Point2f0(0, 0), Point2f0(10, 10)]
+    fig = text(
+        ["0 is the ORIGIN of this", "10 says hi"],
+        position = pos,
+        aspect = DataAspect(),
+        # space = :screen,
+        align = (:center, :center),
+        textsize = 2)
+    scatter!(pos)
+    display(fig)
 end
-
 
 function single_strings_single_positions()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
@@ -48,7 +55,7 @@ function single_strings_single_positions()
         i += 1
     end
 
-    scene
+    display(scene)
 end
 
 single_strings_single_positions()
@@ -76,7 +83,7 @@ function multi_strings_multi_positions()
     text!(scene, strings, position = points, align = aligns, rotation = rotations,
         color = [(:black, alpha) for alpha in LinRange(0.3, 0.7, length(points))])
 
-    scene
+    display(scene)
 end
 
 multi_strings_multi_positions()
