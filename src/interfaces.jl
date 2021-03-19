@@ -268,7 +268,7 @@ $(ATTRIBUTES)
         position = Point2f0(0),
         justification = automatic,
         lineheight = 1.0,
-        space = :data,
+        space = :screen, # or :data
         _glyphlayout = nothing,
     )
 end
