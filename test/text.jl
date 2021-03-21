@@ -173,3 +173,74 @@ function multi_boundingboxes()
 end
 
 multi_boundingboxes()
+
+function single_boundingboxes()
+    scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
+
+    for a in 0:pi/4:7pi/4
+
+        t = text!(scene,
+            "makie",
+            position = (200, 200) .+ 60 * Point2f0(cos(a), sin(a)),
+            rotation = a,
+            align = (:left, :center),
+            textsize = 30,
+            space = :data
+        )
+
+        wireframe!(scene, boundingbox(t), color = (:blue, 0.3))
+
+        t2 = text!(scene,
+            "makie",
+            position = (200, 600) .+ 60 * Point2f0(cos(a), sin(a)),
+            rotation = a,
+            align = (:left, :center),
+            textsize = 30,
+            space = :screen
+        )
+
+        # these boundingboxes should be invisible because they only enclose the anchor
+        wireframe!(scene, boundingbox(t2), color = (:red, 0.3))
+
+    end
+
+    
+    scene
+end
+
+single_boundingboxes()
+
+
+
+function text_in_3d_axis()
+    text(
+        fill("Makie", 7),
+        rotation = [i / 7 * 1.5pi for i in 1:7],
+        position = [Point3f0(0, 0, i/2) for i in 1:7],
+        color = [cgrad(:viridis)[x] for x in LinRange(0, 1, 7)],
+        align = (:left, :baseline),
+        textsize = 1,
+        space = :data
+    )
+end
+
+text_in_3d_axis()
+
+
+function empty_lines()
+    scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
+
+    t1 = text!(scene, "Line1\nLine 2\n\nLine4",
+        position = (200, 400), align = (:center, :center), space = :data)
+
+    wireframe!(scene, boundingbox(t1), color = (:red, 0.3))
+
+    t2 = text!(scene, "\nLine 2\nLine 3\n\n\nLine6\n\n",
+        position = (400, 400), align = (:center, :center), space = :data)
+
+    wireframe!(scene, boundingbox(t2), color = (:blue, 0.3))
+
+    scene
+end
+
+empty_lines()

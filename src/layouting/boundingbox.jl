@@ -80,33 +80,23 @@ function project_widths(matrix, vec)
     return pr - zero
 end
 
+function rotate_bbox(bb::FRect3D, rot)
+    points = decompose(Point3f0, bb)
+    FRect3D(Ref(rot) .* points)
+end
+
 function boundingbox(x::Text, text::String, position::VecTypes)
 
     glyphlayout = x._glyphlayout[]
-    glyphorigins, glyphbbs = glyphlayout.origins, glyphlayout.bboxes
+    
     pos = to_ndim(Point3f0, x.position[], 0)
+    rot = convert_attribute(x.rotation[], key"rotation"())
 
     if x.space[] == :data
-
-        bb = FRect3D()
-        for (char, charo, glyphbb) in zip(x[1][], glyphorigins, glyphbbs)
-            # ignore line breaks
-            char in ('\r', '\n') && continue
-
-            # TODO: Correct BBox
-            charbb = FRect3D(glyphbb) + charo + pos
-            if !isfinite_rect(bb)
-                bb = charbb
-            else
-                bb = union(bb, charbb)
-            end
-        end
-
+        data_text_boundingbox(x[1][], glyphlayout, rot, pos)
     elseif x.space[] == :screen
-        bb = data_limits(x)
+        data_limits(x)
     end
-
-    bb
 end
 
 # function boundingbox(x::Text, text::String, positions::AbstractArray)
@@ -136,27 +126,44 @@ end
 #     bb
 # end
 
+function data_text_boundingbox(string::String, glyphlayout::Glyphlayout, rotation::Quaternion, position::Point3f0)
+    bb = FRect3D()
+    glyphorigins, glyphbbs = glyphlayout.origins, glyphlayout.bboxes
+
+    for (char, charo, glyphbb) in zip(string, glyphorigins, glyphbbs)
+        # ignore line breaks
+        # char in ('\r', '\n') && continue
+
+        charbb = rotate_bbox(FRect3D(glyphbb), rotation) + charo + position
+        if !isfinite_rect(bb)
+            bb = charbb
+        else
+            bb = union(bb, charbb)
+        end
+    end
+
+    bb
+end
+
 function boundingbox(x::Text, texts::AbstractArray, positions::AbstractArray)
 
     layouts = x._glyphlayout[]
+    rotations = convert_attribute(x.rotation[], key"rotation"())
+    positions_3d = to_ndim.(Point3f0, positions, 0)
 
     if x.space[] == :data
         bb = FRect3D()
-        for (text, pos, layout) in zip(texts, positions, layouts)
-            for (char, origin, bbox) in zip(text, layout.origins, layout.bboxes)
-                char == '\n' && continue
-                charbb = FRect3D(bbox) + origin + to_ndim(Point3f0, pos, 0)
-                if !isfinite_rect(bb)
-                    bb = charbb
-                else
-                    bb = union(bb, charbb)
-                end
+        broadcast_foreach(texts, positions_3d, layouts, rotations) do text, pos, layout, rot
+            if !isfinite_rect(bb)
+                bb = data_text_boundingbox(text, layout, rot, pos)
+            else
+                bb = union(bb, data_text_boundingbox(text, layout, rot, pos))
             end
         end
+        bb
     elseif x.space[] == :screen
-        bb = data_limits(x)
+        data_limits(x)
     end
-    return bb
 end
 
 function boundingbox(x::Text)
