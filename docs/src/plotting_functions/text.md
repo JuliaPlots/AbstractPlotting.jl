@@ -11,6 +11,8 @@ The text anchor is given in data coordinates, but the size of the glyphs is inde
 The boundingbox of the text will include every data point or every text anchor point.
 This also means that `autolimits!` might cut off your text, because the glyphs don't have a meaningful size in data coordinates (the size is independent of zoom level), and you have to take some care to manually place the text or set data limits such that it is fully visible.
 
+You can either plot one string with one position, or a vector of strings with a vector of positions.
+
 ```@example
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -26,11 +28,11 @@ text!("center", position = (0, 0), align = (:center, :center))
 circlepoints = [(cos(a), sin(a)) for a in LinRange(0, 2pi, 16)[1:end-1]]
 scatter!(circlepoints)
 text!(
-    string.(1:15),
+    "this is point " .* string.(1:15),
     position = circlepoints,
     rotation = LinRange(0, 2pi, 16)[1:end-1],
     align = (:right, :baseline),
-    color = cgrad(:rainbow, 15)[1:15]
+    color = cgrad(:rainbow, 15)[LinRange(0, 1)]
 )
 
 f
@@ -58,4 +60,46 @@ text!(
 )
 
 f
+```
+
+By default, justification of multiline text follows alignment.
+Text that is left aligned is also left justified.
+You can override this with the `justification` attribute.
+
+```@example
+using CairoMakie
+CairoMakie.activate!() # hide
+AbstractPlotting.inline!(true) # hide
+
+scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
+
+points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3]
+scatter!(scene, points, marker = :circle, markersize = 10px)
+
+i = 1
+for halign in (:left, :center, :right), justification in (:left, :center, :right)
+
+    t = text!(scene, "a\nshort\nparagraph",
+        color = (:black, 0.5),
+        position = points[i],
+        align = (halign, :center),
+        justification = justification)
+
+    bb = boundingbox(t)
+    wireframe!(scene, bb, color = (:red, 0.2))
+
+    i += 1
+end
+
+for (p, al) in zip(points[3:3:end], (:left, :center, :right))
+    text!(scene, "align :" * string(al), position = p .+ (0, 80),
+        align = (:center, :baseline))
+end
+
+for (p, al) in zip(points[7:9], (:left, :center, :right))
+    text!(scene, "justification\n:" * string(al), position = p .+ (80, 0),
+        align = (:center, :baseline), rotation = pi/2)
+end
+
+scene
 ```
