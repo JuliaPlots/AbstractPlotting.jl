@@ -115,7 +115,7 @@ function single_strings_single_positions_justification()
     i = 1
     for halign in (:left, :center, :right), justification in (:left, :center, :right)
 
-        t = text!(scene, "AA\nBBB\nCCCC\nDDDD",
+        t = text!(scene, "a\nshort\nparagraph",
             color = (:black, 0.5),
             position = points[i],
             align = (halign, :center),
@@ -129,12 +129,12 @@ function single_strings_single_positions_justification()
     end
 
     for (p, al) in zip(points[3:3:end], (:left, :center, :right))
-        text!(scene, "align " * string(al), position = p .+ (0, 80),
+        text!(scene, "align :" * string(al), position = p .+ (0, 80),
             align = (:center, :baseline))
     end
 
     for (p, al) in zip(points[7:9], (:left, :center, :right))
-        text!(scene, "justif " * string(al), position = p .+ (80, 0),
+        text!(scene, "justification\n:" * string(al), position = p .+ (80, 0),
             align = (:center, :baseline), rotation = pi/2)
     end
 
