@@ -133,7 +133,7 @@ function single_strings_single_positions_justification()
 
     for (p, al) in zip(points[7:9], (:left, :center, :right))
         text!(scene, "justification\n:" * string(al), position = p .+ (80, 0),
-            align = (:center, :baseline), rotation = pi/2)
+            align = (:center, :top), rotation = pi/2)
     end
 
     scene
