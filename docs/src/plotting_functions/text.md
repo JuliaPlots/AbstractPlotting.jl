@@ -20,7 +20,7 @@ AbstractPlotting.inline!(true) # hide
 
 f = Figure(resolution = (800, 600))
 
-Axis(f[1, 1], aspect = DataAspect())
+Axis(f[1, 1], aspect = DataAspect(), backgroundcolor = :gray50)
 
 scatter!(Point2f0(0, 0))
 text!("center", position = (0, 0), align = (:center, :center))
@@ -32,7 +32,7 @@ text!(
     position = circlepoints,
     rotation = LinRange(0, 2pi, 16)[1:end-1],
     align = (:right, :baseline),
-    color = cgrad(:rainbow, 15)[LinRange(0, 1)]
+    color = cgrad(:Spectral)[LinRange(0, 1, 15)]
 )
 
 f
@@ -76,19 +76,18 @@ scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
 points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3]
 scatter!(scene, points, marker = :circle, markersize = 10px)
 
-i = 1
-for halign in (:left, :center, :right), justification in (:left, :center, :right)
+symbols = (:left, :center, :right)
+
+for ((justification, halign), point) in zip(Iterators.product(symbols, symbols), points)
 
     t = text!(scene, "a\nshort\nparagraph",
         color = (:black, 0.5),
-        position = points[i],
+        position = point,
         align = (halign, :center),
         justification = justification)
 
     bb = boundingbox(t)
     wireframe!(scene, bb, color = (:red, 0.2))
-
-    i += 1
 end
 
 for (p, al) in zip(points[3:3:end], (:left, :center, :right))

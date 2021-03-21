@@ -112,20 +112,18 @@ function single_strings_single_positions_justification()
     points = [Point(x, y) .* 200 for x in 1:3 for y in 1:3]
     scatter!(scene, points, marker = :circle, markersize = 10px)
 
-    i = 1
-    for halign in (:left, :center, :right), justification in (:left, :center, :right)
+    symbols = (:left, :center, :right)
+
+    for ((justification, halign), point) in zip(Iterators.product(symbols, symbols), points)
 
         t = text!(scene, "a\nshort\nparagraph",
             color = (:black, 0.5),
-            position = points[i],
+            position = point,
             align = (halign, :center),
-            space = :data,
             justification = justification)
 
         bb = boundingbox(t)
         wireframe!(scene, bb, color = (:red, 0.2))
-
-        i += 1
     end
 
     for (p, al) in zip(points[3:3:end], (:left, :center, :right))
