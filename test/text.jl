@@ -148,9 +148,9 @@ function multi_boundingboxes()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
 
     t1 = text!(scene,
-        fill("makie", 8),
-        position = [(200, 200) .+ 60 * Point2f0(cos(a), sin(a)) for a in 0:pi/4:7pi/4],
-        rotation = 0:pi/4:7pi/4,
+        fill("makie", 4),
+        position = [(200, 200) .+ 60 * Point2f0(cos(a), sin(a)) for a in pi/4:pi/2:7pi/4],
+        rotation = pi/4:pi/2:7pi/4,
         align = (:left, :center),
         textsize = 30,
         space = :data
@@ -159,9 +159,9 @@ function multi_boundingboxes()
     wireframe!(scene, boundingbox(t1), color = (:blue, 0.3))
 
     t2 = text!(scene,
-        fill("makie", 8),
-        position = [(200, 600) .+ 60 * Point2f0(cos(a), sin(a)) for a in 0:pi/4:7pi/4],
-        rotation = 0:pi/4:7pi/4,
+        fill("makie", 4),
+        position = [(200, 600) .+ 60 * Point2f0(cos(a), sin(a)) for a in pi/4:pi/2:7pi/4],
+        rotation = pi/4:pi/2:7pi/4,
         align = (:left, :center),
         textsize = 30,
         space = :screen
@@ -177,7 +177,7 @@ multi_boundingboxes()
 function single_boundingboxes()
     scene = Scene(camera = campixel!, show_axis = false, resolution = (800, 800))
 
-    for a in 0:pi/4:7pi/4
+    for a in pi/4:pi/2:7pi/4
 
         t = text!(scene,
             "makie",
