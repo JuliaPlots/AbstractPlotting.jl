@@ -106,21 +106,25 @@ end
 # Trait for categorical values
 struct Categorical end
 struct Continuous end
+struct HasRefPool end # the better Categorical
 
-categorical_trait(::AbstractVector) = Categorical()
+categorical_trait(x::AbstractVector) = !isnothing(DataAPI.refpool(x)) ? HasRefPool() : Categorical()
 categorical_trait(::AbstractVector{<: Number}) = Continuous()
 
 categorical_labels(xs) = categorical_labels(categorical_trait(xs), xs)
 categorical_labels(::Categorical, xs) = unique(xs)
 categorical_labels(::Continuous,  _)  = automatic # we let them be automatic
+categorical_labels(::HasRefPool,  xs) = values(DataAPI.refpool(xs)) # could also use DataAPI.levels(xs)
 
 categorical_range(xs) = categorical_range(categorical_trait(xs), xs)
 categorical_range(::Categorical, xs) = 1:length(categorical_labels(xs))
 categorical_range(::Continuous,  _)  = automatic # we let them be automatic
+categorical_range(::HasRefPool,  xs) = keys(DataAPI.refpool(xs))
 
 categorical_position(x, xs) = categorical_position(categorical_trait(xs), x, xs)
 categorical_position(::Categorical, x, xs) = findfirst(l -> l == x, categorical_labels(xs))
 categorical_position(::Continuous,  x, _)  = x
+categorical_position(::HasRefPool,  x, xs) = DataAPI.invrefpool(xs)[x]
 
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector) = convert_arguments(P, (x, y))
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector, z::AbstractVector) = convert_arguments(P, (x, y, z))
