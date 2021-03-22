@@ -126,6 +126,16 @@ categorical_position(::Categorical, x, xs) = findfirst(l -> l == x, categorical_
 categorical_position(::Continuous,  x, _)  = x
 categorical_position(::HasRefPool,  x, xs) = DataAPI.invrefpool(xs)[x]
 
+categorical_positions(xs) = categorical_positions(categorical_trait(xs), xs)
+categorical_positions(::Continuous, xs) = xs
+categorical_positions(::HasRefPool, xs) = DataAPI.refarray(xs)
+function categorical_positions(::Categorical, xs)
+    labels = categorical_labels(xs)
+    map(xs) do x
+        findfirst(l -> l == x, labels)
+    end
+end
+
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector) = convert_arguments(P, (x, y))
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector, z::AbstractVector) = convert_arguments(P, (x, y, z))
 
