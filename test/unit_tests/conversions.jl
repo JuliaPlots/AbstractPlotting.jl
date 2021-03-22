@@ -116,9 +116,9 @@ end
 @testset "Categorical values" begin
     # AbstractPlotting.jl#345
     a = Any[Int64(1), Int32(1), Int128(2)] # vector of categorical values of different types
-    ilabels = AbstractPlotting.categoric_labels(a)
+    ilabels = AbstractPlotting.categorical_labels(a)
     @test ilabels == [1, 2]
-    @test AbstractPlotting.categoric_position.(a, Ref(ilabels)) == [1, 1, 2]
+    @test AbstractPlotting.categorical_position.(a, Ref(ilabels)) == [1, 1, 2]
 end
 
 using AbstractPlotting: check_line_pattern, line_diff_pattern

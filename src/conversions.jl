@@ -105,24 +105,24 @@ end
 
 # Trait for categorical values
 struct Categorical end
-struct Continous end
+struct Continuous end
 
 categorical_trait(::Type) = Categorical()
-categorical_trait(::Type{<: Number}) = Continous()
+categorical_trait(::Type{<: Number}) = Continuous()
 
-categoric_labels(x::AbstractVector{T}) where T = categoric_labels(categorical_trait(T), x)
+categorical_labels(x::AbstractVector{T}) where T = categorical_labels(categorical_trait(T), x)
 
-categoric_labels(::Categorical, x) = unique(x)
-categoric_labels(::Continous, x) = automatic # we let them be automatic
+categorical_labels(::Categorical, x) = unique(x)
+categorical_labels(::Continuous, x) = automatic # we let them be automatic
 
-categoric_range(range::Automatic) = range
-categoric_range(range) = 1:length(range)
+categorical_range(labels::Automatic) = labels
+categorical_range(labels) = 1:length(labels)
 
-function categoric_position(x, labels)
+function categorical_position(x, labels)
     findfirst(l -> l == x, labels)
 end
 
-categoric_position(x, labels::Automatic) = x
+categorical_position(x, labels::Automatic) = x
 
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector) = convert_arguments(P, (x, y))
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector, z::AbstractVector) = convert_arguments(P, (x, y, z))
@@ -132,10 +132,10 @@ function convert_arguments(::PointBased, positions::NTuple{N, AbstractVector}) w
     if any(n-> length(x) != length(n), positions)
         error("All vectors need to have the same length. Found: $(length.(positions))")
     end
-    labels = categoric_labels.(positions)
-    xyrange = categoric_range.(labels)
+    labels = categorical_labels.(positions)
+    xyrange = categorical_range.(labels)
     points = map(zip(positions...)) do p
-        Point{N, Float32}(categoric_position.(p, labels))
+        Point{N, Float32}(categorical_position.(p, labels))
     end
     PlotSpec(points, tickranges = xyrange, ticklabels = labels)
 end
@@ -146,8 +146,8 @@ function convert_arguments(
     )
     n, m = size(z)
     positions = (x, y)
-    labels = categoric_labels.(positions)
-    xyrange = categoric_range.(labels)
+    labels = categorical_labels.(positions)
+    xyrange = categorical_range.(labels)
     args = convert_arguments(SL, 0..n, 0..m, z)
     xyranges = (
         to_linspace(0.5..(n-0.5), n),
