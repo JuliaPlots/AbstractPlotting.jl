@@ -429,7 +429,7 @@ function reset_limits!(ax; xauto = true, yauto = true)
             left(ax.targetlimits[]), right(ax.targetlimits[])
         end
     else
-        convert(Tuple{Float32, Float32}, mxlims)
+        convert(Tuple{Float32, Float32}, tuple(mxlims...))
     end
     ylims = if isnothing(mylims)
         if yauto
@@ -958,8 +958,8 @@ Set the axis limits to `xlims` and `ylims`.
 If limits are ordered high-low, this reverses the axis orientation.
 """
 function limits!(ax::Axis, xlims, ylims)
-    xlims!(ax, xlims)
-    ylims!(ax, ylims)
+    AbstractPlotting.xlims!(ax, xlims)
+    AbstractPlotting.ylims!(ax, ylims)
 end
 
 """
@@ -969,8 +969,8 @@ Set the axis x-limits to `x1` and `x2` and the y-limits to `y1` and `y2`.
 If limits are ordered high-low, this reverses the axis orientation.
 """
 function limits!(ax::Axis, x1, x2, y1, y2)
-    xlims!(ax, x1, x2)
-    ylims!(ax, y1, y2)
+    AbstractPlotting.xlims!(ax, x1, x2)
+    AbstractPlotting.ylims!(ax, y1, y2)
 end
 
 """
@@ -982,8 +982,8 @@ If limits are ordered high-low, this reverses the axis orientation.
 function limits!(ax::Axis, rect::Rect2D)
     xmin, ymin = minimum(rect)
     xmax, ymax = maximum(rect)
-    xlims!(ax, xmin, xmax)
-    ylims!(ax, ymin, ymax)
+    AbstractPlotting.xlims!(ax, xmin, xmax)
+    AbstractPlotting.ylims!(ax, ymin, ymax)
 end
 
 function limits!(args...)
