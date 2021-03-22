@@ -1,5 +1,7 @@
 @cell arc(Point2f0(0), 10f0, 0f0, pi, linewidth=20)
 
+@cell mesh(IRect(0, 0, 200, 200))
+
 @cell poly(IRect(0, 0, 200, 200), strokewidth=20, strokecolor=:red, color=(:black, 0.4))
 
 @cell begin
