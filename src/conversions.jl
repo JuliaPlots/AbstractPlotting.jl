@@ -118,11 +118,9 @@ categorical_range(xs) = categorical_range(categorical_trait(xs), xs)
 categorical_range(::Categorical, xs) = 1:length(categorical_labels(xs))
 categorical_range(::Continuous,  _)  = automatic # we let them be automatic
 
-function categorical_position(x, labels)
-    findfirst(l -> l == x, labels)
-end
-
-categorical_position(x, labels::Automatic) = x
+categorical_position(x, xs) = categorical_position(categorical_trait(xs), x, xs)
+categorical_position(::Categorical, x, xs) = findfirst(l -> l == x, categorical_labels(xs))
+categorical_position(::Continuous,  x, _)  = x
 
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector) = convert_arguments(P, (x, y))
 convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector, z::AbstractVector) = convert_arguments(P, (x, y, z))
@@ -135,7 +133,7 @@ function convert_arguments(::PointBased, positions::NTuple{N, AbstractVector}) w
     labels = categorical_labels.(positions)
     xyrange = categorical_range.(positions)
     points = map(zip(positions...)) do p
-        Point{N, Float32}(categorical_position.(p, labels))
+        Point{N, Float32}(categorical_position.(p, positions))
     end
     PlotSpec(points, tickranges = xyrange, ticklabels = labels)
 end
