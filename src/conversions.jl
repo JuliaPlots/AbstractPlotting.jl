@@ -107,16 +107,16 @@ end
 struct Categorical end
 struct Continuous end
 
-categorical_trait(::Type) = Categorical()
-categorical_trait(::Type{<: Number}) = Continuous()
+categorical_trait(::AbstractVector) = Categorical()
+categorical_trait(::AbstractVector{<: Number}) = Continuous()
 
-categorical_labels(x::AbstractVector{T}) where T = categorical_labels(categorical_trait(T), x)
+categorical_labels(xs) = categorical_labels(categorical_trait(xs), xs)
+categorical_labels(::Categorical, xs) = unique(xs)
+categorical_labels(::Continuous,  _)  = automatic # we let them be automatic
 
-categorical_labels(::Categorical, x) = unique(x)
-categorical_labels(::Continuous, x) = automatic # we let them be automatic
-
-categorical_range(labels::Automatic) = labels
-categorical_range(labels) = 1:length(labels)
+categorical_range(xs) = categorical_range(categorical_trait(xs), xs)
+categorical_range(::Categorical, xs) = 1:length(categorical_labels(xs))
+categorical_range(::Continuous,  _)  = automatic # we let them be automatic
 
 function categorical_position(x, labels)
     findfirst(l -> l == x, labels)
@@ -133,7 +133,7 @@ function convert_arguments(::PointBased, positions::NTuple{N, AbstractVector}) w
         error("All vectors need to have the same length. Found: $(length.(positions))")
     end
     labels = categorical_labels.(positions)
-    xyrange = categorical_range.(labels)
+    xyrange = categorical_range.(positions)
     points = map(zip(positions...)) do p
         Point{N, Float32}(categorical_position.(p, labels))
     end
@@ -147,7 +147,7 @@ function convert_arguments(
     n, m = size(z)
     positions = (x, y)
     labels = categorical_labels.(positions)
-    xyrange = categorical_range.(labels)
+    xyrange = categorical_range.(positions)
     args = convert_arguments(SL, 0..n, 0..m, z)
     xyranges = (
         to_linspace(0.5..(n-0.5), n),

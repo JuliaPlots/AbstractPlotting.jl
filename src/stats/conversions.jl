@@ -14,7 +14,7 @@ function convert_arguments(::SampleBased, positions::NTuple{N,AbstractVector}) w
         error("all vector need to be same length. Found: $(length.(positions))")
     end
     labels = categorical_labels.(positions)
-    xyrange = categorical_range.(labels)
+    xyrange = categorical_range.(positions)
     newpos = map(positions, labels) do pos,lab
         el32convert(categorical_position.(pos, Ref(lab)))
     end
