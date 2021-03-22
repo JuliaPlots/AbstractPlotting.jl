@@ -21,6 +21,7 @@ using Printf: @sprintf
 import Isoband
 import PolygonOps
 import GridLayoutBase
+import DataAPI # interface for categorical arrays
 
 # Imports from Base which we don't want to have to qualify
 using Base: RefValue
