@@ -598,6 +598,8 @@ function default_attributes(::Type{Slider}, scene)
         horizontal = true
         "The align mode of the slider in its parent GridLayout."
         alignmode = Inside()
+        "Controls if the button snaps to valid positions or moves freely"
+        snap = true
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
@@ -644,6 +646,8 @@ function default_attributes(::Type{RangeSlider}, scene)
         horizontal = true
         "The align mode of the slider in its parent GridLayout."
         alignmode = Inside()
+        "Controls if the buttons snap to valid positions or move freely"
+        snap = true
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end

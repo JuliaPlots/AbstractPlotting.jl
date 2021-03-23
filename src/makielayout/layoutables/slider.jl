@@ -9,7 +9,7 @@ function layoutable(::Type{Slider}, fig_or_scene; bbox = nothing, kwargs...)
     decorations = Dict{Symbol, Any}()
 
     @extract attrs (
-        halign, valign, horizontal, linewidth,
+        halign, valign, horizontal, linewidth, snap,
         startvalue, value, color_active, color_active_dimmed, color_inactive
     )
 
@@ -107,19 +107,20 @@ function layoutable(::Type{Slider}, fig_or_scene; bbox = nothing, kwargs...)
 
         dragging[] = true
         dif = event.px - event.prev_px
-        fraction = if horizontal[]
-            dif[1] / (endpoints[][2][1] - endpoints[][1][1])
+        fraction = clamp(if horizontal[]
+            (event.px[1] - endpoints[][1][1]) / (endpoints[][2][1] - endpoints[][1][1])
         else
-            dif[2] / (endpoints[][2][2] - endpoints[][1][2])
-        end
-        if fraction != 0.0f0
-            newfraction = min(max(displayed_sliderfraction[] + fraction, 0f0), 1f0)
-            displayed_sliderfraction[] = newfraction
+            (event.px[2] - endpoints[][1][2]) / (endpoints[][2][2] - endpoints[][1][2])
+        end, 0, 1)
 
-            newindex = closest_fractionindex(sliderrange[], newfraction)
-            if selected_index[] != newindex
-                selected_index[] = newindex
-            end
+        newindex = closest_fractionindex(sliderrange[], fraction)
+        if snap[]
+            fraction = (newindex - 1) / (length(sliderrange[]) - 1)
+        end
+        displayed_sliderfraction[] = fraction
+
+        if selected_index[] != newindex
+            selected_index[] = newindex
         end
     end
 

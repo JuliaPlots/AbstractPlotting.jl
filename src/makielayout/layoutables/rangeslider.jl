@@ -9,7 +9,7 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     decorations = Dict{Symbol, Any}()
 
     @extract attrs (
-        halign, valign, horizontal, linewidth,
+        halign, valign, horizontal, linewidth, snap,
         startvalues, values, color_active, color_active_dimmed, color_inactive
     )
 
@@ -121,6 +121,11 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
         fraction = clamp(fraction, 0, 1)
 
         i_closer = argmin(abs.(fraction .- displayed_sliderfractions[]))
+
+        if snap[]
+            snapindex = closest_fractionindex(sliderrange[], fraction)
+            fraction = (snapindex - 1) / (length(sliderrange[]) - 1)
+        end
 
         displayed_sliderfractions[] = minmax(if i_closer == 1
             (fraction, displayed_sliderfractions[][2])
