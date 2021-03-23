@@ -612,6 +612,53 @@ end)
 """
 Slider
 
+function default_attributes(::Type{RangeSlider}, scene)
+    attrs, docdict, defaultdict = @documented_attributes begin
+        "The horizontal alignment of the slider in its suggested bounding box."
+        halign = :center
+        "The vertical alignment of the slider in its suggested bounding box."
+        valign = :center
+        "The width setting of the slider."
+        width = Auto()
+        "The height setting of the slider."
+        height = Auto()
+        "The range of values that the slider can pick from."
+        range = 0:10
+        "Controls if the parent layout can adjust to this element's width"
+        tellwidth = true
+        "Controls if the parent layout can adjust to this element's height"
+        tellheight = true
+        "The start values of the slider or the values that are closest in the slider range."
+        startvalues = (0, 0)
+        "The current values of the slider."
+        values = (0, 0)
+        "The width of the slider line"
+        linewidth = 15
+        "The color of the slider when the mouse hovers over it."
+        color_active_dimmed = COLOR_ACCENT_DIMMED[]
+        "The color of the slider when the mouse clicks and drags the slider."
+        color_active = COLOR_ACCENT[]
+        "The color of the slider when it is not interacted with."
+        color_inactive = RGBf0(0.94, 0.94, 0.94)
+        "Controls if the slider has a horizontal orientation or not."
+        horizontal = true
+        "The align mode of the slider in its parent GridLayout."
+        alignmode = Inside()
+    end
+    (attributes = attrs, documentation = docdict, defaults = defaultdict)
+end
+
+@doc """
+RangeSlider has the following attributes:
+
+$(let
+    _, docs, defaults = default_attributes(RangeSlider, nothing)
+    docvarstring(docs, defaults)
+end)
+"""
+RangeSlider
+
+
 function default_attributes(::Type{Toggle}, scene)
     attrs, docdict, defaultdict = @documented_attributes begin
         "The horizontal alignment of the toggle in its suggested bounding box."
