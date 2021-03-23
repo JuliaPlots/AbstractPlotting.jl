@@ -114,7 +114,7 @@ categorical_trait(::AbstractVector{<: Number}) = Continuous()
 categorical_labels(xs) = categorical_labels(categorical_trait(xs), xs)
 categorical_labels(::Categorical, xs) = unique(xs)
 categorical_labels(::Continuous,  _)  = automatic # we let them be automatic
-categorical_labels(::HasRefPool,  xs) = values(DataAPI.refpool(xs)) # could also use DataAPI.levels(xs)
+categorical_labels(::HasRefPool,  xs) = DataAPI.levels(xs) # could also use values(DataAPI.refpool(xs))
 
 categorical_range(xs) = categorical_range(categorical_trait(xs), xs)
 categorical_range(::Categorical, xs) = 1:length(categorical_labels(xs))
