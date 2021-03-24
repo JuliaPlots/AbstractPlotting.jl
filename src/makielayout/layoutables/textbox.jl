@@ -254,24 +254,11 @@ end
 
 
 function charbbs(text)
-    positions = AbstractPlotting.layout_text(text[1][], text.position[], text.textsize[],
-        text.font[], text.align[], text.rotation[], text.model[],
-        text.justification[], text.lineheight[])
-
-    font = AbstractPlotting.to_font(text.font[])
-
-    bbs = [
-        AbstractPlotting.FreeTypeAbstraction.height_insensitive_boundingbox(
-            AbstractPlotting.FreeTypeAbstraction.get_extent(font, char),
-            font
-        )
-        for char in text[1][]
-    ]
-
-    bbs_shifted_scaled = [Rect2D(
-            (AbstractPlotting.origin(bb) .* text.textsize[] .+ pos[1:2])...,
-            (widths(bb) .* text.textsize[])...)
-        for (bb, pos) in zip(bbs, positions)]
+    glyphlayout = text._glyphlayout[]
+    if !(glyphlayout isa AbstractPlotting.Glyphlayout)
+        error("Expected a single Glyphlayout from the textbox string, got a $(typeof(glyphlayout)).")
+    end
+    glyphlayout.bboxes
 end
 
 function validate_textbox(str, validator::Function)
