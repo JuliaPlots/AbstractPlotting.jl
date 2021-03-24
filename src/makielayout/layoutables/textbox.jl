@@ -93,16 +93,20 @@ function layoutable(::Type{Textbox}, fig_or_scene; bbox = nothing, kwargs...)
 
     cursorpoints = lift(cursorindex, displayed_charbbs) do ci, bbs
 
-        if (ci) > length(bbs)
+        hadvances = t.elements[:text]._glyphlayout[].hadvances::Vector{Float32}
+
+        if ci > length(bbs)
             # correct cursorindex if it's outside of the displayed charbbs range
             cursorindex[] = length(bbs)
             return
         end
 
-        if ci == 0
+        if 0 < ci < length(bbs)
+            [leftline(bbs[ci+1])...]
+        elseif ci == 0
             [leftline(bbs[1])...]
         else
-            [rightline(bbs[ci])...]
+            [leftline(bbs[ci])...] .+ Point2f0(hadvances[ci], 0)
         end
     end
 
@@ -258,7 +262,10 @@ function charbbs(text)
     if !(glyphlayout isa AbstractPlotting.Glyphlayout)
         error("Expected a single Glyphlayout from the textbox string, got a $(typeof(glyphlayout)).")
     end
-    glyphlayout.bboxes
+    pos = Point2f0(text.position[])
+    map(glyphlayout.bboxes, glyphlayout.origins) do bb, ori
+        FRect2D(Point2f0(ori) + bb.origin + pos, bb.widths)
+    end
 end
 
 function validate_textbox(str, validator::Function)
