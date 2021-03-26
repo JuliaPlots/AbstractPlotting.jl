@@ -13,7 +13,7 @@ function colors_svg(key::Symbol, cs, w, h; categorical)
     <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
      "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
      <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-          width="$(n * ws)mm" height="$(h)mm"
+          width="$(categorical ? n * ws : w)mm" height="$(h)mm"
           viewBox="0 0 $n 1" preserveAspectRatio="none"
           shape-rendering="crispEdges" stroke="none">
     """
@@ -38,7 +38,7 @@ function colors_svg(key::Symbol, cs, w, h; categorical)
         html *= """
         </linearGradient>
         </defs>
-        <rect width="$(w)mm" height="$(h)mm" x="0" y="0" fill="url(#lgrad_$key)" />
+        <rect width="100%" height="100%" x="0" y="0" fill="url(#lgrad_$key)" />
         """
     end
     html *= "</svg>"
