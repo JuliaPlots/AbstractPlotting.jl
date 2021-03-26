@@ -16,7 +16,7 @@ function convert_arguments(::SampleBased, positions::NTuple{N,AbstractVector}) w
     labels = categorical_labels.(positions)
     xyrange = categorical_range.(positions)
     newpos = map(positions) do pos
-        el32convert(categorical_position.(pos, Ref(pos)))
+        el32convert(categorical_positions(pos))
     end
     PlotSpec(newpos...; tickranges = xyrange, ticklabels = labels)
 end
