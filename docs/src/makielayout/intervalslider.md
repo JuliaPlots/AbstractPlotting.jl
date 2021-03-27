@@ -24,7 +24,7 @@ using CairoMakie
 AbstractPlotting.inline!(true) # hide
 CairoMakie.activate!() # hide
 
-f = Figure()
+f = Figure(resolution = (800, 800))
 Axis(f[1, 1], limits = (0, 1, 0, 1))
 
 rs_h = IntervalSlider(f[2, 1], range = LinRange(0, 1, 1000),
