@@ -152,6 +152,7 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
                 fraction = (snapindex - 1) / (length(sliderrange[]) - 1)
             end
             if state[] == :min
+                # if the mouse crosses over the current max, reverse
                 if fraction > displayed_sliderfractions[][2]
                     state[] = :max
                     displayed_sliderfractions[] = (displayed_sliderfractions[][2], fraction)
@@ -159,6 +160,7 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
                     displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][2])
                 end
             else
+                # if the mouse crosses over the current min, reverse
                 if fraction < displayed_sliderfractions[][1]
                     state[] = :min
                     displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][1])
@@ -193,18 +195,7 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
             if selected_indices[] != newindices
                 selected_indices[] = newindices
             end
-        else
-            error("The state should not be $state[] while dragging.")
         end
-        
-
-        # displayed_sliderfractions[] = minmax(if i_closer == 1
-        #     (fraction, displayed_sliderfractions[][2])
-        # else
-        #     (displayed_sliderfractions[][1], fraction)
-        # end...)
-
-        
     end
 
     onmouseleftdragstop(mouseevents) do event
