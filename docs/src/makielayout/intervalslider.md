@@ -1,6 +1,23 @@
 # IntervalSlider
 
-The interval slider selects a
+The interval slider selects an interval (low, high) from the supplied attribute `range`.
+The (approximate) start values can be set with `startvalues`.
+
+The currently selected interval is in the attribute `interval` and is a Tuple of `(low, high)`.
+Don't change this value manually, but use the function `set_close_to!(intslider, v1, v2)`.
+This is necessary to ensure the values are actually present in the `range` attribute.
+
+You can click anywhere outside of the currently selected range and the closer interval edge will jump to the point.
+You can then drag the edge around.
+When hovering over the slider, the larger button indicates the edge that will react.
+
+If the mouse hovers over the central area of the interval and both buttons are enlarged, clicking and dragging shifts the interval around as a whole.
+
+You can double-click the slider to reset it to the values present in `startvalues`.
+If `startvalues === AbstractPlotting.automatic`, the full interval will be selected (this is the default).
+
+If you set the attribute `snap = false`, the slider will move continously while dragging and only jump to the closest available values when releasing the mouse.
+
 
 ```@example
 using CairoMakie
@@ -8,7 +25,7 @@ AbstractPlotting.inline!(true) # hide
 CairoMakie.activate!() # hide
 
 
-f = Figure()
+f = Figure(resolution = (800, 800))
 Axis(f[1, 1], limits = (0, 1, 0, 1))
 
 rs_h = IntervalSlider(f[2, 1], range = LinRange(0, 1, 1000), startvalues = (0.2, 0.8))
@@ -17,9 +34,10 @@ rs_v = IntervalSlider(f[1, 2], range = LinRange(0, 1, 1000), startvalues = (0.4,
 
 data = rand(Point2f0, 300)
 
-colors = lift(rs_h.values, rs_v.values) do hrange, vrange
+# color points differently if they are within the two intervals
+colors = lift(rs_h.interval, rs_v.interval) do h_int, v_int
     map(data) do d
-        (hrange[1] < d[1] < hrange[2]) && (vrange[1] < d[2] < vrange[2])
+        (h_int[1] < d[1] < h_int[2]) && (v_int[1] < d[2] < v_int[2])
     end
 end
 
