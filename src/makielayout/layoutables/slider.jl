@@ -206,7 +206,7 @@ end
 """
 Set the `slider` to the value in the slider's range that is closest to `value`.
 """
-function set_close_to!(slider, value)
+function set_close_to!(slider::Slider, value)
     closest = closest_index(slider.range[], value)
     slider.selected_index = closest
 end

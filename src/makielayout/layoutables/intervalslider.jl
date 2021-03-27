@@ -268,49 +268,12 @@ function layoutable(::Type{IntervalSlider}, fig_or_scene; bbox = nothing, kwargs
     IntervalSlider(fig_or_scene, layoutobservables, attrs, decorations)
 end
 
-function valueindex(sliderrange, value)
-    for (i, val) in enumerate(sliderrange)
-        if val == value
-            return i
-        end
-    end
-    nothing
-end
-
-function closest_fractionindex(sliderrange, fraction)
-    n = length(sliderrange)
-    onestepfrac = 1 / (n - 1)
-    i = round(Int, fraction / onestepfrac) + 1
-    min(max(i, 1), n)
-end
-
-function closest_index(sliderrange, value)
-    for (i, val) in enumerate(sliderrange)
-        if val == value
-            return i
-        end
-    end
-    # if the value wasn't found this way try inexact
-    closest_index_inexact(sliderrange, value)
-end
-
-function closest_index_inexact(sliderrange, value)
-    distance = Inf
-    selected_i = 0
-    for (i, val) in enumerate(sliderrange)
-        newdist = abs(val - value)
-        if newdist < distance
-            distance = newdist
-            selected_i = i
-        end
-    end
-    selected_i
-end
 
 """
 Set the `slider` to the value in the slider's range that is closest to `value`.
 """
-function set_close_to!(slider, value)
-    closest = closest_index(slider.range[], value)
-    slider.selected_index = closest
+function set_close_to!(intervalslider::IntervalSlider, v1, v2)
+    mima = minmax(v1, v2)
+    indices = closest_index.(Ref(intervalslider.range[]), mima)
+    intervalslider.selected_indices[] = indices
 end
