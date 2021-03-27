@@ -147,11 +147,22 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
                 fraction = (snapindex - 1) / (length(sliderrange[]) - 1)
             end
             if state[] == :min
-                displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][2])
+                if fraction > displayed_sliderfractions[][2]
+                    state[] = :max
+                    displayed_sliderfractions[] = (displayed_sliderfractions[][2], fraction)
+                else
+                    displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][2])
+                end
             else
-                displayed_sliderfractions[] = (displayed_sliderfractions[][1], fraction)
+                if fraction < displayed_sliderfractions[][1]
+                    state[] = :min
+                    displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][1])
+                else
+                    displayed_sliderfractions[] = (displayed_sliderfractions[][1], fraction)
+                end
             end
             newindices = closest_fractionindex.(Ref(sliderrange[]), displayed_sliderfractions[])
+
             if selected_indices[] != newindices
                 selected_indices[] = newindices
             end
