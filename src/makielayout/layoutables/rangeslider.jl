@@ -78,7 +78,11 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     end
 
     # initialize slider value with closest from range
-    selected_indices[] = closest_index.(Ref(sliderrange[]), startvalues[])
+    selected_indices[] = if startvalues[] === AbstractPlotting.automatic
+        (1, lastindex(sliderrange[]))
+    else
+        closest_index.(Ref(sliderrange[]), startvalues[])
+    end
 
     middlepoints = lift(endpoints, displayed_sliderfractions) do ep, sfs
         [Point2f0(ep[1] .+ sf .* (ep[2] .- ep[1])) for sf in sfs]
@@ -102,17 +106,34 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     linesegs = linesegments!(topscene, linepoints, color = linecolors, linewidth = linewidth, raw = true)
     decorations[:linesegments] = linesegs
 
-    button_magnification = Node(1.0)
-    buttonsize = @lift($linewidth * $button_magnification)
-    buttons = scatter!(topscene, middlepoints, color = color_active, strokewidth = 0, markersize = buttonsize, raw = true)
+    state = Node(:none)
+    button_magnifications = lift(state) do state
+        if state == :none
+            [1.0, 1.0]
+        elseif state == :min
+            [1.25, 1.0]
+        elseif state == :both
+            [1.25, 1.25]
+        else
+            [1.0, 1.25]
+        end
+    end
+    buttonsizes = @lift($linewidth .* $button_magnifications)
+    buttons = scatter!(topscene, middlepoints, color = color_active, strokewidth = 0, markersize = buttonsizes, raw = true)
     decorations[:buttons] = buttons
 
     mouseevents = addmouseevents!(topscene, linesegs, buttons)
 
+    # we need to record where a drag started for the case where the center of the
+    # range is shifted, because the difference in indices always needs to stay the same
+    # and the slider is moved relative to this start position
+    startfraction = Ref(0.0)
+    start_disp_fractions = Ref((0.0, 0.0))
+    startindices = Ref((1, 1))
+
     onmouseleftdrag(mouseevents) do event
 
         dragging[] = true
-        dif = event.px
         fraction = if horizontal[]
             (event.px[1] - endpoints[][1][1]) / (endpoints[][2][1] - endpoints[][1][1])
         else
@@ -120,23 +141,54 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
         end
         fraction = clamp(fraction, 0, 1)
 
-        i_closer = argmin(abs.(fraction .- displayed_sliderfractions[]))
+        if state[] in (:min, :max)
+            if snap[]
+                snapindex = closest_fractionindex(sliderrange[], fraction)
+                fraction = (snapindex - 1) / (length(sliderrange[]) - 1)
+            end
+            if state[] == :min
+                displayed_sliderfractions[] = (fraction, displayed_sliderfractions[][2])
+            else
+                displayed_sliderfractions[] = (displayed_sliderfractions[][1], fraction)
+            end
+            newindices = closest_fractionindex.(Ref(sliderrange[]), displayed_sliderfractions[])
+            if selected_indices[] != newindices
+                selected_indices[] = newindices
+            end
+        elseif state[] == :both
+            fracdif = fraction - startfraction[]
 
-        if snap[]
-            snapindex = closest_fractionindex(sliderrange[], fraction)
-            fraction = (snapindex - 1) / (length(sliderrange[]) - 1)
-        end
+            clamped_fracdif = clamp(fracdif, -start_disp_fractions[][1], 1 - start_disp_fractions[][2])
 
-        displayed_sliderfractions[] = minmax(if i_closer == 1
-            (fraction, displayed_sliderfractions[][2])
+            ntarget = round(Int, length(sliderrange[]) * clamped_fracdif)
+
+            nlow = -startindices[][1] + 1
+            nhigh = length(sliderrange[]) - startindices[][2]
+            nchange = clamp(ntarget, nlow, nhigh)
+
+            newindices = startindices[] .+ nchange
+
+            displayed_sliderfractions[] = if snap[]
+                (newindices .- 1) ./ (length(sliderrange[]) - 1)
+            else
+                start_disp_fractions[] .+ clamped_fracdif
+            end
+
+            if selected_indices[] != newindices
+                selected_indices[] = newindices
+            end
         else
-            (displayed_sliderfractions[][1], fraction)
-        end...)
-
-        newindices = closest_fractionindex.(Ref(sliderrange[]), displayed_sliderfractions[])
-        if selected_indices[] != newindices
-            selected_indices[] = newindices
+            error("The state should not be $state[] while dragging.")
         end
+        
+
+        # displayed_sliderfractions[] = minmax(if i_closer == 1
+        #     (fraction, displayed_sliderfractions[][2])
+        # else
+        #     (displayed_sliderfractions[][1], fraction)
+        # end...)
+
+        
     end
 
     onmouseleftdragstop(mouseevents) do event
@@ -148,8 +200,21 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     onmouseleftdown(mouseevents) do event
 
         pos = event.px
+        
         dim = horizontal[] ? 1 : 2
-        frac = (pos[dim] - endpoints[][1][dim]) / (endpoints[][2][dim] - endpoints[][1][dim])
+        frac = clamp(
+            (pos[dim] - endpoints[][1][dim]) / (endpoints[][2][dim] - endpoints[][1][dim]),
+            0, 1
+        )
+
+        startfraction[] = frac
+        startindices[] = selected_indices[]
+        start_disp_fractions[] = displayed_sliderfractions[]
+
+        if state[] in (:both, :none)
+            return
+        end
+
         newindex = closest_fractionindex(sliderrange[], frac)
         if abs(newindex - selected_indices[][1]) < abs(newindex - selected_indices[][2])
             selected_indices[] = (newindex, selected_indices[][2])
@@ -160,15 +225,34 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     end
 
     onmouseleftdoubleclick(mouseevents) do event
-        selected_indices[] = closest_index(sliderrange[], startvalues[])
+        selected_indices[] = selected_indices[] = if startvalues[] === AbstractPlotting.automatic
+            (1, lastindex(sliderrange[]))
+        else
+            closest_index.(Ref(sliderrange[]), startvalues[])
+        end
     end
 
-    onmouseenter(mouseevents) do event
-        button_magnification[] = 1.25
+    onmouseover(mouseevents) do event
+        fraction = if horizontal[]
+            (event.px[1] - endpoints[][1][1]) / (endpoints[][2][1] - endpoints[][1][1])
+        else
+            (event.px[2] - endpoints[][1][2]) / (endpoints[][2][2] - endpoints[][1][2])
+        end
+        fraction = clamp(fraction, 0, 1)
+
+        buttondistance = displayed_sliderfractions[][2] - displayed_sliderfractions[][1]
+
+        state[] = if fraction < displayed_sliderfractions[][1] + 0.25 * buttondistance
+            :min
+        elseif fraction < displayed_sliderfractions[][1] + 0.75 * buttondistance
+            :both
+        else
+            :max
+        end
     end
 
     onmouseout(mouseevents) do event
-        button_magnification[] = 1.0
+        state[] = :none
     end
 
     # trigger autosize through linewidth for first layout

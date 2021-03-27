@@ -625,13 +625,13 @@ function default_attributes(::Type{RangeSlider}, scene)
         "The height setting of the slider."
         height = Auto()
         "The range of values that the slider can pick from."
-        range = 0:10
+        range = 0:0.01:10
         "Controls if the parent layout can adjust to this element's width"
         tellwidth = true
         "Controls if the parent layout can adjust to this element's height"
         tellheight = true
         "The start values of the slider or the values that are closest in the slider range."
-        startvalues = (0, 0)
+        startvalues = AbstractPlotting.automatic
         "The current values of the slider."
         values = (0, 0)
         "The width of the slider line"
