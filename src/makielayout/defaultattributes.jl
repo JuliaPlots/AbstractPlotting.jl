@@ -577,7 +577,7 @@ function default_attributes(::Type{Slider}, scene)
         "The height setting of the slider."
         height = Auto()
         "The range of values that the slider can pick from."
-        range = 0:10
+        range = 0:0.01:10
         "Controls if the parent layout can adjust to this element's width"
         tellwidth = true
         "Controls if the parent layout can adjust to this element's height"

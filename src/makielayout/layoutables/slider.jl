@@ -71,6 +71,11 @@ function layoutable(::Type{Slider}, fig_or_scene; bbox = nothing, kwargs...)
         end
     end
 
+    # when the range is changed, switch to closest value
+    on(sliderrange) do rng
+        selected_index[] = closest_index(rng, value[])
+    end
+
     on(selected_index) do i
         value[] = sliderrange[][i]
     end
