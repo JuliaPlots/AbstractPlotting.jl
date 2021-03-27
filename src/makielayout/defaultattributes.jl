@@ -584,7 +584,7 @@ function default_attributes(::Type{Slider}, scene)
         tellheight = true
         "The start value of the slider or the value that is closest in the slider range."
         startvalue = 0
-        "The current value of the slider."
+        "The current value of the slider. Don't set this manually, use the function `set_close_to!`."
         value = 0
         "The width of the slider line"
         linewidth = 15
@@ -614,7 +614,7 @@ end)
 """
 Slider
 
-function default_attributes(::Type{RangeSlider}, scene)
+function default_attributes(::Type{IntervalSlider}, scene)
     attrs, docdict, defaultdict = @documented_attributes begin
         "The horizontal alignment of the slider in its suggested bounding box."
         halign = :center
@@ -632,8 +632,8 @@ function default_attributes(::Type{RangeSlider}, scene)
         tellheight = true
         "The start values of the slider or the values that are closest in the slider range."
         startvalues = AbstractPlotting.automatic
-        "The current values of the slider."
-        values = (0, 0)
+        "The current interval of the slider. Don't set this manually, use the function `set_close_to!`."
+        interval = (0, 0)
         "The width of the slider line"
         linewidth = 15
         "The color of the slider when the mouse hovers over it."
@@ -653,14 +653,14 @@ function default_attributes(::Type{RangeSlider}, scene)
 end
 
 @doc """
-RangeSlider has the following attributes:
+IntervalSlider has the following attributes:
 
 $(let
-    _, docs, defaults = default_attributes(RangeSlider, nothing)
+    _, docs, defaults = default_attributes(IntervalSlider, nothing)
     docvarstring(docs, defaults)
 end)
 """
-RangeSlider
+IntervalSlider
 
 
 function default_attributes(::Type{Toggle}, scene)

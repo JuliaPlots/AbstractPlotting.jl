@@ -134,7 +134,7 @@ end
 
 @Layoutable Slider
 
-@Layoutable RangeSlider
+@Layoutable IntervalSlider
 
 @Layoutable Button
 

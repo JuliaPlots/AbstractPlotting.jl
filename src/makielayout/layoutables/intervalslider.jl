@@ -1,22 +1,22 @@
-function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...)
+function layoutable(::Type{IntervalSlider}, fig_or_scene; bbox = nothing, kwargs...)
 
     topscene = get_topscene(fig_or_scene)
 
-    default_attrs = default_attributes(RangeSlider, topscene).attributes
-    theme_attrs = subtheme(topscene, :RangeSlider)
+    default_attrs = default_attributes(IntervalSlider, topscene).attributes
+    theme_attrs = subtheme(topscene, :IntervalSlider)
     attrs = merge!(merge!(Attributes(kwargs), theme_attrs), default_attrs)
 
     decorations = Dict{Symbol, Any}()
 
     @extract attrs (
         halign, valign, horizontal, linewidth, snap,
-        startvalues, values, color_active, color_active_dimmed, color_inactive
+        startvalues, interval, color_active, color_active_dimmed, color_inactive
     )
 
     sliderrange = attrs.range
 
     protrusions = Node(GridLayoutBase.RectSides{Float32}(0, 0, 0, 0))
-    layoutobservables = LayoutObservables{RangeSlider}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight,
+    layoutobservables = LayoutObservables{IntervalSlider}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight,
         halign, valign, attrs.alignmode; suggestedbbox = bbox, protrusions = protrusions)
 
     onany(linewidth, horizontal) do lw, horizontal
@@ -73,13 +73,13 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
         end
     end
 
-    # when the range is changed, switch to closest values
+    # when the range is changed, switch to closest interval
     on(sliderrange) do rng
-        selected_indices[] = closest_index.(Ref(rng), values[])
+        selected_indices[] = closest_index.(Ref(rng), interval[])
     end
 
     on(selected_indices) do is
-        values[] = getindex.(Ref(sliderrange[]), is)
+        interval[] = getindex.(Ref(sliderrange[]), is)
     end
 
     # initialize slider value with closest from range
@@ -265,7 +265,7 @@ function layoutable(::Type{RangeSlider}, fig_or_scene; bbox = nothing, kwargs...
     # trigger autosize through linewidth for first layout
     linewidth[] = linewidth[]
 
-    RangeSlider(fig_or_scene, layoutobservables, attrs, decorations)
+    IntervalSlider(fig_or_scene, layoutobservables, attrs, decorations)
 end
 
 function valueindex(sliderrange, value)

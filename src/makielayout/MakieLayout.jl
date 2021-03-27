@@ -56,7 +56,7 @@ include("layoutables/axis.jl")
 include("layoutables/colorbar.jl")
 include("layoutables/label.jl")
 include("layoutables/slider.jl")
-include("layoutables/rangeslider.jl")
+include("layoutables/intervalslider.jl")
 include("layoutables/button.jl")
 include("layoutables/box.jl")
 include("layoutables/toggle.jl")
@@ -67,7 +67,7 @@ include("layoutables/textbox.jl")
 
 export Axis
 export Slider
-export RangeSlider
+export IntervalSlider
 export Button
 export Colorbar
 export Label
