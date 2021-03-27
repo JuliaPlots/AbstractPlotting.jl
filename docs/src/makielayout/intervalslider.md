@@ -24,24 +24,29 @@ using CairoMakie
 AbstractPlotting.inline!(true) # hide
 CairoMakie.activate!() # hide
 
-
-f = Figure(resolution = (800, 800))
+f = Figure()
 Axis(f[1, 1], limits = (0, 1, 0, 1))
 
-rs_h = IntervalSlider(f[2, 1], range = LinRange(0, 1, 1000), startvalues = (0.2, 0.8))
-rs_v = IntervalSlider(f[1, 2], range = LinRange(0, 1, 1000), startvalues = (0.4, 0.9),
-    horizontal = false)
+rs_h = IntervalSlider(f[2, 1], range = LinRange(0, 1, 1000),
+    startvalues = (0.2, 0.8))
+rs_v = IntervalSlider(f[1, 2], range = LinRange(0, 1, 1000),
+    startvalues = (0.4, 0.9), horizontal = false)
 
-data = rand(Point2f0, 300)
+Label(f[3, 1], @lift(string(round.($(rs_h.interval), digits = 2))),
+    tellwidth = false)
+Label(f[1, 3], @lift(string(round.($(rs_v.interval), digits = 2))),
+    tellheight = false, rotation = pi/2)
+
+points = rand(Point2f0, 300)
 
 # color points differently if they are within the two intervals
 colors = lift(rs_h.interval, rs_v.interval) do h_int, v_int
-    map(data) do d
-        (h_int[1] < d[1] < h_int[2]) && (v_int[1] < d[2] < v_int[2])
+    map(points) do p
+        (h_int[1] < p[1] < h_int[2]) && (v_int[1] < p[2] < v_int[2])
     end
 end
 
-scatter!(data, color = colors, colormap = [:black, :orange], strokewidth = 0)
+scatter!(points, color = colors, colormap = [:black, :orange], strokewidth = 0)
 
 f
 ```
