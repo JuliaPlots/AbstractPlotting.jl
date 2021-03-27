@@ -204,9 +204,10 @@ function closest_index_inexact(sliderrange, value)
 end
 
 """
-Set the `slider` to the value in the slider's range that is closest to `value`.
+Set the `slider` to the value in the slider's range that is closest to `value` and return this value.
 """
 function set_close_to!(slider::Slider, value)
     closest = closest_index(slider.range[], value)
     slider.selected_index = closest
+    slider.range[][closest]
 end

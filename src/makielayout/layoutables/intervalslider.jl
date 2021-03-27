@@ -270,10 +270,11 @@ end
 
 
 """
-Set the `slider` to the value in the slider's range that is closest to `value`.
+Set the `slider` to the values in the slider's range that are closest to `v1` and `v2`, and return those values ordered min, max.
 """
 function set_close_to!(intervalslider::IntervalSlider, v1, v2)
     mima = minmax(v1, v2)
     indices = closest_index.(Ref(intervalslider.range[]), mima)
     intervalslider.selected_indices[] = indices
+    getindex.(Ref(intervalslider.range[]), indices)
 end
