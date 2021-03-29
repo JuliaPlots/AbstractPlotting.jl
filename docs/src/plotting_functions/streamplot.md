@@ -29,4 +29,8 @@ f(x) = f(x, P)
 
 streamplot(f, -1.5..1.5, -1.5..1.5, colormap = :magma,
     figure = (resolution = (800, 600),))
+
+save("example_streamplot.png", current_figure(), px_per_unit = 2) # hide
 ```
+
+![example streamplot](example_streamplot.png)
