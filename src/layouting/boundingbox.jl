@@ -151,30 +151,41 @@ function boundingbox(x::Text)
 end
 
 
-#     if x.space[] == :data
-#         if x[1][] isa AbstractArray
-#             bb = FRect3D()
-#             for
-#         else
-#             boundingbox(x, to_value(x[1]))
-#         end
-#     elseif x.space[] == :screen
-#         data_limits(x)
-#     end
-# end
+function screenspace_boundingbox(x::Text)
+    # See above
+    if !isempty(x.plots)
+        x = x.plots[1]
+    end
 
+    if x.space[] == :screen
+        scene = x.parent
+        while !(scene isa Scene)
+            scene = scene.parent
+        end
+        pv = camera(scene::Scene).projectionview
+        area = pixelarea(scene::Scene)
 
-# boundingbox(x::Text) = boundingbox(x, to_value(x[1]))
+        if x.position[] isa Vector
+            glyph_bboxes = map(gls -> boundingbox.(gls), x._glyphlayout)
+            bboxes = 
+            map(eachindex(x.position[])) do idx
+                map(glyph_bboxes, x.position, pv, area) do bboxes, positions, pv, area
+                    p = project(pv, Vec2f0(widths(area)), to_ndim(Point3f0, positions[idx], 0))
+                    bboxes[idx] + to_ndim(Point3f0, p, 0)
+                end
+            end
+            return bboxes
+        else
+            glyph_bboxes = map(boundingbox, x._glyphlayout)
+            return map(glyph_bboxes, x.position, pv, area) do bbox, pos, pv, area
+                p = project(pv, Vec2f0(widths(area)), to_ndim(Point3f0, pos, 0))
+                bbox + to_ndim(Point3f0, p, 0)
+            end
+        end
+    end
+    error("`screenspace_boundingbox() is only applicable with `space = :screen`.")
+end
 
-# function boundingbox(
-#         text::String, position, textsize;
-#         font = "default", align = (:left, :bottom), rotation = 0.0
-#     )
-#     return boundingbox(
-#         text, position, textsize,
-#         to_font(font), to_align(align), to_rotation(rotation)
-#     )
-# end
 
 """
 Calculate an approximation of a tight rectangle around a 2D rectangle rotated by `angle` radians.

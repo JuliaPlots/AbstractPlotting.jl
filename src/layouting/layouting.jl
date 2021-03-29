@@ -43,6 +43,18 @@ struct Glyphlayout
     hadvances::Vector{Float32}
 end
 
+function boundingbox(gl::Glyphlayout)
+    bbox = FRect3D(
+        gl.origins[1] .+ Vec3f0(origin(gl.bboxes[1])..., 0), 
+        Vec3f0(widths(gl.bboxes[1])..., 0)
+    )
+    for (o, bb) in zip(gl.origins[2:end], gl.bboxes[2:end])
+        bbox2 = FRect3D(o .+ Vec3f0(origin(bb)..., 0), Vec3f0(widths(bb)..., 0))
+        bbox = union(bbox, bbox2)
+    end
+    bbox
+end
+
 """
     layout_text(
         string::AbstractString, textsize::Union{AbstractVector, Number},
