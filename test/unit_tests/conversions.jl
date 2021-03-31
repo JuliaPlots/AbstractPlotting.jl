@@ -2,7 +2,8 @@ using AbstractPlotting:
     NoConversion,
     convert_arguments,
     conversion_trait,
-    convert_single_argument
+    convert_single_argument,
+    to_vertices
 
 using StaticArrays
 
