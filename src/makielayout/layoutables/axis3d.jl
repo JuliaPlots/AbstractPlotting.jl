@@ -100,6 +100,8 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     ax
 end
 
+can_be_current_axis(ax3::Axis3) = true
+
 function calculate_matrices(limits, px_area, elev, azim, perspectiveness)
     ws = widths(limits)
 
