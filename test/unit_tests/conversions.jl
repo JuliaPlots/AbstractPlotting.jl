@@ -113,6 +113,14 @@ end
     @test p4[1][22:26] == pts4
 end
 
+@testset "Categorical values" begin
+    # AbstractPlotting.jl#345
+    a = Any[Int64(1), Int32(1), Int128(2)] # vector of categorical values of different types
+    ilabels = AbstractPlotting.categorical_labels(a)
+    @test ilabels == [1, 2]
+    @test AbstractPlotting.categorical_position.(a, Ref(a)) == [1, 1, 2]
+end
+
 using AbstractPlotting: check_line_pattern, line_diff_pattern
 
 @testset "Linetype" begin
@@ -147,8 +155,6 @@ using AbstractPlotting: check_line_pattern, line_diff_pattern
     @test_throws ArgumentError line_diff_pattern(:dash, ())
     @test_throws ArgumentError line_diff_pattern(:dash, (1, 2, 3))
 end
-<<<<<<< HEAD
-=======
 
 struct MyVector{T}
     v::Vector{T}
@@ -178,4 +184,3 @@ end
         (Point2f0[(1.0, 2.0), (NaN, NaN), (3.0, 4.0)],)
     )
 end
->>>>>>> jk/conversion-fixes

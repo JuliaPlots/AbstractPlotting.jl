@@ -147,8 +147,84 @@ convert_arguments(p::PointBased, x::GeometryPrimitive) = convert_arguments(p, de
 function convert_arguments(::PointBased, pos::AbstractMatrix{<: Number})
     (to_vertices(pos),)
 end
-
 convert_arguments(P::PointBased, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}) = (Point2f0.(x, y),)
+
+# Trait for categorical values
+struct Categorical end
+struct Continuous end
+struct HasRefPool end # the better Categorical
+
+categorical_trait(x::AbstractVector) = !isnothing(DataAPI.refpool(x)) ? HasRefPool() : Categorical()
+categorical_trait(::AbstractVector{<: Number}) = Continuous()
+
+categorical_labels(xs) = categorical_labels(categorical_trait(xs), xs)
+categorical_labels(::Categorical, xs) = unique(xs)
+categorical_labels(::Continuous,  _)  = automatic # we let them be automatic
+categorical_labels(::HasRefPool,  xs) = DataAPI.levels(xs) # could also use values(DataAPI.refpool(xs))
+
+categorical_range(xs) = categorical_range(categorical_trait(xs), xs)
+categorical_range(::Categorical, xs) = 1:length(categorical_labels(xs))
+categorical_range(::Continuous,  _)  = automatic # we let them be automatic
+categorical_range(::HasRefPool,  xs) = keys(DataAPI.refpool(xs))
+
+categorical_position(x, xs) = categorical_position(categorical_trait(xs), x, xs)
+categorical_position(::Categorical, x, xs, labels = categorical_labels(xs)) = findfirst(l -> l == x, labels)
+categorical_position(::Continuous,  x, _)  = x
+categorical_position(::HasRefPool,  x, xs) = DataAPI.invrefpool(xs)[x]
+
+categorical_positions(xs) = categorical_positions(categorical_trait(xs), xs)
+categorical_positions(::Continuous, xs) = xs
+function categorical_positions(t::Categorical, xs)
+    labels = categorical_labels(xs)
+    categorical_position.(Ref(t), xs, Ref(xs), Ref(labels))
+end
+categorical_positions(::HasRefPool, xs) = DataAPI.refarray(xs)
+
+convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector) = convert_arguments(P, (x, y))
+convert_arguments(P::PointBased, x::AbstractVector, y::AbstractVector, z::AbstractVector) = convert_arguments(P, (x, y, z))
+
+function convert_arguments(::PointBased, positions::NTuple{N, AbstractVector}) where N
+    x = first(positions)
+    if any(n-> length(x) != length(n), positions)
+        error("All vectors need to have the same length. Found: $(length.(positions))")
+    end
+    labels = categorical_labels.(positions)
+    xyrange = categorical_range.(positions)
+
+    num_positions = categorical_positions.(positions)
+    points = Point{N, Float32}.(zip(num_positions...))
+
+    PlotSpec(points, tickranges = xyrange, ticklabels = labels)
+end
+
+function convert_arguments(
+        SL::SurfaceLike,
+        x::AbstractVector, y::AbstractVector, z::AbstractMatrix{<: Number}
+    )
+    n, m = size(z)
+    positions = (x, y)
+    labels = categorical_labels.(positions)
+    xyrange = categorical_range.(positions)
+    args = convert_arguments(SL, 0..n, 0..m, z)
+    xyranges = (
+        to_linspace(0.5..(n-0.5), n),
+        to_linspace(0.5..(m-0.5), m)
+    )
+    return PlotSpec(
+        args...,
+        tickranges = xyranges, ticklabels = labels
+    )
+end
+
+convert_arguments(::SurfaceLike, x::AbstractMatrix, y::AbstractMatrix) = (x, y, zeros(size(y)))
+
+"""
+Accepts a Vector of Pair of Points (e.g. `[Point(0, 0) => Point(1, 1), ...]`)
+to encode e.g. linesegments or directions.
+"""
+function convert_arguments(::Type{<: LineSegments}, positions::AbstractVector{E}) where E <: Union{Pair{A, A}, Tuple{A, A}} where A <: VecTypes{N, T} where {N, T}
+    (elconvert(Point{N, Float32}, reinterpret(Point{N, T}, positions)),)
+end
 
 convert_arguments(P::PointBased, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, z::AbstractVector{<:Real}) = (Point3f0.(x, y, z),)
 

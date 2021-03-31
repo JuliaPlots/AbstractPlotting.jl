@@ -13,10 +13,10 @@ function convert_arguments(::SampleBased, positions::NTuple{N,AbstractVector}) w
     if any(n-> length(x) != length(n), positions)
         error("all vector need to be same length. Found: $(length.(positions))")
     end
-    labels = categoric_labels.(positions)
-    xyrange = categoric_range.(labels)
-    newpos = map(positions, labels) do pos,lab
-        el32convert(categoric_position.(pos, Ref(lab)))
+    labels = categorical_labels.(positions)
+    xyrange = categorical_range.(positions)
+    newpos = map(positions) do pos
+        el32convert(categorical_positions(pos))
     end
     PlotSpec(newpos...; tickranges = xyrange, ticklabels = labels)
 end
