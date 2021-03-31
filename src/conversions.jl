@@ -216,8 +216,6 @@ function convert_arguments(
     )
 end
 
-convert_arguments(::SurfaceLike, x::AbstractMatrix, y::AbstractMatrix) = (x, y, zeros(size(y)))
-
 """
 Accepts a Vector of Pair of Points (e.g. `[Point(0, 0) => Point(1, 1), ...]`)
 to encode e.g. linesegments or directions.
@@ -341,7 +339,7 @@ end
 #                                 SurfaceLike                                  #
 ################################################################################
 
-convert_arguments(::SurfaceLike, x::AbstractMatrix, y::AbstractMatrix) = (x, y, zeros(size(y)))
+convert_arguments(::SurfaceLike, x::AbstractMatrix{<:Number}, y::AbstractMatrix{<:Number}) = (x, y, zeros(size(y)))
 
 """
     convert_arguments(P, x, y, z)::Tuple{ClosedInterval, ClosedInterval, Matrix}
@@ -419,6 +417,7 @@ end
 function convert_arguments(::VolumeLike, x::RangeLike, y::RangeLike, z::RangeLike, data::AbstractArray{T, 3}) where T
     return (x, y, z, el32convert(data))
 end
+
 """
     convert_arguments(P, x, y, z, i)::(Vector, Vector, Vector, Matrix)
 
@@ -426,8 +425,8 @@ Takes 3 `AbstractVector` `x`, `y`, and `z` and the `AbstractMatrix` `i`, and put
 
 `P` is the plot Type (it is optional).
 """
-function convert_arguments(::VolumeLike, x::AbstractVector, y::AbstractVector, z::AbstractVector, i::AbstractArray{T, 3}) where T
-    (x, y, z, el32convert(i))
+function convert_arguments(::VolumeLike, x::AbstractVector{<: Number}, y::AbstractVector{<: Number}, z::AbstractVector{<: Number}, i::AbstractArray{T, 3}) where T
+    return (x, y, z, el32convert(i))
 end
 
 
@@ -439,7 +438,7 @@ spanned by `x`, `y` and `z`, and puts `x`, `y`, `z` and `f(x,y,z)` in a Tuple.
 
 `P` is the plot Type (it is optional).
 """
-function convert_arguments(::VolumeLike, x::AbstractVector, y::AbstractVector, z::AbstractVector, f::Function)
+function convert_arguments(::VolumeLike, x::AbstractVector{<: Number}, y::AbstractVector{<: Number}, z::AbstractVector{<: Number}, f::Function)
     if !applicable(f, x[1], y[1], z[1])
         error("You need to pass a function with signature f(x, y, z). Found: $f")
     end
