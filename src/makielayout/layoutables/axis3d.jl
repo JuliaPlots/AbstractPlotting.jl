@@ -27,7 +27,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     scenearea = lift(round_to_IRect2D, layoutobservables.computedbbox)
 
-    scene = Scene(topscene, scenearea, raw = true, clear = false)
+    scene = Scene(topscene, scenearea, raw = true, clear = false, backgroundcolor = attrs.backgroundcolor)
 
     matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, projection)
 
@@ -54,13 +54,13 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     mi1 = @lift(!(pi/2 <= $azimuth % 2pi < 3pi/2))
     mi2 = @lift(0 <= $azimuth % 2pi < pi)
     mi3 = @lift($elevation > 0)
-    add_gridlines_and_frames!(scene, 1, limits, ticknode_1, mi1, mi2, mi3)
-    add_gridlines_and_frames!(scene, 2, limits, ticknode_2, mi2, mi1, mi3)
-    add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2)
-    
-    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, xlabel)
-    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, ylabel)
-    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, zlabel)
+    add_gridlines_and_frames!(scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
+    add_gridlines_and_frames!(scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
+    add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
+
+    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
+    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
+    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
 
 
     mouseeventhandle = addmouseevents!(scene)
@@ -280,7 +280,11 @@ function dim2(dim)
     end
 end
 
-function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1, min2)
+function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
+
+    dimsym(sym) = Symbol(string((:x, :y, :z)[dim]) * string(sym))
+    attr(sym) = attrs[dimsym(sym)]
+
     dpoint = (v, v1, v2) -> dimpoint(dim, v, v1, v2)
     d1 = dim1(dim)
     d2 = dim2(dim)
@@ -294,8 +298,8 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
             dpoint(t, f1, mi[d2]), dpoint(t, f1, ma[d2])
         end
     end
-    linesegments!(scene, endpoints, color = :gray80,
-        xautolimits = false, yautolimits = false, zautolimits = false)
+    linesegments!(scene, endpoints, color = attr(:gridcolor),
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true)
 
     endpoints2 = lift(limits, ticknode, min1, min2) do lims, ticks, min1, min2
         f1 = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
@@ -307,8 +311,8 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
             dpoint(t, mi[d1], f2), dpoint(t, ma[d1], f2)
         end
     end
-    linesegments!(scene, endpoints2, color = :gray80,
-        xautolimits = false, yautolimits = false, zautolimits = false)
+    linesegments!(scene, endpoints2, color = attr(:gridcolor),
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true)
 
 
     framepoints = lift(limits, miv) do lims, miv
@@ -319,13 +323,17 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         p4 = dpoint(m, minimum(lims)[d1], maximum(lims)[d2])
         [p1, p2, p3, p4, p1]
     end
-    lines!(scene, framepoints, color = :black, linewidth = 1,
-        xautolimits = false, yautolimits = false, zautolimits = false)
+    lines!(scene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,)
 
     nothing
 end
 
-function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2, label)
+function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
+
+    dimsym(sym) = Symbol(string((:x, :y, :z)[dim]) * string(sym))
+    attr(sym) = attrs[dimsym(sym)]
+
     dpoint = (v, v1, v2) -> dimpoint(dim, v, v1, v2)
     d1 = dim1(dim)
     d2 = dim2(dim)
@@ -353,7 +361,8 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
     end
 
     linesegments!(scene, tick_segments,
-        xautolimits = false, yautolimits = false, zautolimits = false)
+        xautolimits = false, yautolimits = false, zautolimits = false,
+        color = attr(:tickcolor), linewidth = attr(:tickwidth))
 
     labels_positions = lift(scene.px_area, scene.camera.projectionview, tick_segments) do pxa, pv, ticksegs
 
@@ -384,7 +393,9 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         end
     end
 
-    a = annotations!(pscene, labels_positions, align = align, show_axis = false)
+    a = annotations!(pscene, labels_positions, align = align, show_axis = false,
+        color = attr(:ticklabelcolor), textsize = attr(:ticklabelsize),
+        font = attr(:ticklabelfont),)
     translate!(a, 0, 0, 1000)
 
     label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview, limits, miv, min1, min2) do pxa, pv, lims, miv, min1, min2
@@ -436,7 +447,10 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         plus_offset, offset_ang_90deg_alwaysup, valign
     end
 
-    text!(pscene, label,
+    text!(pscene, attr(:label),
+        color = attr(:labelcolor),
+        textsize = attr(:labelsize),
+        font = attr(:labelfont),
         position = @lift($label_pos_rot_valign[1]),
         rotation = @lift($label_pos_rot_valign[2]),
         align = @lift((:center, $label_pos_rot_valign[3])))

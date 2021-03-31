@@ -978,18 +978,80 @@ function default_attributes(::Type{Axis3}, scene)
         data_aspect = :same # :equal
         "Projection"
         projection = :fit # :fitzoom :stretch
+        "The background color"
+        backgroundcolor = :transparent
         "The x label"
-        xlabel = ""
+        xlabel = "x"
         "The y label"
-        ylabel = ""
+        ylabel = "y"
         "The z label"
-        zlabel = ""
+        zlabel = "z"
         "The x label color"
         xlabelcolor = :black
         "The y label color"
         ylabelcolor = :black
         "The z label color"
         zlabelcolor = :black
+        "The x label size"
+        xlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The y label size"
+        ylabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The z label size"
+        zlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The x label font"
+        xlabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The y label font"
+        ylabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The z label font"
+        zlabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The x ticklabel color"
+        xticklabelcolor = :black
+        "The y ticklabel color"
+        yticklabelcolor = :black
+        "The z ticklabel color"
+        zticklabelcolor = :black
+        "The x ticklabel size"
+        xticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The y ticklabel size"
+        yticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The z ticklabel size"
+        zticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The x ticklabel font"
+        xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The y ticklabel font"
+        yticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The z ticklabel font"
+        zticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The x grid color"
+        xgridcolor = :gray80
+        "The y grid color"
+        ygridcolor = :gray80
+        "The z grid color"
+        zgridcolor = :gray80
+        "The x tick color"
+        xtickcolor = :black
+        "The y tick color"
+        ytickcolor = :black
+        "The z tick color"
+        ztickcolor = :black
+        "The x tick width"
+        xtickwidth = 1
+        "The y tick width"
+        ytickwidth = 1
+        "The z tick width"
+        ztickwidth = 1
+        "The x spine color"
+        xspinecolor = :black
+        "The y spine color"
+        yspinecolor = :black
+        "The z spine color"
+        zspinecolor = :black
+        "The x spine width"
+        xspinewidth = 1
+        "The y spine width"
+        yspinewidth = 1
+        "The z spine width"
+        zspinewidth = 1
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
