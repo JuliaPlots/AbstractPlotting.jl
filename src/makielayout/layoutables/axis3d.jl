@@ -115,7 +115,7 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
     t = AbstractPlotting.translationmatrix(-Float64.(limits.origin))
     s = if data_aspect == :equal
         scales = 2 ./ Float64.(ws)
-    elseif data_aspect == :same
+    elseif data_aspect == :data
         scales = 2 ./ max.(maximum(ws), Float64.(ws))
     elseif data_aspect isa VecTypes{3}
         scales = 2 ./ Float64.(ws) .* Float64.(data_aspect) ./ maximum(data_aspect)

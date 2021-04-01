@@ -969,15 +969,15 @@ function default_attributes(::Type{Axis3}, scene)
         "The alignment of the scene in its suggested bounding box."
         alignmode = Inside()
         "The elevation angle of the camera"
-        elevation = pi/4
+        elevation = pi/8
         "The azimuth angle of the camera"
         azimuth = 1.275 * pi
         "A number between 0 and 1, where 0 is orthographic, and 1 full perspective"
         perspectiveness = 0f0
         "Aspects of the 3 axes with each other"
-        data_aspect = :same # :equal
+        data_aspect = (1, 1, 2/3) # :data :equal
         "Projection"
-        projection = :stretch # :fit :fitzoom
+        projection = :fitzoom # :fit :fitzoom :stretch
         "The background color"
         backgroundcolor = :transparent
         "The x label"
