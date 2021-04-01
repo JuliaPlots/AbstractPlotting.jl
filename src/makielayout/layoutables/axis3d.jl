@@ -155,7 +155,7 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
 
     view_matrix = lookat_matrix * scale_matrix
     
-    projection_matrix = projectionmatrix(eyepos, radius, azim, elev, angle, w, h, scales, projection)
+    projection_matrix = projectionmatrix(view_matrix, limits, eyepos, radius, azim, elev, angle, w, h, scales, projection)
 
     # for eyeposition dependent algorithms, we need to present the position as if
     # there was no scaling applied
@@ -164,17 +164,59 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
     view_matrix, projection_matrix, eyeposition
 end
 
-function projectionmatrix(eyepos, radius, azim, elev, angle, width, height, scales, projection)
+function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle, width, height, scales, projection)
     near = radius - sqrt(3)
     far = radius + 2 * sqrt(3)
 
     aspect_ratio = width / height
 
-    projection_matrix = if projection == :fit
+    projection_matrix = if projection in (:fit, :fitzoom)
+        if height > width
+            angle = angle / aspect_ratio
+        end
+
+        pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+
+        if projection == :fitzoom
+            points = decompose(Point3f0, limits)
+            # @show points
+            projpoints = Ref(pm * viewmatrix) .* to_ndim.(Point4f0, points, 1)
+
+            maxx = maximum(x -> abs(x[1] / x[4]), projpoints)
+            maxy = maximum(x -> abs(x[2] / x[4]), projpoints)
+
+            ratio_x = maxx
+            ratio_y = maxy
+
+            if ratio_y > ratio_x
+                angle = angle * ratio_y
+            else
+                angle = angle * ratio_x
+            end
+
+            pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+        end
+
+        pm
+
+    elseif projection == :stretch
+
+        pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
+
+        points = decompose(Point3f0, limits)
+        # @show points
+        projpoints = Ref(pm * viewmatrix) .* to_ndim.(Point4f0, points, 1)
+
+        maxx = maximum(x -> abs(x[1] / x[4]), projpoints)
+        maxy = maximum(x -> abs(x[2] / x[4]), projpoints)
+
+        ratio_x = maxx
+        ratio_y = maxy
+
+        angle = angle * ratio_y
+        aspect_ratio = aspect_ratio / ratio_y * ratio_x
+
         AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
-    # elseif projection isa Float64
-    #     aspect_ratio = projection * width / height
-    #     AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
     else
         error("Invalid projection $projection")
     end

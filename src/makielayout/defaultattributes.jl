@@ -977,7 +977,7 @@ function default_attributes(::Type{Axis3}, scene)
         "Aspects of the 3 axes with each other"
         data_aspect = :same # :equal
         "Projection"
-        projection = :fit # :fitzoom :stretch
+        projection = :stretch # :fit :fitzoom
         "The background color"
         backgroundcolor = :transparent
         "The x label"
