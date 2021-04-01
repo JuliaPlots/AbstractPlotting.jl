@@ -341,7 +341,8 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         end
     end
     linesegments!(scene, endpoints, color = attr(:gridcolor),
-        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true)
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
+        visible = attr(:gridvisible))
 
     endpoints2 = lift(limits, ticknode, min1, min2) do lims, ticks, min1, min2
         f1 = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
@@ -354,19 +355,27 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         end
     end
     linesegments!(scene, endpoints2, color = attr(:gridcolor),
-        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true)
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
+        visible = attr(:gridvisible))
 
 
-    framepoints = lift(limits, miv) do lims, miv
-        m = (miv ? minimum : maximum)(lims)[dim]
-        p1 = dpoint(m, minimum(lims)[d1], minimum(lims)[d2])
-        p2 = dpoint(m, maximum(lims)[d1], minimum(lims)[d2])
-        p3 = dpoint(m, maximum(lims)[d1], maximum(lims)[d2])
-        p4 = dpoint(m, minimum(lims)[d1], maximum(lims)[d2])
-        [p1, p2, p3, p4, p1]
+    framepoints = lift(limits, min1, min2) do lims, mi1, mi2
+        f(mi) = mi ? minimum : maximum
+        p1 = dpoint(minimum(lims)[dim], f(mi1)(lims)[d1], f(mi2)(lims)[d2])
+        p2 = dpoint(maximum(lims)[dim], f(mi1)(lims)[d1], f(mi2)(lims)[d2])
+        p3 = dpoint(minimum(lims)[dim], f(!mi1)(lims)[d1], f(mi2)(lims)[d2])
+        p4 = dpoint(maximum(lims)[dim], f(!mi1)(lims)[d1], f(mi2)(lims)[d2])
+        p5 = dpoint(minimum(lims)[dim], f(mi1)(lims)[d1], f(!mi2)(lims)[d2])
+        p6 = dpoint(maximum(lims)[dim], f(mi1)(lims)[d1], f(!mi2)(lims)[d2])
+        # p7 = dpoint(minimum(lims)[dim], f(!mi1)(lims)[d1], f(!mi2)(lims)[d2])
+        # p8 = dpoint(maximum(lims)[dim], f(!mi1)(lims)[d1], f(!mi2)(lims)[d2])
+        [p1, p2, p3, p4, p5, p6]
+        # [p1, p2, p3, p4, p5, p6, p7, p8]
     end
-    lines!(scene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
-        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,)
+
+    linesegments!(scene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
+        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
+        visible = attr(:spinevisible))
 
     nothing
 end
