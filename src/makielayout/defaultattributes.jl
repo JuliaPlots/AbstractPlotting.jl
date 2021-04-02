@@ -1129,11 +1129,11 @@ function default_attributes(::Type{Axis3}, scene)
         "The color of the title"
         titlecolor = :black
         "The color of the xy panel"
-        xypanelcolor = :gray98
+        xypanelcolor = :transparent
         "The color of the yz panel"
-        yzpanelcolor = :gray98
+        yzpanelcolor = :transparent
         "The color of the xz panel"
-        xzpanelcolor = :gray98
+        xzpanelcolor = :transparent
         "Controls if the xy panel is visible"
         xypanelvisible = true
         "Controls if the yz panel is visible"

@@ -168,8 +168,8 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
     t2 = AbstractPlotting.translationmatrix(-0.5 .* ws .* scales)
     scale_matrix = t2 * s * t
 
-    ang_max = 70
-    ang_min = 1
+    ang_max = 90
+    ang_min = 0.5
 
     @assert 0 <= perspectiveness <= 1
 
@@ -446,6 +446,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
     linesegments!(scene, tick_segments,
         xautolimits = false, yautolimits = false, zautolimits = false,
+        transparency = true,
         color = attr(:tickcolor), linewidth = attr(:tickwidth), visible = attr(:ticksvisible))
 
     labels_positions = lift(scene.px_area, scene.camera.projectionview,
@@ -583,21 +584,19 @@ function add_panel!(scene, dim1, dim2, dim3, limits, min3, attrs)
 
     vertices = lift(limits, min3) do lims, mi3
 
-        ws = lims.widths
-        os = lims.origin
-        dif = ws .- os
+        mi = minimum(lims)
+        ma = maximum(lims)
 
-        lims_enlarged = FRect3D(os .- 0.005 .* dif, ws .* 1.01)
+        v3 = if mi3
+            mi[dim3] + 0.005 * (mi[dim3] - ma[dim3])
+        else
+            ma[dim3] + 0.005 * (ma[dim3] - mi[dim3])
+        end
 
-        mi = minimum(lims_enlarged)
-        ma = maximum(lims_enlarged)
-
-        f = mi3 ? mi : ma
-
-        p1 = dim3point(dim1, dim2, dim3, mi[dim1], mi[dim2], f[dim3])
-        p2 = dim3point(dim1, dim2, dim3, mi[dim1], ma[dim2], f[dim3])
-        p3 = dim3point(dim1, dim2, dim3, ma[dim1], ma[dim2], f[dim3])
-        p4 = dim3point(dim1, dim2, dim3, ma[dim1], mi[dim2], f[dim3])
+        p1 = dim3point(dim1, dim2, dim3, mi[dim1], mi[dim2], v3)
+        p2 = dim3point(dim1, dim2, dim3, mi[dim1], ma[dim2], v3)
+        p3 = dim3point(dim1, dim2, dim3, ma[dim1], ma[dim2], v3)
+        p4 = dim3point(dim1, dim2, dim3, ma[dim1], mi[dim2], v3)
         [p1, p2, p3, p4]
     end
 
