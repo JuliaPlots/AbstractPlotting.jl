@@ -13,6 +13,7 @@ The visual result is that objects with known real-world dimensions look correct 
 
 ```@example
 using GLMakie
+using FileIO
 GLMakie.activate!() # hide
 AbstractPlotting.inline!(true) # hide
 
