@@ -497,7 +497,10 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
     translate!(a, 0, 0, 1000)
 
-    label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview, limits, miv, min1, min2) do pxa, pv, lims, miv, min1, min2
+    label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview,
+            limits, miv, min1, min2, attr(:labeloffset),
+            attr(:labelrotation)) do pxa, pv, lims, miv, min1, min2,
+                loffset, lrotation
 
         o = pxa.origin
 
@@ -529,7 +532,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         offset_vec = (AbstractPlotting.Mat2f0(cos(a), sin(a), -sin(a), cos(a)) *
             AbstractPlotting.GeometryBasics.normalize(diffsign * diff))
         # rot = rotsign * pi/2
-        plus_offset = midpoint + 40 * offset_vec
+        plus_offset = midpoint + loffset * offset_vec
             
         offset_ang = atan(offset_vec[2], offset_vec[1])
         offset_ang_90deg = offset_ang + pi/2
@@ -540,10 +543,25 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         if slight_flip
             offset_ang_90deg_alwaysup += pi
         end
+        offset_ang_90deg_alwaysup
+
+        labelrotation = if lrotation == AbstractPlotting.automatic
+            offset_ang_90deg_alwaysup
+        else
+            lrotation
+        end
 
         valign = offset_vec[2] > 0 || slight_flip ? :bottom : :top
 
-        plus_offset, offset_ang_90deg_alwaysup, valign
+        plus_offset, labelrotation, valign
+    end
+
+    labelalign = lift(label_pos_rot_valign, attr(:labelalign)) do (_, _, valign), lalign
+        if lalign == AbstractPlotting.automatic
+            (:center, valign)
+        else
+            lalign
+        end
     end
 
     text!(pscene, attr(:label),
@@ -552,7 +570,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         font = attr(:labelfont),
         position = @lift($label_pos_rot_valign[1]),
         rotation = @lift($label_pos_rot_valign[2]),
-        align = @lift((:center, $label_pos_rot_valign[3])),
+        align = labelalign,
         visible = attr(:labelvisible)
     )
 

@@ -1022,6 +1022,24 @@ function default_attributes(::Type{Axis3}, scene)
         ylabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The z label font"
         zlabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The x label rotation"
+        xlabelrotation = AbstractPlotting.automatic
+        "The y label rotation"
+        ylabelrotation = AbstractPlotting.automatic
+        "The z label rotation"
+        zlabelrotation = AbstractPlotting.automatic
+        "The x label align"
+        xlabelalign = AbstractPlotting.automatic
+        "The y label align"
+        ylabelalign = AbstractPlotting.automatic
+        "The z label align"
+        zlabelalign = AbstractPlotting.automatic
+        "The x label offset"
+        xlabeloffset = 40
+        "The y label offset"
+        ylabeloffset = 40
+        "The z label offset"
+        zlabeloffset = 40
         "The x ticklabel color"
         xticklabelcolor = :black
         "The y ticklabel color"
