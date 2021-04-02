@@ -13,7 +13,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     theme_attrs = subtheme(topscene, :Axis3)
     attrs = merge!(merge!(Attributes(kwargs), theme_attrs), default_attrs)
 
-    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, projection,
+    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, viewmode,
         xlabel, ylabel, zlabel,
     )
 
@@ -32,7 +32,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     scene = Scene(topscene, scenearea, raw = true, clear = false, backgroundcolor = attrs.backgroundcolor)
 
-    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, projection)
+    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, viewmode)
 
     on(matrices) do (view, proj, eyepos)
         pv = proj * view
@@ -146,7 +146,7 @@ end
 can_be_current_axis(ax3::Axis3) = true
 
 function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_aspect,
-        projection)
+    viewmode)
     ws = widths(limits)
 
 
@@ -193,7 +193,7 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
 
     view_matrix = lookat_matrix * scale_matrix
     
-    projection_matrix = projectionmatrix(view_matrix, limits, eyepos, radius, azim, elev, angle, w, h, scales, projection)
+    projection_matrix = projectionmatrix(view_matrix, limits, eyepos, radius, azim, elev, angle, w, h, scales, viewmode)
 
     # for eyeposition dependent algorithms, we need to present the position as if
     # there was no scaling applied
@@ -202,20 +202,20 @@ function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_a
     view_matrix, projection_matrix, eyeposition
 end
 
-function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle, width, height, scales, projection)
+function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle, width, height, scales, viewmode)
     near = radius - sqrt(3)
     far = radius + 2 * sqrt(3)
 
     aspect_ratio = width / height
 
-    projection_matrix = if projection in (:fit, :fitzoom, :stretch)
+    projection_matrix = if viewmode in (:fit, :fitzoom, :stretch)
         if height > width
             angle = angle / aspect_ratio
         end
 
         pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
 
-        if projection in (:fitzoom, :stretch)
+        if viewmode in (:fitzoom, :stretch)
             points = decompose(Point3f0, limits)
             # @show points
             projpoints = Ref(pm * viewmatrix) .* to_ndim.(Point4f0, points, 1)
@@ -226,7 +226,7 @@ function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle,
             ratio_x = maxx
             ratio_y = maxy
 
-            if projection == :fitzoom
+            if viewmode == :fitzoom
                 if ratio_y > ratio_x
                     pm = AbstractPlotting.scalematrix(Vec3(1/ratio_y, 1/ratio_y, 1)) * pm
                 else
@@ -238,7 +238,7 @@ function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle,
         end
         pm
     else
-        error("Invalid projection $projection")
+        error("Invalid viewmode $viewmode")
     end
 end
 
