@@ -1089,11 +1089,11 @@ function default_attributes(::Type{Axis3}, scene)
         "The z spine width"
         zspinewidth = 1
         "Controls if the x spine is visible"
-        xspinevisible = true
+        xspinesvisible = true
         "Controls if the y spine is visible"
-        yspinevisible = true
+        yspinesvisible = true
         "Controls if the z spine is visible"
-        zspinevisible = true
+        zspinesvisible = true
         "Controls if the x grid is visible"
         xgridvisible = true
         "Controls if the y grid is visible"

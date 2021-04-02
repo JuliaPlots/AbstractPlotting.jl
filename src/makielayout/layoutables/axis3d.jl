@@ -419,7 +419,7 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
 
     linesegments!(scene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
         xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
-        visible = attr(:spinevisible))
+        visible = attr(:spinesvisible))
 
     nothing
 end
@@ -662,5 +662,12 @@ function hidedecorations!(ax::Axis3;
     hidezdecorations!(ax; label = label, ticklabels = ticklabels,
         ticks = ticks, grid = grid)
 
+    ax
+end
+
+function hidespines!(ax::Axis3)
+    ax.xspinesvisible = false
+    ax.yspinesvisible = false
+    ax.zspinesvisible = false
     ax
 end
