@@ -208,14 +208,14 @@ function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle,
 
     aspect_ratio = width / height
 
-    projection_matrix = if projection in (:fit, :fitzoom)
+    projection_matrix = if projection in (:fit, :fitzoom, :stretch)
         if height > width
             angle = angle / aspect_ratio
         end
 
         pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
 
-        if projection == :fitzoom
+        if projection in (:fitzoom, :stretch)
             points = decompose(Point3f0, limits)
             # @show points
             projpoints = Ref(pm * viewmatrix) .* to_ndim.(Point4f0, points, 1)
@@ -226,35 +226,17 @@ function projectionmatrix(viewmatrix, limits, eyepos, radius, azim, elev, angle,
             ratio_x = maxx
             ratio_y = maxy
 
-            if ratio_y > ratio_x
-                angle = angle * ratio_y
+            if projection == :fitzoom
+                if ratio_y > ratio_x
+                    pm = AbstractPlotting.scalematrix(Vec3(1/ratio_y, 1/ratio_y, 1)) * pm
+                else
+                    pm = AbstractPlotting.scalematrix(Vec3(1/ratio_x, 1/ratio_x, 1)) * pm
+                end
             else
-                angle = angle * ratio_x
+                pm = AbstractPlotting.scalematrix(Vec3(1/ratio_x, 1/ratio_y, 1)) * pm
             end
-
-            pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
         end
-
         pm
-
-    elseif projection == :stretch
-
-        pm = AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
-
-        points = decompose(Point3f0, limits)
-        # @show points
-        projpoints = Ref(pm * viewmatrix) .* to_ndim.(Point4f0, points, 1)
-
-        maxx = maximum(x -> abs(x[1] / x[4]), projpoints)
-        maxy = maximum(x -> abs(x[2] / x[4]), projpoints)
-
-        ratio_x = maxx
-        ratio_y = maxy
-
-        angle = angle * ratio_y
-        aspect_ratio = aspect_ratio / ratio_y * ratio_x
-
-        AbstractPlotting.perspectiveprojection(Float64, angle, aspect_ratio, near, far)
     else
         error("Invalid projection $projection")
     end
