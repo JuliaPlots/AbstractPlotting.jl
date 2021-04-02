@@ -42,7 +42,9 @@ The attributes `data_aspect` and `viewmode` both influence the apparent relative
 The `data_aspect` changes how long each axis is relative to the other two.
 
 If you set it to `:data`, the axes will be scaled according to their lengths in data space.
-The visual result is that objects with known real-world dimensions look correct and not squished or 
+The visual result is that objects with known real-world dimensions look correct and not squished.
+
+You can also set it to a three-tuple, where each number gives the relative length of that axis vs the others.
 
 ```@example
 using GLMakie
