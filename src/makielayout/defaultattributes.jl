@@ -992,6 +992,24 @@ function default_attributes(::Type{Axis3}, scene)
         ylabelcolor = :black
         "The z label color"
         zlabelcolor = :black
+        "Controls if the x label is visible"
+        xlabelvisible = true
+        "Controls if the y label is visible"
+        ylabelvisible = true
+        "Controls if the z label is visible"
+        zlabelvisible = true
+        "Controls if the x ticklabels are visible"
+        xticklabelsvisible = true
+        "Controls if the y ticklabels are visible"
+        yticklabelsvisible = true
+        "Controls if the z ticklabels are visible"
+        zticklabelsvisible = true
+        "Controls if the x ticks are visible"
+        xticksvisible = true
+        "Controls if the y ticks are visible"
+        yticksvisible = true
+        "Controls if the z ticks are visible"
+        zticksvisible = true
         "The x label size"
         xlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
         "The y label size"
@@ -1064,6 +1082,34 @@ function default_attributes(::Type{Axis3}, scene)
         ygridvisible = true
         "Controls if the z grid is visible"
         zgridvisible = true
+        "The protrusions on the sides of the axis, how much gap space is reserved for labels etc."
+        protrusions = 30
+        "The x ticks"
+        xticks = WilkinsonTicks(5; k_min = 3)
+        "The y ticks"
+        yticks = WilkinsonTicks(5; k_min = 3)
+        "The z ticks"
+        zticks = WilkinsonTicks(5; k_min = 3)
+        "The x tick format"
+        xtickformat = AbstractPlotting.automatic
+        "The y tick format"
+        ytickformat = AbstractPlotting.automatic
+        "The z tick format"
+        ztickformat = AbstractPlotting.automatic
+        "The axis title string."
+        title = ""
+        "The font family of the title."
+        titlefont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        "The title's font size."
+        titlesize = lift_parent_attribute(scene, :fontsize, 20f0)
+        "The gap between axis and title."
+        titlegap = 10f0
+        "Controls if the title is visible."
+        titlevisible = true
+        "The horizontal alignment of the title."
+        titlealign = :center
+        "The color of the title"
+        titlecolor = :black
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end

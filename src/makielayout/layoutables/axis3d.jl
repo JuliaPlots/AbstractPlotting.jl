@@ -19,9 +19,12 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     decorations = Dict{Symbol, Any}()
 
-    protrusions = Node(GridLayoutBase.RectSides{Float32}(0,0,0,0))
+
+    protrusions = lift(to_protrusions, attrs.protrusions)
     layoutobservables = LayoutObservables{Axis3}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight, attrs.halign, attrs.valign, attrs.alignmode;
         suggestedbbox = bbox, protrusions = protrusions)
+
+    notify(protrusions)
 
     limits = Node(FRect3D(Vec3f0(0f0, 0f0, 0f0), Vec3f0(100f0, 100f0, 100f0)))
 
@@ -39,16 +42,16 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
         scene.camera.projectionview[] = pv
     end
 
-    ticknode_1 = lift(limits) do lims
-        get_tickvalues(LinearTicks(4), minimum(lims)[1], maximum(lims)[1])
+    ticknode_1 = lift(limits, attrs.xticks, attrs.xtickformat) do lims, ticks, format
+        tl = get_ticks(ticks, format, minimum(lims)[1], maximum(lims)[1])
     end
 
-    ticknode_2 = lift(limits) do lims
-        get_tickvalues(LinearTicks(4), minimum(lims)[2], maximum(lims)[2])
+    ticknode_2 = lift(limits, attrs.yticks, attrs.ytickformat) do lims, ticks, format
+        tl = get_ticks(ticks, format, minimum(lims)[2], maximum(lims)[2])
     end
 
-    ticknode_3 = lift(limits) do lims
-        get_tickvalues(LinearTicks(4), minimum(lims)[3], maximum(lims)[3])
+    ticknode_3 = lift(limits, attrs.zticks, attrs.ztickformat) do lims, ticks, format
+        tl = get_ticks(ticks, format, minimum(lims)[3], maximum(lims)[3])
     end
 
     mi1 = @lift(!(pi/2 <= $azimuth % 2pi < 3pi/2))
@@ -61,6 +64,41 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
     add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
     add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
+
+
+    titlepos = lift(scene.px_area, attrs.titlegap, attrs.titlealign) do a, titlegap, align
+
+        x = if align == :center
+            a.origin[1] + a.widths[1] / 2
+        elseif align == :left
+            a.origin[1]
+        elseif align == :right
+            a.origin[1] + a.widths[1]
+        else
+            error("Title align $align not supported.")
+        end
+
+        yoffset = top(a) + titlegap
+
+        Point2(x, yoffset)
+    end
+
+    titlealignnode = lift(attrs.titlealign) do align
+        (align, :bottom)
+    end
+
+    titlet = text!(
+        topscene, attrs.title,
+        position = titlepos,
+        visible = attrs.titlevisible,
+        textsize = attrs.titlesize,
+        align = titlealignnode,
+        font = attrs.titlefont,
+        color = attrs.titlecolor,
+        space = :data,
+        show_axis=false)
+    decorations[:title] = titlet
+
 
 
     mouseeventhandle = addmouseevents!(scene)
@@ -258,6 +296,9 @@ function autolimits!(ax::Axis3)
     nothing
 end
 
+to_protrusions(x::Number) = GridLayoutBase.RectSides{Float32}(x, x, x, x)
+to_protrusions(x::Tuple{Any, Any, Any, Any}) = GridLayoutBase.RectSides{Float32}(x...)
+
 function getlimits(ax::Axis3, dim)
 
     plots_with_autolimits = if dim == 1
@@ -330,7 +371,10 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
     dpoint = (v, v1, v2) -> dimpoint(dim, v, v1, v2)
     d1 = dim1(dim)
     d2 = dim2(dim)
-    endpoints = lift(limits, ticknode, min1, min2) do lims, ticks, min1, min2
+
+    tickvalues = @lift($ticknode[1])
+
+    endpoints = lift(limits, tickvalues, min1, min2) do lims, ticks, min1, min2
         f1 = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
         # from tickvalues and f1 and min2:max2
@@ -344,7 +388,7 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
         visible = attr(:gridvisible))
 
-    endpoints2 = lift(limits, ticknode, min1, min2) do lims, ticks, min1, min2
+    endpoints2 = lift(limits, tickvalues, min1, min2) do lims, ticks, min1, min2
         f1 = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
         # from tickvalues and f1 and min2:max2
@@ -389,7 +433,10 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
     d1 = dim1(dim)
     d2 = dim2(dim)
 
-    tick_segments = lift(limits, ticknode, miv, min1, min2) do lims, ticks, miv, min1, min2
+    tickvalues = @lift($ticknode[1])
+    ticklabels = @lift($ticknode[2])
+
+    tick_segments = lift(limits, tickvalues, miv, min1, min2) do lims, ticks, miv, min1, min2
 
         f1 = !min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
@@ -413,9 +460,10 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
     linesegments!(scene, tick_segments,
         xautolimits = false, yautolimits = false, zautolimits = false,
-        color = attr(:tickcolor), linewidth = attr(:tickwidth))
+        color = attr(:tickcolor), linewidth = attr(:tickwidth), visible = attr(:ticksvisible))
 
-    labels_positions = lift(scene.px_area, scene.camera.projectionview, tick_segments) do pxa, pv, ticksegs
+    labels_positions = lift(scene.px_area, scene.camera.projectionview,
+            tick_segments, ticklabels) do pxa, pv, ticksegs, ticklabs
 
         o = pxa.origin
 
@@ -428,9 +476,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
             tendp + offset
         end
 
-        ticklabels = get_ticklabels(AbstractPlotting.automatic, ticknode[])
-
-        v = collect(zip(ticklabels, points))
+        v = collect(zip(ticklabs, points))
         v::Vector{Tuple{String, Point2f0}}
     end
 
@@ -446,7 +492,9 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
     a = annotations!(pscene, labels_positions, align = align, show_axis = false,
         color = attr(:ticklabelcolor), textsize = attr(:ticklabelsize),
-        font = attr(:ticklabelfont),)
+        font = attr(:ticklabelfont), visible = attr(:ticklabelsvisible),
+    )
+
     translate!(a, 0, 0, 1000)
 
     label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview, limits, miv, min1, min2) do pxa, pv, lims, miv, min1, min2
@@ -504,7 +552,97 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         font = attr(:labelfont),
         position = @lift($label_pos_rot_valign[1]),
         rotation = @lift($label_pos_rot_valign[2]),
-        align = @lift((:center, $label_pos_rot_valign[3])))
+        align = @lift((:center, $label_pos_rot_valign[3])),
+        visible = attr(:labelvisible)
+    )
 
     nothing
+end
+
+function hidexdecorations!(ax::Axis3;
+    label = true, ticklabels = true, ticks = true, grid = true)
+
+    if label
+        ax.xlabelvisible = false
+    end
+    if ticklabels
+        ax.xticklabelsvisible = false
+    end
+    if ticks
+        ax.xticksvisible = false
+    end
+    if grid
+        ax.xgridvisible = false
+    end
+    # if minorgrid
+    #     ax.xminorgridvisible = false
+    # end
+    # if minorticks
+    #     ax.xminorticksvisible = false
+    # end
+
+    ax
+end
+
+function hideydecorations!(ax::Axis3;
+    label = true, ticklabels = true, ticks = true, grid = true)
+
+    if label
+        ax.ylabelvisible = false
+    end
+    if ticklabels
+        ax.yticklabelsvisible = false
+    end
+    if ticks
+        ax.yticksvisible = false
+    end
+    if grid
+        ax.ygridvisible = false
+    end
+    # if minorgrid
+    #     ax.yminorgridvisible = false
+    # end
+    # if minorticks
+    #     ax.yminorticksvisible = false
+    # end
+
+    ax
+end
+
+function hidezdecorations!(ax::Axis3;
+    label = true, ticklabels = true, ticks = true, grid = true)
+
+    if label
+        ax.zlabelvisible = false
+    end
+    if ticklabels
+        ax.zticklabelsvisible = false
+    end
+    if ticks
+        ax.zticksvisible = false
+    end
+    if grid
+        ax.zgridvisible = false
+    end
+    # if minorgrid
+    #     ax.zminorgridvisible = false
+    # end
+    # if minorticks
+    #     ax.zminorticksvisible = false
+    # end
+
+    ax
+end
+
+function hidedecorations!(ax::Axis3;
+    label = true, ticklabels = true, ticks = true, grid = true)
+
+    hidexdecorations!(ax; label = label, ticklabels = ticklabels,
+        ticks = ticks, grid = grid)
+    hideydecorations!(ax; label = label, ticklabels = ticklabels,
+        ticks = ticks, grid = grid)
+    hidezdecorations!(ax; label = label, ticklabels = ticklabels,
+        ticks = ticks, grid = grid)
+
+    ax
 end
