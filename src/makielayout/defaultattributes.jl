@@ -1128,6 +1128,18 @@ function default_attributes(::Type{Axis3}, scene)
         titlealign = :center
         "The color of the title"
         titlecolor = :black
+        "The color of the xy panel"
+        xypanelcolor = :gray98
+        "The color of the yz panel"
+        yzpanelcolor = :gray98
+        "The color of the xz panel"
+        xzpanelcolor = :gray98
+        "Controls if the xy panel is visible"
+        xypanelvisible = true
+        "Controls if the yz panel is visible"
+        yzpanelvisible = true
+        "Controls if the xz panel is visible"
+        xzpanelvisible = true
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end

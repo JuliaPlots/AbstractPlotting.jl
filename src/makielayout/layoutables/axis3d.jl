@@ -57,14 +57,18 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     mi1 = @lift(!(pi/2 <= $azimuth % 2pi < 3pi/2))
     mi2 = @lift(0 <= $azimuth % 2pi < pi)
     mi3 = @lift($elevation > 0)
+
+    add_panel!(scene, 1, 2, 3, limits, mi3, attrs)
+    add_panel!(scene, 2, 3, 1, limits, mi1, attrs)
+    add_panel!(scene, 1, 3, 2, limits, mi2, attrs)
+
     add_gridlines_and_frames!(scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
     add_gridlines_and_frames!(scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
     add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
 
     add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
     add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
-    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
-
+    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)   
 
     titlepos = lift(scene.px_area, attrs.titlegap, attrs.titlealign) do a, titlegap, align
 
@@ -557,6 +561,51 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
     )
 
     nothing
+end
+
+function dim3point(dim1, dim2, dim3, v1, v2, v3)
+    if (dim1, dim2, dim3) == (1, 2, 3)
+        Point(v1, v2, v3)
+    elseif (dim1, dim2, dim3) == (2, 3, 1)
+        Point(v3, v1, v2)
+    elseif (dim1, dim2, dim3) == (1, 3, 2)
+        Point(v1, v3, v2)
+    else
+        error("Invalid dim order $dim1, $dim2, $dim3")
+    end
+end
+
+function add_panel!(scene, dim1, dim2, dim3, limits, min3, attrs)
+
+    dimsym(sym) = Symbol(string((:x, :y, :z)[dim1]) *
+        string((:x, :y, :z)[dim2]) * string(sym))
+    attr(sym) = attrs[dimsym(sym)]
+
+    vertices = lift(limits, min3) do lims, mi3
+
+        ws = lims.widths
+        os = lims.origin
+        dif = ws .- os
+
+        lims_enlarged = FRect3D(os .- 0.005 .* dif, ws .* 1.01)
+
+        mi = minimum(lims_enlarged)
+        ma = maximum(lims_enlarged)
+
+        f = mi3 ? mi : ma
+
+        p1 = dim3point(dim1, dim2, dim3, mi[dim1], mi[dim2], f[dim3])
+        p2 = dim3point(dim1, dim2, dim3, mi[dim1], ma[dim2], f[dim3])
+        p3 = dim3point(dim1, dim2, dim3, ma[dim1], ma[dim2], f[dim3])
+        p4 = dim3point(dim1, dim2, dim3, ma[dim1], mi[dim2], f[dim3])
+        [p1, p2, p3, p4]
+    end
+
+    faces = [1 2 3; 3 4 1]
+
+    mesh!(scene, vertices, faces, shading = false,
+        xautolimits = false, yautolimits = false, zautolimits = false,
+        color = attr(:panelcolor), visible = attr(:panelvisible))
 end
 
 function hidexdecorations!(ax::Axis3;
