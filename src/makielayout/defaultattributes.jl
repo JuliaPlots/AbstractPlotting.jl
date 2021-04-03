@@ -1039,7 +1039,7 @@ function default_attributes(::Type{Axis3}, scene)
         "The y label offset"
         ylabeloffset = 40
         "The z label offset"
-        zlabeloffset = 40
+        zlabeloffset = 50
         "The x ticklabel color"
         xticklabelcolor = :black
         "The y ticklabel color"
