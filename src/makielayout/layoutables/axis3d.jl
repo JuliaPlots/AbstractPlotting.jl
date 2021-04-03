@@ -66,9 +66,9 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     add_gridlines_and_frames!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
     add_gridlines_and_frames!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
 
-    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
-    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
-    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)   
+    add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs, azimuth)
+    add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs, azimuth)
+    add_ticks_and_ticklabels!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs, azimuth)   
 
     titlepos = lift(scene.px_area, attrs.titlegap, attrs.titlealign) do a, titlegap, align
 
@@ -425,7 +425,7 @@ function to_topscene_z_2d(p3d, scene)
     Point3f0(p2d..., p3d[3])
 end
 
-function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
+function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs, azimuth)
 
     dimsym(sym) = Symbol(string((:x, :y, :z)[dim]) * string(sym))
     attr(sym) = attrs[dimsym(sym)]
@@ -453,7 +453,12 @@ function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, 
         map(ticks) do t
             p1 = dpoint(t, f1, f2)
             p2 = if dim == 3
-                dpoint(t, f1, f2 + 0.03 * diff_f2)
+                # special case the z axis, here it depends on azimuth in which direction the ticks go
+                if 45 <= (rad2deg(azimuth[]) % 180) <= 135
+                    dpoint(t, f1 + 0.03 * diff_f1, f2)
+                else
+                    dpoint(t, f1, f2 + 0.03 * diff_f2)
+                end
             else
                 dpoint(t, f1 + 0.03 * diff_f1, f2)
             end
