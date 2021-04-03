@@ -13,7 +13,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     theme_attrs = subtheme(topscene, :Axis3)
     attrs = merge!(merge!(Attributes(kwargs), theme_attrs), default_attrs)
 
-    @extract attrs (elevation, azimuth, perspectiveness, data_aspect, viewmode,
+    @extract attrs (elevation, azimuth, perspectiveness, aspect, viewmode,
         xlabel, ylabel, zlabel,
     )
 
@@ -32,7 +32,7 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     scene = Scene(topscene, scenearea, raw = true, clear = false, backgroundcolor = attrs.backgroundcolor)
 
-    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, data_aspect, viewmode)
+    matrices = lift(calculate_matrices, limits, scene.px_area, elevation, azimuth, perspectiveness, aspect, viewmode)
 
     on(matrices) do (view, proj, eyepos)
         pv = proj * view
@@ -149,20 +149,20 @@ end
 
 can_be_current_axis(ax3::Axis3) = true
 
-function calculate_matrices(limits, px_area, elev, azim, perspectiveness, data_aspect,
+function calculate_matrices(limits, px_area, elev, azim, perspectiveness, aspect,
     viewmode)
     ws = widths(limits)
 
 
     t = AbstractPlotting.translationmatrix(-Float64.(limits.origin))
-    s = if data_aspect == :equal
+    s = if aspect == :equal
         scales = 2 ./ Float64.(ws)
-    elseif data_aspect == :data
+    elseif aspect == :data
         scales = 2 ./ max.(maximum(ws), Float64.(ws))
-    elseif data_aspect isa VecTypes{3}
-        scales = 2 ./ Float64.(ws) .* Float64.(data_aspect) ./ maximum(data_aspect)
+    elseif aspect isa VecTypes{3}
+        scales = 2 ./ Float64.(ws) .* Float64.(aspect) ./ maximum(aspect)
     else
-        error("Invalid data_aspect $data_aspect")
+        error("Invalid aspect $aspect")
     end |> AbstractPlotting.scalematrix
 
     t2 = AbstractPlotting.translationmatrix(-0.5 .* ws .* scales)
