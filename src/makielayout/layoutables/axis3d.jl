@@ -477,37 +477,37 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         end
     end
 
-    a = annotations!(pscene, labels_positions, align = align, show_axis = false,
+    ticklabel_obj = annotations!(pscene, labels_positions, align = align, show_axis = false,
         color = attr(:ticklabelcolor), textsize = attr(:ticklabelsize),
         font = attr(:ticklabelfont), visible = attr(:ticklabelsvisible),
     )
 
-    translate!(a, 0, 0, 1000)
+    translate!(ticklabel_obj, 0, 0, 1000)
 
     label_pos_rot_valign = lift(scene.px_area, scene.camera.projectionview,
             limits, miv, min1, min2, attr(:labeloffset),
             attr(:labelrotation)) do pxa, pv, lims, miv, min1, min2,
-                loffset, lrotation
+                labeloffset, lrotation
 
         o = pxa.origin
 
         f1 = !min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
 
+        # get end points of axis
         p1 = dpoint(minimum(lims)[dim], f1, f2)
         p2 = dpoint(maximum(lims)[dim], f1, f2)
 
+        # project them into screen space
         pp1 = Point2f0(o + AbstractPlotting.project(scene, p1))
         pp2 = Point2f0(o + AbstractPlotting.project(scene, p2))
 
+        # find the midpoint
         midpoint = (pp1 + pp2) / 2
 
-        # f1_oppo = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
-        # f2_oppo = !min2 ? minimum(lims)[d2] : maximum(lims)[d2]
-
+        # and the difference vector
         diff = pp2 - pp1
 
-        # rotsign = miv ? 1 : -1
         diffsign = if dim == 1 || dim == 3
             !(min1 ⊻ min2) ? 1 : -1
         else
@@ -516,10 +516,12 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
 
         a = pi/2
 
+        # get the vector pointing from the axis in the direction of the label anchor
         offset_vec = (AbstractPlotting.Mat2f0(cos(a), sin(a), -sin(a), cos(a)) *
             AbstractPlotting.GeometryBasics.normalize(diffsign * diff))
-        # rot = rotsign * pi/2
-        plus_offset = midpoint + loffset * offset_vec
+
+        # calculate the label offset from the axis midpoint
+        plus_offset = midpoint + labeloffset * offset_vec
             
         offset_ang = atan(offset_vec[2], offset_vec[1])
         offset_ang_90deg = offset_ang + pi/2
