@@ -62,9 +62,9 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     add_panel!(scene, 2, 3, 1, limits, mi1, attrs)
     add_panel!(scene, 1, 3, 2, limits, mi2, attrs)
 
-    add_gridlines_and_frames!(scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
-    add_gridlines_and_frames!(scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
-    add_gridlines_and_frames!(scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
+    add_gridlines_and_frames!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
+    add_gridlines_and_frames!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
+    add_gridlines_and_frames!(topscene, scene, 3, limits, ticknode_3, mi3, mi1, mi2, attrs)
 
     add_ticks_and_ticklabels!(topscene, scene, 1, limits, ticknode_1, mi1, mi2, mi3, attrs)
     add_ticks_and_ticklabels!(topscene, scene, 2, limits, ticknode_2, mi2, mi1, mi3, attrs)
@@ -349,7 +349,7 @@ function dim2(dim)
     end
 end
 
-function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
+function add_gridlines_and_frames!(topscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
 
     dimsym(sym) = Symbol(string((:x, :y, :z)[dim]) * string(sym))
     attr(sym) = attrs[dimsym(sym)]
@@ -389,7 +389,11 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         visible = attr(:gridvisible))
 
 
-    framepoints = lift(limits, min1, min2) do lims, mi1, mi2
+    framepoints = lift(limits, min1, min2,
+            scene.camera.projectionview, scene.px_area) do lims, mi1, mi2, pview, pxa
+
+        o = pxa.origin
+
         f(mi) = mi ? minimum : maximum
         p1 = dpoint(minimum(lims)[dim], f(mi1)(lims)[d1], f(mi2)(lims)[d2])
         p2 = dpoint(maximum(lims)[dim], f(mi1)(lims)[d1], f(mi2)(lims)[d2])
@@ -399,18 +403,29 @@ function add_gridlines_and_frames!(scene, dim::Int, limits, ticknode, miv, min1,
         p6 = dpoint(maximum(lims)[dim], f(mi1)(lims)[d1], f(!mi2)(lims)[d2])
         # p7 = dpoint(minimum(lims)[dim], f(!mi1)(lims)[d1], f(!mi2)(lims)[d2])
         # p8 = dpoint(maximum(lims)[dim], f(!mi1)(lims)[d1], f(!mi2)(lims)[d2])
-        [p1, p2, p3, p4, p5, p6]
-        # [p1, p2, p3, p4, p5, p6, p7, p8]
+
+        # we are going to transform the 3d frame points into 2d of the topscene
+        # while copying the old z coordinate because otherwise the frame lines can
+        # be cut when they lie directly on the scene boundary
+        to_topscene_z_2d.([p1, p2, p3, p4, p5, p6], Ref(scene))
     end
 
-    linesegments!(scene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
-        xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
-        visible = attr(:spinesvisible))
+    linesegments!(topscene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
+        transparency = true,
+        visible = attr(:spinesvisible), show_axis = false)
 
     nothing
 end
 
-function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
+# this function projects a point from a 3d subscene into the parent space while
+# copying the old z coordinate
+function to_topscene_z_2d(p3d, scene)
+    o = scene.px_area[].origin
+    p2d = Point2f0(o + AbstractPlotting.project(scene, p3d))
+    Point3f0(p2d..., p3d[3])
+end
+
+function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs)
 
     dimsym(sym) = Symbol(string((:x, :y, :z)[dim]) * string(sym))
     attr(sym) = attrs[dimsym(sym)]
@@ -422,7 +437,9 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
     tickvalues = @lift($ticknode[1])
     ticklabels = @lift($ticknode[2])
 
-    tick_segments = lift(limits, tickvalues, miv, min1, min2) do lims, ticks, miv, min1, min2
+    tick_segments = lift(limits, tickvalues, miv, min1, min2,
+            scene.camera.projectionview, scene.px_area) do lims, ticks, miv, min1, min2,
+                pview, pxa
 
         f1 = !min1 ? minimum(lims)[d1] : maximum(lims)[d1]
         f2 = min2 ? minimum(lims)[d2] : maximum(lims)[d2]
@@ -440,11 +457,22 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
             else
                 dpoint(t, f1 + 0.03 * diff_f1, f2)
             end
+
             (p1, p2)
         end
     end
 
-    linesegments!(scene, tick_segments,
+    # we are going to transform the 3d tick segments into 2d of the topscene
+    # while copying the old z coordinate because otherwise they
+    # be cut when they extend beyond the scene boundary
+    tick_segments_2dz = lift(tick_segments,
+            scene.camera.projectionview, scene.px_area) do ts, _, _
+        map(ts) do p1_p2
+            to_topscene_z_2d.(p1_p2, Ref(scene))
+        end
+    end
+
+    linesegments!(topscene, tick_segments_2dz,
         xautolimits = false, yautolimits = false, zautolimits = false,
         transparency = true,
         color = attr(:tickcolor), linewidth = attr(:tickwidth), visible = attr(:ticksvisible))
@@ -477,7 +505,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         end
     end
 
-    ticklabel_obj = annotations!(pscene, labels_positions, align = align, show_axis = false,
+    ticklabel_obj = annotations!(topscene, labels_positions, align = align, show_axis = false,
         color = attr(:ticklabelcolor), textsize = attr(:ticklabelsize),
         font = attr(:ticklabelfont), visible = attr(:ticklabelsvisible),
     )
@@ -553,7 +581,7 @@ function add_ticks_and_ticklabels!(pscene, scene, dim::Int, limits, ticknode, mi
         end
     end
 
-    text!(pscene, attr(:label),
+    text!(topscene, attr(:label),
         color = attr(:labelcolor),
         textsize = attr(:labelsize),
         font = attr(:labelfont),
