@@ -405,24 +405,26 @@ function add_gridlines_and_frames!(topscene, scene, dim::Int, limits, ticknode, 
         # p8 = dpoint(maximum(lims)[dim], f(!mi1)(lims)[d1], f(!mi2)(lims)[d2])
 
         # we are going to transform the 3d frame points into 2d of the topscene
-        # while copying the old z coordinate because otherwise the frame lines can
+        # because otherwise the frame lines can
         # be cut when they lie directly on the scene boundary
         to_topscene_z_2d.([p1, p2, p3, p4, p5, p6], Ref(scene))
     end
 
     linesegments!(topscene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
-        transparency = true,
+        # transparency = true,
         visible = attr(:spinesvisible), show_axis = false)
 
     nothing
 end
 
-# this function projects a point from a 3d subscene into the parent space while
-# copying the old z coordinate
+# this function projects a point from a 3d subscene into the parent space with a really
+# small z value
 function to_topscene_z_2d(p3d, scene)
     o = scene.px_area[].origin
     p2d = Point2f0(o + AbstractPlotting.project(scene, p3d))
-    Point3f0(p2d..., p3d[3])
+    # -10000 is an arbitrary weird constant that in preliminary testing didn't seem
+    # to clip into plot objects anymore
+    Point3f0(p2d..., -10000)
 end
 
 function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, miv, min1, min2, attrs, azimuth)
@@ -468,7 +470,7 @@ function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, 
     end
 
     # we are going to transform the 3d tick segments into 2d of the topscene
-    # while copying the old z coordinate because otherwise they
+    # because otherwise they
     # be cut when they extend beyond the scene boundary
     tick_segments_2dz = lift(tick_segments,
             scene.camera.projectionview, scene.px_area) do ts, _, _
