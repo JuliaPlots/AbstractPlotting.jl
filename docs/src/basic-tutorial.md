@@ -55,8 +55,10 @@ lines!(x, y2)
 current_figure()
 ```
 
-The second `lines!` plots into the axis created by the first `lines`.
-The call to `current_figure` is necessary here, because functions with `!` return only the newly created plot object, but this alone does not cause the figure to display.
+The second `lines!` call plots into the axis created by the first `lines` call.
+If you don't specify an axis to plot into, it's as if you had called `lines!(current_axis(), ...)`.
+
+The call to `current_figure` is necessary here, because functions with `!` return only the newly created plot object, but this alone does not cause the figure to display when returned.
 
 ## Attributes
 
