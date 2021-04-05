@@ -148,12 +148,15 @@ current_figure()
 
 Of course you can also use an array of colors directly, in which case the `colorrange` is ignored:
 
-```@example array_scatter
+```@example
+using CairoMakie
 
-colors = repeat([:crimson, :dodgerblue, :darkmagenta, :sienna1, :teal], 20)
-sc.color = colors
+x = LinRange(0, 10, 100)
+y = sin.(x)
 
-current_figure()
+colors = repeat([:crimson, :dodgerblue, :slateblue1, :sienna1, :orchid1], 20)
+
+scatter(x, y, color = colors, markersize = 20)
 ```
 
 
