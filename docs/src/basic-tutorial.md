@@ -4,7 +4,7 @@ Here is a quick tutorial to get you started. We assume you have [Julia](https://
 
 First, we import GLMakie, which might take a little bit of time because there is a lot to precompile. Just sit tight!
 For this tutorial, we also call `AbstractPlotting.inline!(true)` so plots appear inline after each example.
-If you set `AbstractPlotting.inline!(false)` and the currently active backend supports windows, an interactive window will open whenever you return a `Figure`.
+If you set `AbstractPlotting.inline!(false)` and the currently active backend supports windows, an interactive window will open whenever you return a [Figure](@ref).
 
 ```@example 1
 using GLMakie
@@ -14,7 +14,7 @@ nothing # hide
 ```
 
 !!! note
-    A `Figure` is usually displayed whenever it is returned in global scope (e.g. in the REPL).
+    A [Figure](@ref) is usually displayed whenever it is returned in global scope (e.g. in the REPL).
     To display a Figure from within a local scope, like from within a function, you can directly call `display(figure)`.  
 
 ## First plot
@@ -135,10 +135,10 @@ current_figure()
 ## Subplots
 
 Makie uses a powerful layout system under the hood, which allows you to create very complex figures with many subplots.
-For the easiest way to do this, we need a `Figure` object.
+For the easiest way to do this, we need a [Figure](@ref) object.
 So far, we haven't seen this explicitly, it was created in the background in the first plotting function call.
 
-We can also create a `Figure` directly and then continue working with it.
+We can also create a [Figure](@ref) directly and then continue working with it.
 We can make subplots by giving the location of the subplot in our layout grid as the first argument to our plotting function.
 The basic syntax for specifying the location in a figure is `fig[row, col]`.
 
@@ -160,10 +160,10 @@ Each `lines` call creates a new axis in the position given as the first argument
 
 ## Constructing axes manually
 
-Like `Figure`s, we can also create axes manually.
+Like [Figure](@ref)s, we can also create axes manually.
 This is useful if we want to prepare an empty axis to then plot into it later.
 
-The default 2D axis that we have created implicitly so far is called [`Axis`](@ref) and can also be created in a specific position in the figure by passing that position as the first argument.
+The default 2D axis that we have created implicitly so far is called [Axis](@ref) and can also be created in a specific position in the figure by passing that position as the first argument.
 
 For example, we can create a figure with three axes.
 
@@ -197,11 +197,11 @@ f
 
 ## Legend and Colorbar
 
-We have seen two `Layoutables` so far, the [`Axis`](@ref) and the [`Legend`](@ref) which was created by the function `axislegend`.
+We have seen two `Layoutables` so far, the [Axis](@ref) and the [Legend](@ref) which was created by the function `axislegend`.
 All `Layoutable`s can be placed into the layout of a figure at arbitrary positions, which makes it easy to assemble complex figures.
 
-In the same way as with the [`Axis`](@ref) before, you can also create a [`Legend`](@ref) manually and then place it freely, wherever you want, in the figure.
-There are multiple ways to create [`Legend`](@ref)s, for one of them you pass one vector of plot objects and one vector of label strings.
+In the same way as with the [Axis](@ref) before, you can also create a [Legend](@ref) manually and then place it freely, wherever you want, in the figure.
+There are multiple ways to create [Legend](@ref)s, for one of them you pass one vector of plot objects and one vector of label strings.
 
 You can see here that we can deconstruct the return value from the two `lines` calls into one newly created axis and one plot object each.
 We can then feed the plot objects to the legend constructor.
@@ -217,7 +217,7 @@ Legend(f[1:2, 2], [l1, l2], ["sin", "cos"])
 f
 ```
 
-The [`Colorbar`](@ref) works in a very similar way.
+The [Colorbar](@ref) works in a very similar way.
 We just need to pass a position in the figure to it, and one plot object.
 In this example, we use a `heatmap`.
 
@@ -244,6 +244,22 @@ hm = heatmap!(ax, randn(20, 20))
 Colorbar(f[1, 2], hm, width = 20)
 f
 ```
+
+## Passing attributes to implicit Figure and Axis
+
+For one-off plots, it's convenient to set a few axis or figure settings directly with the plotting command.
+You can do this only with the plotting functions without `!` like `lines` or `scatter`, because those always create a new axis, and can create a new figure if they are not plotting into an existing one. This is explained further under [Plot Method Signatures](@ref).
+
+You can pass your axis attributes under the keyword `axis` and your figure attributes under the keyword [figure](@ref).
+
+```@example
+heatmap(randn(20, 20),
+    figure = (resolution = (800, 600), backgroundcolor = :pink),
+    axis = (aspect = 1, xlabel = "x axis", ylabel = "y axis")
+)
+```
+
+If you set only one attribute, be careful to do `axis = (key = value,)` (note the trailing comma), otherwise you're not making a NamedTuple but a local variable `key`.
 
 ## Next steps
 
