@@ -19,7 +19,7 @@ nothing # hide
 
 ## First plot
 
-Makie has many different plotting functions, one of the most common ones is `lines`.
+Makie has many different plotting functions, one of the most common ones is [lines](@ref).
 You can just call such a function and your plot will appear if your coding environment can show png or svg files.
 Remember that we called `AbstractPlotting.inline!(true)`, so no window will open.
 
@@ -31,7 +31,7 @@ y = sin.(x)
 lines(x, y)
 ```
 
-Another common function is `scatter`.
+Another common function is [scatter](@ref).
 
 ```@example
 using GLMakie
