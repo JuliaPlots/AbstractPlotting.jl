@@ -24,6 +24,8 @@ You can just call such a function and your plot will appear if your coding envir
 Remember that we called `AbstractPlotting.inline!(true)`, so no window will open.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y = sin.(x)
 lines(x, y)
@@ -32,6 +34,8 @@ lines(x, y)
 Another common function is `scatter`.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y = sin.(x)
 scatter(x, y)
@@ -46,6 +50,8 @@ The functions without a `!` always create a new axis with a plot inside, while t
 Here's how you could plot two lines on top of each other.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
 y2 = cos.(x)
@@ -66,6 +72,8 @@ Every plotting function has attributes which you can set through keyword argumen
 The lines in the previous example both have the same default color, which we can change easily.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
 y2 = cos.(x)
@@ -79,6 +87,8 @@ Other plotting functions have different attributes.
 The function `scatter`, for example, does not only have the `color` attribute, but also a `markersize` attribute.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
 y2 = cos.(x)
@@ -91,6 +101,8 @@ current_figure()
 If you save the plot object returned from a call like `scatter!`, you can also manipulate its attributes later with the syntax `plot.attribute = new_value`.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
 y2 = cos.(x)
@@ -108,6 +120,8 @@ current_figure()
 If you add label attributes to your plots, you can call the `axislegend` function to add a legend with all labeled plots to the current axis.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
 y2 = cos.(x)
@@ -129,6 +143,8 @@ We can make subplots by giving the location of the subplot in our layout grid as
 The basic syntax for specifying the location in a figure is `fig[row, col]`.
 
 ```@example
+using GLMakie
+
 x = LinRange(0, 10, 100)
 y = sin.(x)
 
@@ -152,6 +168,8 @@ The default 2D axis that we have created implicitly so far is called [`Axis`](@r
 For example, we can create a figure with three axes.
 
 ```@example manual_axes
+using GLMakie
+ 
 f = Figure()
 ax1 = Axis(f[1, 1])
 ax2 = Axis(f[1, 2])
@@ -170,7 +188,7 @@ f
 
 Axes also have many attributes that you can set, for example to give them a title.
 
-```@example manual_axes
+```@example manual_axes 
 ax1.title = "sin"
 ax2.title = "cos"
 ax3.title = "sqrt"
@@ -190,6 +208,8 @@ We can then feed the plot objects to the legend constructor.
 We place the legend in the second column and across both rows, which centers it nicely next to the two axes.
 
 ```@example
+using GLMakie
+
 f = Figure()
 ax1, l1 = lines(f[1, 1], 0..10, sin, color = :red)
 ax2, l2 = lines(f[2, 1], 0..10, cos, color = :blue)
@@ -205,6 +225,8 @@ You can see here that we split the return value of `heatmap` into three parts: t
 This is useful as we can then continue with the figure `f` and the heatmap `hm` which we need for the colorbar.
 
 ```@example
+using GLMakie
+
 f, ax, hm = heatmap(randn(20, 20))
 Colorbar(f[1, 2], hm, width = 20)
 f
@@ -214,6 +236,8 @@ The previous short syntax is basically equivalent to this longer, manual version
 You can switch between those workflows however you please.
 
 ```@example
+using GLMakie
+
 f = Figure()
 ax = Axis(f[1, 1])
 hm = heatmap!(ax, randn(20, 20))
