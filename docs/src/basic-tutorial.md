@@ -186,12 +186,16 @@ lines!(ax3, 0..10, sqrt)
 f
 ```
 
-Axes also have many attributes that you can set, for example to give them a title.
+Axes also have many attributes that you can set, for example to give them a title, or labels.
 
 ```@example manual_axes 
 ax1.title = "sin"
 ax2.title = "cos"
 ax3.title = "sqrt"
+
+ax1.ylabel = "amplitude"
+ax2.ylabel = "amplitude"
+ax3.xlabel = "time"
 f
 ```
 
