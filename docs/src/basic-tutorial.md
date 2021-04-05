@@ -4,7 +4,7 @@ Here is a quick tutorial to get you started. We assume you have [Julia](https://
 
 First, we import GLMakie, which might take a little bit of time because there is a lot to precompile. Just sit tight!
 For this tutorial, we also call `AbstractPlotting.inline!(true)` so plots appear inline after each example.
-If you set `AbstractPlotting.inline!(false)` and the currently active backend supports windows, an interactive window will open whenever you return a [`Figure`](@ref).
+If you set `AbstractPlotting.inline!(false)` and the currently active backend supports windows, an interactive window will open whenever you return a `Figure`.
 
 ```@example 1
 using GLMakie
@@ -14,7 +14,7 @@ nothing # hide
 ```
 
 !!! note
-    A [`Figure`](@ref) is usually displayed whenever it is returned in global scope (e.g. in the REPL).
+    A `Figure` is usually displayed whenever it is returned in global scope (e.g. in the REPL).
     To display a Figure from within a local scope, like from within a function, you can directly call `display(figure)`.  
 
 ## First plot
@@ -135,10 +135,10 @@ current_figure()
 ## Subplots
 
 Makie uses a powerful layout system under the hood, which allows you to create very complex figures with many subplots.
-For the easiest way to do this, we need a [`Figure`](@ref) object.
+For the easiest way to do this, we need a `Figure` object.
 So far, we haven't seen this explicitly, it was created in the background in the first plotting function call.
 
-We can also create a [`Figure`](@ref) directly and then continue working with it.
+We can also create a `Figure` directly and then continue working with it.
 We can make subplots by giving the location of the subplot in our layout grid as the first argument to our plotting function.
 The basic syntax for specifying the location in a figure is `fig[row, col]`.
 
@@ -160,7 +160,7 @@ Each `lines` call creates a new axis in the position given as the first argument
 
 ## Constructing axes manually
 
-Like [`Figure`](@ref)s, we can also create axes manually.
+Like `Figure`s, we can also create axes manually.
 This is useful if we want to prepare an empty axis to then plot into it later.
 
 The default 2D axis that we have created implicitly so far is called [`Axis`](@ref) and can also be created in a specific position in the figure by passing that position as the first argument.
@@ -244,3 +244,15 @@ hm = heatmap!(ax, randn(20, 20))
 Colorbar(f[1, 2], hm, width = 20)
 f
 ```
+
+## Next steps
+
+We've only looked at a small subset of Makie's functionality here.
+
+You can read about the different available plotting functions with examples in the `Plotting Functions` section.
+
+If you want to learn about making complex figures with nested sublayouts, have a look at the [Layout Tutorial](@ref).
+
+If you're interested in creating interactive visualizations that use Makie's special `Observables` workflow, this is explained in more detail in the [Observables & Interaction](@ref) section.
+
+If you want to create animated movies, you can find more information in the [Animations](@ref) chapter.
