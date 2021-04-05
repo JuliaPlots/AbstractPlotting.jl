@@ -1,14 +1,14 @@
 # Basic Tutorial
 
-Here is a quick tutorial to get you started. We assume you have [Julia](https://julialang.org/) and `GLMakie.jl` (or one of the other backends) installed already.
+Here is a quick tutorial to get you started. We assume you have [Julia](https://julialang.org/) and `CairoMakie.jl` (or one of the other backends) installed already.
 
-First, we import GLMakie, which might take a little bit of time because there is a lot to precompile. Just sit tight!
+First, we import CairoMakie, which might take a little bit of time because there is a lot to precompile. Just sit tight!
 For this tutorial, we also call `AbstractPlotting.inline!(true)` so plots appear inline after each example.
 If you set `AbstractPlotting.inline!(false)` and the currently active backend supports windows, an interactive window will open whenever you return a [Figure](@ref).
 
 ```@example 1
-using GLMakie
-GLMakie.activate!() # hide
+using CairoMakie
+CairoMakie.activate!() # hide
 AbstractPlotting.inline!(true)
 nothing # hide
 ```
@@ -24,7 +24,7 @@ You can just call such a function and your plot will appear if your coding envir
 Remember that we called `AbstractPlotting.inline!(true)`, so no window will open.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y = sin.(x)
@@ -34,7 +34,7 @@ lines(x, y)
 Another common function is [scatter](@ref).
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y = sin.(x)
@@ -50,7 +50,7 @@ The functions without a `!` always create a new axis with a plot inside, while t
 Here's how you could plot two lines on top of each other.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
@@ -72,7 +72,7 @@ Every plotting function has attributes which you can set through keyword argumen
 The lines in the previous example both have the same default color, which we can change easily.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
@@ -87,7 +87,7 @@ Other plotting functions have different attributes.
 The function `scatter`, for example, does not only have the `color` attribute, but also a `markersize` attribute.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
@@ -101,7 +101,7 @@ current_figure()
 If you save the plot object returned from a call like `scatter!`, you can also manipulate its attributes later with the syntax `plot.attribute = new_value`.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
@@ -120,7 +120,7 @@ current_figure()
 If you add label attributes to your plots, you can call the `axislegend` function to add a legend with all labeled plots to the current axis.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y1 = sin.(x)
@@ -143,7 +143,7 @@ We can make subplots by giving the location of the subplot in our layout grid as
 The basic syntax for specifying the location in a figure is `fig[row, col]`.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 x = LinRange(0, 10, 100)
 y = sin.(x)
@@ -168,7 +168,7 @@ The default 2D axis that we have created implicitly so far is called [Axis](@ref
 For example, we can create a figure with three axes.
 
 ```@example manual_axes
-using GLMakie
+using CairoMakie
  
 f = Figure()
 ax1 = Axis(f[1, 1])
@@ -212,7 +212,7 @@ We can then feed the plot objects to the legend constructor.
 We place the legend in the second column and across both rows, which centers it nicely next to the two axes.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 f = Figure()
 ax1, l1 = lines(f[1, 1], 0..10, sin, color = :red)
@@ -229,7 +229,7 @@ You can see here that we split the return value of `heatmap` into three parts: t
 This is useful as we can then continue with the figure `f` and the heatmap `hm` which we need for the colorbar.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 f, ax, hm = heatmap(randn(20, 20))
 Colorbar(f[1, 2], hm, width = 20)
@@ -240,7 +240,7 @@ The previous short syntax is basically equivalent to this longer, manual version
 You can switch between those workflows however you please.
 
 ```@example
-using GLMakie
+using CairoMakie
 
 f = Figure()
 ax = Axis(f[1, 1])
