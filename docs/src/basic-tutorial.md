@@ -254,9 +254,11 @@ f
 For one-off plots, it's convenient to set a few axis or figure settings directly with the plotting command.
 You can do this only with the plotting functions without `!` like `lines` or `scatter`, because those always create a new axis, and can create a new figure if they are not plotting into an existing one. This is explained further under [Plot Method Signatures](@ref).
 
-You can pass your axis attributes under the keyword `axis` and your figure attributes under the keyword [figure](@ref).
+You can pass your axis attributes under the keyword `axis` and your figure attributes under the keyword figure.
 
 ```@example
+using CairoMakie
+
 heatmap(randn(20, 20),
     figure = (resolution = (800, 600), backgroundcolor = :pink),
     axis = (aspect = 1, xlabel = "x axis", ylabel = "y axis")
