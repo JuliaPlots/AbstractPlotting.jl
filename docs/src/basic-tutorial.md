@@ -194,7 +194,7 @@ ax2.title = "cos"
 ax3.title = "sqrt"
 
 ax1.ylabel = "amplitude"
-ax2.ylabel = "amplitude"
+ax3.ylabel = "amplitude"
 ax3.xlabel = "time"
 f
 ```
