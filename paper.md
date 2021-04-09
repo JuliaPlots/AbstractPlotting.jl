@@ -32,6 +32,9 @@ Finally, users can extend every step of this pipeline for their custom types thr
 
 # Statement of need
 
+# Example
+
+![Example figure.\label{fig:example}](paper_example.png)
 
 # Acknowledgements
 
