@@ -1,5 +1,11 @@
 function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlot; kwargs...)
 
+    for key in (:colormap, :limits)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
+
     layoutable(Colorbar, fig_or_scene;
         colormap = plot.colormap,
         limits = plot.colorrange,
@@ -9,6 +15,12 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlot; kwargs
 end
 
 function layoutable(::Type{<:Colorbar}, fig_or_scene, heatmap::Union{Heatmap, Image}; kwargs...)
+
+    for key in (:colormap, :limits, :highclip, :lowclip)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
 
     layoutable(Colorbar, fig_or_scene;
         colormap = heatmap.colormap,
@@ -20,6 +32,12 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene, heatmap::Union{Heatmap, Im
 end
 
 function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlotting.Contourf; kwargs...)
+
+    for key in (:colormap, :limits, :highclip, :lowclip)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
 
     steps = plot._computed_levels
 
