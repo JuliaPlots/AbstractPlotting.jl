@@ -32,9 +32,11 @@ Finally, users can extend every step of this pipeline for their custom types thr
 
 # Statement of need
 
+Julia is a new programming language that has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
+
 # Example
 
-![Example figure.\label{fig:example}](paper_example.png)
+![Legends and colorbars can be placed in arbitrary position, and aligned with axes using their main lines. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
 
 # Acknowledgements
 
