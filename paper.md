@@ -40,10 +40,16 @@ Therefore, researchers have to switch between tools which means they have to spe
 `Makie.jl` is a new plotting package which is built from the ground up to leverage the power of `Julia`, a relatively young programming language which excels at technical computing and has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
 Julia users have historically often used plotting software from other ecosystems, such as `matplotlib` or `ggplot` through `PyCall.jl` and `RCall.jl`.
 But these wrapper packages cannot take full advantage of Julia's type system and multiple dispatch paradigm, so they leave both performance and flexibility on the table.
+`Makie.jl` aims to fill this gap in the Julia ecosystem.
 
 # Example
 
-```
+The following example illustrates a few key features of `Makie.jl`:
+Both plots use Julia's multiple dispatch to visualize functions directly over given intervals or ranges.
+The layout is non-trivial, as a legend is placed above the left axis, which conforms to its width automatically, while both are aligned with the right axis and its colorbar placed below.
+The figure title is added not with a specialized function, but via the ordinary layout mechanism.
+
+```julia
 using CairoMakie
 
 polynomials = ["20x", "3x^2 + 3x", "x^3 - 2x^2 - 10x"]
@@ -79,7 +85,11 @@ Label(f[0, :], "Makie.jl Example Figure")
 save("paper_example.png", f, px_per_unit = 2)
 ```
 
-![Legends and colorbars can be placed in arbitrary position, and aligned with axes using their main lines. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
+![Legends and colorbars can be placed in arbitrary positions, and aligned with axes along their main edges. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
+
+# Overview
+
+
 
 # Acknowledgements
 
