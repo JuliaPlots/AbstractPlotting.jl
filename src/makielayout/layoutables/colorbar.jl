@@ -31,7 +31,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene, heatmap::Union{Heatmap, Im
     )
 end
 
-function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlotting.Contourf; kwargs...)
+function layoutable(::Type{<:Colorbar}, fig_or_scene, contourf::AbstractPlotting.Contourf; kwargs...)
 
     for key in (:colormap, :limits, :highclip, :lowclip)
         if key in keys(kwargs)
@@ -39,17 +39,17 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlotting.Con
         end
     end
 
-    steps = plot._computed_levels
+    steps = contourf._computed_levels
 
     limits = lift(steps) do steps
         steps[1], steps[end]
     end
 
     layoutable(Colorbar, fig_or_scene;
-        colormap = plot._computed_colormap,
+        colormap = contourf._computed_colormap,
         limits = limits,
-        lowclip = plot._computed_extendlow,
-        highclip = plot._computed_extendhigh,
+        lowclip = contourf._computed_extendlow,
+        highclip = contourf._computed_extendhigh,
         kwargs...
     )
 
