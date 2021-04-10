@@ -32,9 +32,52 @@ Finally, users can extend every step of this pipeline for their custom types thr
 
 # Statement of need
 
-Julia is a new programming language that has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
+Good data visualization is crucial for the work of every scientist around the world.
+To effectively understand and communicate results, different disciplines ranging from publication-quality static vector graphics, through animated movies, to interactive data exploration tools, require flexible and powerful plotting software.
+Most tools available today lack one or more of the following attributes: High performance for the fluid rendering of large datasets, interactive visualizations, the ability to extend the plotting pipeline to handle user-defined data structures and types, implementations of both 2D and 3D rendering, and the power to construct complex figures without having to tweak alignments and spacings after the fact in image editing software.
+Therefore, researchers have to switch between tools which means they have to spend more time to learn unfamiliar syntax and redo work if one software turns out to lack critical abilities for the task at hand.
+
+`Makie.jl` is a new plotting package which is built from the ground up to leverage the power of `Julia`, a relatively young programming language which excels at technical computing and has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
+Julia users have historically often used plotting software from other ecosystems, such as `matplotlib` or `ggplot` through `PyCall.jl` and `RCall.jl`.
+But these wrapper packages cannot take full advantage of Julia's type system and multiple dispatch paradigm, so they leave both performance and flexibility on the table.
 
 # Example
+
+```
+using CairoMakie
+
+polynomials = ["20x", "3x^2 + 3x", "x^3 - 2x^2 - 10x"]
+functions = eval.(Meta.parse.("x -> " .* polynomials))
+
+f = Figure(resolution = (700, 500), fontsize = 14, font = "Helvetica")
+ax = Axis(f[2, 1], xlabel = "x", ylabel = "f(x)", title = "Polynomials")
+
+colors = [:tomato, "#04e04c", RGBf0(0.1, 0.3, 1)]
+
+for (f, p, color) in zip(functions, polynomials, colors)
+    lines!(-5..5, f, label = p, color = color, linewidth = 2)
+end
+
+Legend(f[1, 1], ax, orientation = :horizontal, colgap = 20, tellheight = true)
+
+function mandelbrot(x, y)
+    z = c = x + y*im
+    for count in 1:30.0
+        abs(z) > 2.0 && return count; z = z^2 + c
+    end
+    return 0.0
+end
+
+ax2, hm = heatmap(f[1:2, 2][1, 1], -2:0.01:1, -2:0.01:2, mandelbrot,
+    interpolate = true, colormap = :thermal)
+hidedecorations!(ax2)
+Colorbar(f[1:2, 2][2, 1], hm, height = 20, vertical = false,
+    flipaxis = false, label = "Iterations")
+
+Label(f[0, :], "Makie.jl Example Figure")
+
+save("paper_example.png", f, px_per_unit = 2)
+```
 
 ![Legends and colorbars can be placed in arbitrary position, and aligned with axes using their main lines. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
 
