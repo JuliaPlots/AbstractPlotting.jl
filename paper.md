@@ -68,9 +68,7 @@ Legend(f[1, 1], ax, orientation = :horizontal, colgap = 20, tellheight = true)
 
 function mandelbrot(x, y)
     z = c = x + y*im
-    for count in 1:30.0
-        abs(z) > 2.0 && return count; z = z^2 + c
-    end
+    for i in 1:30.0; abs(z) > 2 && return i; z = z^2 + c; end
     return 0.0
 end
 

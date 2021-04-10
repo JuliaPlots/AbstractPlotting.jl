@@ -16,9 +16,7 @@ Legend(f[1, 1], ax, orientation = :horizontal, colgap = 20, tellheight = true)
 
 function mandelbrot(x, y)
     z = c = x + y*im
-    for count in 1:30.0
-        abs(z) > 2.0 && return count; z = z^2 + c
-    end
+    for i in 1:30.0; abs(z) > 2 && return i; z = z^2 + c; end
     return 0.0
 end
 
@@ -31,5 +29,6 @@ Colorbar(f[1:2, 2][2, 1], hm, height = 20, vertical = false,
 Label(f[0, :], "Makie.jl Example Figure")
 
 f
+# save("paper_example.png", f, px_per_unit = 2)
 ##
 save("paper_example.png", f, px_per_unit = 2)
