@@ -220,14 +220,13 @@ function LineAxis(parent::Scene; kwargs...)
             (limits[][1] <= tv || limits[][1] ≈ tv) &&
              (tv <= limits[][2] || tv ≈ limits[][2])
         end
-        @show length(tickvalues_unfiltered)
-        @show length(i_values_within_limits)
+
         tickvalues[] = tickvalues_unfiltered[i_values_within_limits]
 
         scale = attrs.scale[]
         tickvalues_scaled = scale.(tickvalues[])
 
-        tick_fractions = (tickvalues_scaled .- scale(limits[][1])) ./ scale(limits[][2])
+        tick_fractions = (tickvalues_scaled .- scale(limits[][1])) ./ (scale(limits[][2]) - scale(limits[][1]))
 
         tick_scenecoords = px_o .+ px_width .* tick_fractions
 
