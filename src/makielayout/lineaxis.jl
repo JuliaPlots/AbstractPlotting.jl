@@ -192,9 +192,9 @@ function LineAxis(parent::Scene; kwargs...)
 
     tickvalues = Node(Float32[])
 
-    tickvalues_labels_unfiltered = lift(pos_extents_horizontal, limits, ticks, tickformat) do (position, extents, horizontal),
-            limits, ticks, tickformat
-        get_ticks(ticks, tickformat, limits...)
+    tickvalues_labels_unfiltered = lift(pos_extents_horizontal, limits, ticks, tickformat, attrs.scale) do (position, extents, horizontal),
+            limits, ticks, tickformat, scale
+        get_ticks(ticks, scale, tickformat, limits...)
     end
 
     tickpositions = Node(Point2f0[])
@@ -215,10 +215,20 @@ function LineAxis(parent::Scene; kwargs...)
         lim_w = limits[][2] - limits[][1]
 
         # if labels are given manually, it's possible that some of them are outside the displayed limits
-        i_values_within_limits = findall(tv -> lim_o <= tv <= (lim_o + lim_w), tickvalues_unfiltered)
+        # we only check approximately because otherwise because of floating point errors, ticks can be dismissed sometimes
+        i_values_within_limits = findall(tickvalues_unfiltered) do tv
+            (limits[][1] <= tv || limits[][1] ≈ tv) &&
+             (tv <= limits[][2] || tv ≈ limits[][2])
+        end
+        @show length(tickvalues_unfiltered)
+        @show length(i_values_within_limits)
         tickvalues[] = tickvalues_unfiltered[i_values_within_limits]
 
-        tick_fractions = (tickvalues[] .- lim_o) ./ lim_w
+        scale = attrs.scale[]
+        tickvalues_scaled = scale.(tickvalues[])
+
+        tick_fractions = (tickvalues_scaled .- scale(limits[][1])) ./ scale(limits[][2])
+
         tick_scenecoords = px_o .+ px_width .* tick_fractions
 
         tickpos = if horizontal
@@ -417,11 +427,22 @@ Base function that calls `get_tickvalues(ticks, vmin, max)` and
 For custom ticks / formatter combinations, this method can be overloaded
 directly, or both `get_tickvalues` and `get_ticklabels` separately.
 """
-function get_ticks(ticks, formatter, vmin, vmax)
-    tickvalues = get_tickvalues(ticks, vmin, vmax)
+function get_ticks(ticks, scale, formatter, vmin, vmax)
+    tickvalues = get_tickvalues(ticks, scale, vmin, vmax)
     ticklabels = get_ticklabels(formatter, tickvalues)
     return tickvalues, ticklabels
 end
+
+# automatic with identity scaling uses WilkinsonTicks by default
+get_tickvalues(::AbstractPlotting.Automatic, ::typeof(identity), vmin, vmax) = get_tickvalues(WilkinsonTicks(5, k_min = 3), vmin, vmax)
+
+# fall back to identity if not overloaded scale function is used with automatic
+get_tickvalues(::AbstractPlotting.Automatic, F, vmin, vmax) = get_tickvalues(AbstractPlotting.automatic, identity, vmin, vmax)
+
+# fall back to non-scale aware behavior if no special version is overloaded
+get_tickvalues(ticks, scale, vmin, vmax) = get_tickvalues(ticks, vmin, vmax)
+
+get_tickvalues(::AbstractPlotting.Automatic, ::typeof(log10), vmin, vmax) = get_tickvalues(Log10Ticks(), vmin, vmax)
 
 function get_ticks(ticks_and_labels::Tuple{Any, Any}, ::AbstractPlotting.Automatic, vmin, vmax)
     n1 = length(ticks_and_labels[1])
@@ -443,6 +464,20 @@ function get_ticks(tickfunction::Function, formatter, vmin, vmax)
     return tickvalues, ticklabels
 end
 
+function get_ticks(::AbstractPlotting.Automatic, ::typeof(log10), ::AbstractPlotting.Automatic, vmin, vmax)
+
+    powers = (ceil(Int, log10(vmin)):floor(Int, log10(vmax)))
+    
+    ticks = 10 .^ powers
+    labels = map(powers) do p
+        s = "10"
+        for d in reverse(digits(p))
+            s *= Showoff.superscript_numerals[d + 1]
+        end
+        s
+    end
+    (ticks, labels)
+end
 
 """
     get_tickvalues(lt::LinearTicks, vmin, vmax)
@@ -452,6 +487,9 @@ Runs a common tick finding algorithm to as many ticks as requested by the
 """
 get_tickvalues(lt::LinearTicks, vmin, vmax) = locateticks(vmin, vmax, lt.n_ideal)
 
+function get_tickvalues(::Log10Ticks, vmin, vmax)
+    exp10.(ceil(log10(vmin)):floor(log10(vmax)))
+end
 
 """
     get_tickvalues(tickvalues, vmin, vmax)

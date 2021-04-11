@@ -583,3 +583,18 @@ function update_limits!(scene::Scene, new_limits::Rect, padding::Vec3f0=scene.pa
     scene.data_limits[] = FRect3D(minimum(lims) .- padd_abs, lim_w .+  2padd_abs)
     scene
 end
+
+
+
+function apply_transform_func end
+
+apply_transform_func(F::typeof(identity), x) = x
+# apply_transform_func(F::Tuple{typeof(identity), typeof(identity)}, x) = x
+# apply_transform_func(F::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x) = x
+
+function apply_transform_func(F::Tuple{Any, Any}, v::VecTypes{2})
+    Point(F[1](v[1]), F[2](v[2]))
+end
+
+inverse_transform(::typeof(identity)) = identity
+inverse_transform(::typeof(log10)) = exp10

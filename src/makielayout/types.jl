@@ -50,6 +50,8 @@ struct MultiplesTicks
     suffix::String
 end
 
+struct Log10Ticks end
+
 """
     IntervalsBetween(n::Int, mirror::Bool = true)
 

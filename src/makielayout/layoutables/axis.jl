@@ -100,7 +100,11 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
     translate!(yminorgridlines, 0, 0, -10)
     decorations[:yminorgridlines] = yminorgridlines
 
-    onany(finallimits, xreversed, yreversed) do lims, xrev, yrev
+    onany(attrs.xscale, attrs.yscale) do xsc, ysc
+        scene.transformation.transform_func[] = (xsc, ysc)
+    end
+
+    onany(finallimits, xreversed, yreversed, attrs.xscale, attrs.yscale) do lims, xrev, yrev, xsc, ysc
 
         nearclip = -10_000f0
         farclip = 10_000f0
@@ -112,10 +116,13 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
         bottomtop = yrev ? (top, bottom) : (bottom, top)
 
         projection = AbstractPlotting.orthographicprojection(
-            leftright..., bottomtop..., nearclip, farclip)
+            xsc.(leftright)...,
+            ysc.(bottomtop)..., nearclip, farclip)
         camera(scene).projection[] = projection
         camera(scene).projectionview[] = projection
     end
+
+    notify(attrs.xscale)
 
     xaxis_endpoints = lift(xaxisposition, scene.px_area) do xaxisposition, area
         if xaxisposition == :bottom
@@ -174,7 +181,7 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
         ticksvisible = xticksvisible, spinevisible = xspinevisible, spinecolor = xspinecolor, spinewidth = spinewidth,
         ticklabelsize = xticklabelsize, trimspine = xtrimspine, ticksize = xticksize,
         reversed = xreversed, tickwidth = xtickwidth, tickcolor = xtickcolor,
-        minorticksvisible = xminorticksvisible, minortickalign = xminortickalign, minorticksize = xminorticksize, minortickwidth = xminortickwidth, minortickcolor = xminortickcolor, minorticks = xminorticks,
+        minorticksvisible = xminorticksvisible, minortickalign = xminortickalign, minorticksize = xminorticksize, minortickwidth = xminortickwidth, minortickcolor = xminortickcolor, minorticks = xminorticks, scale = attrs.xscale,
         )
     decorations[:xaxis] = xaxis
 
@@ -187,7 +194,7 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
         ticksvisible = yticksvisible, spinevisible = yspinevisible, spinecolor = yspinecolor, spinewidth = spinewidth,
         trimspine = ytrimspine, ticklabelsize = yticklabelsize, ticksize = yticksize, flip_vertical_label = flip_ylabel, reversed = yreversed, tickwidth = ytickwidth,
             tickcolor = ytickcolor,
-        minorticksvisible = yminorticksvisible, minortickalign = yminortickalign, minorticksize = yminorticksize, minortickwidth = yminortickwidth, minortickcolor = yminortickcolor, minorticks = yminorticks,
+        minorticksvisible = yminorticksvisible, minortickalign = yminortickalign, minorticksize = yminorticksize, minortickwidth = yminortickwidth, minortickcolor = yminortickcolor, minorticks = yminorticks, scale = attrs.yscale,
         )
 
     decorations[:yaxis] = yaxis

@@ -184,11 +184,11 @@ function default_attributes(::Type{Axis}, scene)
         "The relative margins added to the autolimits in y direction."
         yautolimitmargin = (0.05f0, 0.05f0)
         "The xticks."
-        xticks = LinearTicks(4)
+        xticks = AbstractPlotting.automatic
         "Format for xticks."
         xtickformat = AbstractPlotting.automatic
         "The yticks."
-        yticks = LinearTicks(4)
+        yticks = AbstractPlotting.automatic
         "Format for yticks."
         ytickformat = AbstractPlotting.automatic
         "The button for panning."
@@ -249,6 +249,10 @@ function default_attributes(::Type{Axis}, scene)
         yminortickcolor = :black
         "The tick locator for the y minor ticks"
         yminorticks = IntervalsBetween(2)
+        "The x axis scale"
+        xscale = identity
+        "The y axis scale"
+        yscale = identity
     end
 
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
@@ -563,6 +567,7 @@ function default_attributes(::Type{LineAxis})
         minortickwidth = 1f0,
         minortickcolor = :black,
         minorticks = AbstractPlotting.automatic,
+        scale = identity,
     )
 end
 
