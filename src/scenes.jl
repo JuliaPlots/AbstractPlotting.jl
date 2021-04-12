@@ -600,6 +600,7 @@ inverse_transform(::typeof(identity)) = identity
 inverse_transform(::typeof(log10)) = exp10
 inverse_transform(::typeof(log)) = exp
 inverse_transform(::typeof(log2)) = exp2
+inverse_transform(::typeof(sqrt)) = x -> x ^ 2
 inverse_transform(F::Tuple) = map(inverse_transform, F)
 
 # apply_inv_transform_func(F, x) = apply_transform_func(inverse_transform(F), x)
