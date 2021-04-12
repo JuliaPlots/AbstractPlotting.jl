@@ -14,15 +14,15 @@ Data limits calculate a minimal boundingbox from the data points in a plot.
 This doesn't include any transformations, markers etc.
 """
 function atomic_limits(x::Atomic{<: Tuple{Arg1}}) where Arg1
-    return xyz_boundingbox(transform_func(x), to_value(x[1]))
+    return xyz_boundingbox(identity, to_value(x[1]))
 end
 
 function atomic_limits(x::Atomic{<: Tuple{X, Y, Z}}) where {X, Y, Z}
-    return xyz_boundingbox(transform_func(x), to_value.(x[1:3])...)
+    return xyz_boundingbox(identity, to_value.(x[1:3])...)
 end
 
 function atomic_limits(x::Atomic{<: Tuple{X, Y}}) where {X, Y}
-    return xyz_boundingbox(transform_func(x), to_value.(x[1:2])...)
+    return xyz_boundingbox(identity, to_value.(x[1:2])...)
 end
 
 _isfinite(x) = isfinite(x)
