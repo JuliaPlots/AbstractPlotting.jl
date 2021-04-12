@@ -494,7 +494,8 @@ function validate_limits_for_scales(lims::Rect, xsc, ysc)
 end
 
 validate_limits_for_scale(lims, ::typeof(identity)) = true
-validate_limits_for_scale(lims, ::typeof(log10)) = all(>(0), lims)
+validate_limits_for_scale(lims, ::Union{typeof(log2), typeof(log10), typeof(log)}) = all(>(0), lims)
+validate_limits_for_scale(lims, ::typeof(sqrt)) = all(>=(0), lims)
 
 function AbstractPlotting.plot!(
         la::Axis, P::AbstractPlotting.PlotFunc,
@@ -1102,4 +1103,6 @@ function defaultlimits(userlimits::Tuple{Any, Any}, xscale, yscale)
 end
 
 defaultlimits(::typeof(log10)) = (1.0, 1000.0)
+defaultlimits(::typeof(log2)) = (1.0, 8.0)
+defaultlimits(::typeof(log)) = (1.0, exp(3.0))
 defaultlimits(::typeof(identity)) = (0.0, 10.0)
