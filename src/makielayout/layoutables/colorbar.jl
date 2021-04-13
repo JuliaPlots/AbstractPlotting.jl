@@ -55,7 +55,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         leftspinecolor, rightspinecolor, bottomspinecolor, colormap, limits,
         halign, valign, vertical, flipaxis, ticklabelalign, flip_vertical_label,
         nsteps, highclip, lowclip,
-        minorticksvisible, minortickalign, minorticksize, minortickwidth, minortickcolor, minorticks)
+        minorticksvisible, minortickalign, minorticksize, minortickwidth, minortickcolor, minorticks, scale)
 
     decorations = Dict{Symbol, Any}()
 
@@ -113,7 +113,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
     map_is_categorical = lift(x -> x isa PlotUtils.CategoricalColorGradient, cgradient)
 
     steps = lift(cgradient, nsteps) do cgradient, n
-        if cgradient isa PlotUtils.CategoricalColorGradient
+        s = if cgradient isa PlotUtils.CategoricalColorGradient
             cgradient.values
         else
             collect(LinRange(0, 1, n))
@@ -131,16 +131,28 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     # for categorical colormaps we make a number of rectangle polys
 
-    rects_and_colors = lift(barbox, vertical, steps, cgradient) do bbox, v, steps, gradient
+    rects_and_colors = lift(barbox, vertical, steps, cgradient, scale, limits) do bbox, v, steps, gradient, scale, lims
+
+        # we need to convert the 0 to 1 steps into rescaled 0 to 1 steps given the
+        # colormap's `scale` attribute
+        
+        # first scale to limits so we can actually apply the scale to the values
+        # (log(0) doesn't work etc.)
+        s_limits = steps .* (lims[2] - lims[1]) .+ lims[1]
+        # scale with scaling function
+        s_limits_scaled = scale.(s_limits)
+        # then rescale to 0 to 1
+        s_scaled = (s_limits_scaled .- s_limits_scaled[1]) ./ (s_limits_scaled[end] - s_limits_scaled[1])
+
         xmin, ymin = minimum(bbox)
         xmax, ymax = maximum(bbox)
 
         rects = if v
-            yvals = steps .* (ymax - ymin) .+ ymin
+            yvals = s_scaled .* (ymax - ymin) .+ ymin
             [BBox(xmin, xmax, b, t)
                 for (b, t) in zip(yvals[1:end-1], yvals[2:end])]
         else
-            xvals = steps .* (xmax - xmin) .+ xmin
+            xvals = s_scaled .* (xmax - xmin) .+ xmin
             [BBox(l, r, ymin, ymax)
                 for (l, r) in zip(xvals[1:end-1], xvals[2:end])]
         end
@@ -294,7 +306,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         spinecolor = :transparent, spinevisible = :false, flip_vertical_label = flip_vertical_label,
         minorticksvisible = minorticksvisible, minortickalign = minortickalign,
         minorticksize = minorticksize, minortickwidth = minortickwidth,
-        minortickcolor = minortickcolor, minorticks = minorticks)
+        minortickcolor = minortickcolor, minorticks = minorticks, scale = scale)
         
     decorations[:axis] = axis
 

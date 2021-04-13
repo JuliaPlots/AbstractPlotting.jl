@@ -370,6 +370,8 @@ function default_attributes(::Type{Colorbar}, scene)
         minortickcolor = :black
         "The tick locator for the minor ticks"
         minorticks = IntervalsBetween(5)
+        "The axis scale"
+        scale = identity
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
