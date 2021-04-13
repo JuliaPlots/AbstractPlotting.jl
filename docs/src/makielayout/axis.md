@@ -273,6 +273,33 @@ hideydecorations!(ax3, ticks = false)
 f
 ```
 
+## Log scales and other axis scales
+
+The two attributes `xscale` and `yscale`, which by default are set to `identity`, can be used to project the data in a nonlinear way, in addition to the linear zoom that the limits provide.
+
+Take care that the axis limits always stay inside the limits appropriate for the chosen scaling function, for example, all log functions fail from 0 and below.
+
+```@example
+using CairoMakie
+
+data = sort(10.0 .^ randn(100))
+
+f = Figure(resolution = (1000, 1000), fontsize = 14)
+
+for (i, scale) in enumerate([identity, log10, log2, log, sqrt])
+    
+    row, col = fldmod1(i, 2)
+    Axis(f[row, col], yscale = scale, title = string(scale),
+        yminorticksvisible = true, yminorgridvisible = true,
+        yminorticks = IntervalsBetween(8))
+        
+    lines!(data, color = :blue)
+
+end
+
+f
+```
+
 ## Controlling Axis aspect ratios
 
 If you're plotting images, you might want to force a specific aspect ratio
