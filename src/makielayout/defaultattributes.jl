@@ -338,10 +338,10 @@ function default_attributes(::Type{Colorbar}, scene)
         flipaxis = true
         "Flips the colorbar label if the axis is vertical."
         flip_vertical_label = false
-        "The width setting of the colorbar."
-        width = nothing
+        "The width setting of the colorbar. Use `size` to set width or height relative to colorbar orientation instead."
+        width = AbstractPlotting.automatic
         "The height setting of the colorbar."
-        height = nothing
+        height = AbstractPlotting.automatic
         "Controls if the parent layout can adjust to this element's width"
         tellwidth = true
         "Controls if the parent layout can adjust to this element's height"
@@ -372,6 +372,8 @@ function default_attributes(::Type{Colorbar}, scene)
         minorticks = IntervalsBetween(5)
         "The axis scale"
         scale = identity
+        "The width or height of the colorbar, depending on if it's vertical or horizontal, unless overridden by `width` / `height`"
+        size = 20
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end

@@ -60,7 +60,18 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
     decorations = Dict{Symbol, Any}()
 
     protrusions = Node(GridLayoutBase.RectSides{Float32}(0, 0, 0, 0))
-    layoutobservables = LayoutObservables{Colorbar}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight,
+
+    # make the layout width and height settings depend on `size` if they are set to automatic
+    # and determine whether they are nothing or `size` depending on colorbar orientation
+    _width = lift(attrs.size, attrs.width, vertical, typ = Any) do sz, w, v
+        w === AbstractPlotting.automatic ? (v ? sz : nothing) : w
+    end
+
+    _height = lift(attrs.size, attrs.height, vertical, typ = Any) do sz, h, v
+        h === AbstractPlotting.automatic ? (v ? nothing : sz) : h
+    end
+
+    layoutobservables = LayoutObservables{Colorbar}(_width, _height, attrs.tellwidth, attrs.tellheight,
         halign, valign, attrs.alignmode; suggestedbbox = bbox, protrusions = protrusions)
 
     framebox = @lift(round_to_IRect2D($(layoutobservables.computedbbox)))
@@ -136,13 +147,7 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         # we need to convert the 0 to 1 steps into rescaled 0 to 1 steps given the
         # colormap's `scale` attribute
         
-        # first scale to limits so we can actually apply the scale to the values
-        # (log(0) doesn't work etc.)
-        s_limits = steps .* (lims[2] - lims[1]) .+ lims[1]
-        # scale with scaling function
-        s_limits_scaled = scale.(s_limits)
-        # then rescale to 0 to 1
-        s_scaled = (s_limits_scaled .- s_limits_scaled[1]) ./ (s_limits_scaled[end] - s_limits_scaled[1])
+        s_scaled = scaled_steps(steps, scale, lims)
 
         xmin, ymin = minimum(bbox)
         xmax, ymax = maximum(bbox)
@@ -176,8 +181,10 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
     # for continous colormaps we sample a 1d image
     # to avoid white lines when rendering vector graphics
 
-    continous_pixels = lift(vertical, nsteps, cgradient) do v, n, grad
-        px = get.(Ref(grad), LinRange(0, 1, n))
+    continous_pixels = lift(vertical, nsteps, cgradient, limits, scale) do v, n, grad, lims, scale
+
+        s_steps = scaled_steps(LinRange(0, 1, n), scale, lims)
+        px = get.(Ref(grad), s_steps)
         v ? reshape(px, 1, n) : reshape(px, n, 1)
     end
 
@@ -344,4 +351,14 @@ end
 
 function tight_ticklabel_spacing!(lc::Colorbar)
     tight_ticklabel_spacing!(lc.elements[:axis])
+end
+
+function scaled_steps(steps, scale, lims)
+    # first scale to limits so we can actually apply the scale to the values
+    # (log(0) doesn't work etc.)
+    s_limits = steps .* (lims[2] - lims[1]) .+ lims[1]
+    # scale with scaling function
+    s_limits_scaled = scale.(s_limits)
+    # then rescale to 0 to 1
+    s_scaled = (s_limits_scaled .- s_limits_scaled[1]) ./ (s_limits_scaled[end] - s_limits_scaled[1])
 end
