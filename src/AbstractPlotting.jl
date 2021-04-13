@@ -1,7 +1,5 @@
 module AbstractPlotting
 
-using Compat
-
 using Random
 using FFMPEG # get FFMPEG on any system!
 using Observables, GeometryBasics, IntervalSets, PlotUtils
