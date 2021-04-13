@@ -91,13 +91,13 @@ end
 
 const ImageLike{Arg} = Union{Heatmap{Arg}, Image{Arg}}
 function data_limits(x::ImageLike{<: Tuple{X, Y, Z}}) where {X, Y, Z}
-    xyz_boundingbox(transform_func(x), to_value.((x[1], x[2]))...)
+    xyz_boundingbox(identity, to_value.((x[1], x[2]))...)
 end
 
 function data_limits(x::Volume)
     _to_interval(r) = ((lo, hi) = extrema(r); lo..hi)
     axes = (x[1], x[2], x[3])
-    xyz_boundingbox(transform_func(x), _to_interval.(to_value.(axes))...)
+    xyz_boundingbox(identity, _to_interval.(to_value.(axes))...)
 end
 
 function text_limits(x::VecTypes)
