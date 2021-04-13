@@ -293,7 +293,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "Controls if the tick marks are visible."
         ticksvisible = true
         "The ticks."
-        ticks = LinearTicks(4)
+        ticks = AbstractPlotting.automatic
         "Format for ticks."
         tickformat = AbstractPlotting.automatic
         "The space reserved for the tick labels."
