@@ -216,7 +216,14 @@ apply_transform(f::typeof(identity), x::VecTypes) = x
 apply_transform(f::typeof(identity), x::Number) = x
 
 apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::AbstractArray) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::VecTypes) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::Number) = x
+
 apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::AbstractArray) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::VecTypes) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::Number) = x
 
 
 # struct PointTrans{N, F}
