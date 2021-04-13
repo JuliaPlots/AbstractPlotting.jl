@@ -584,23 +584,3 @@ function update_limits!(scene::Scene, new_limits::Rect, padding::Vec3f0=scene.pa
     scene
 end
 
-
-
-function apply_transform_func end
-
-apply_transform_func(F::typeof(identity), x) = x
-# apply_transform_func(F::Tuple{typeof(identity), typeof(identity)}, x) = x
-# apply_transform_func(F::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x) = x
-
-function apply_transform_func(F::Tuple{Any, Any}, v::VecTypes{2})
-    Point(F[1](v[1]), F[2](v[2]))
-end
-
-inverse_transform(::typeof(identity)) = identity
-inverse_transform(::typeof(log10)) = exp10
-inverse_transform(::typeof(log)) = exp
-inverse_transform(::typeof(log2)) = exp2
-inverse_transform(::typeof(sqrt)) = x -> x ^ 2
-inverse_transform(F::Tuple) = map(inverse_transform, F)
-
-# apply_inv_transform_func(F, x) = apply_transform_func(inverse_transform(F), x)
