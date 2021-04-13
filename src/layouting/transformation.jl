@@ -209,37 +209,54 @@ transform_func_obs(x) = transformation(x).transform_func
     apply_transform(f, data)
 Apply the data transform func to the data
 """
-apply_transform(f::typeof(identity), position::Number) = position
-apply_transform(f::typeof(identity), positions::AbstractArray) = positions
-apply_transform(f::typeof(identity), positions::AbstractVector) = positions
-apply_transform(f::typeof(identity), position::VecTypes) = position
+apply_transform(f::typeof(identity), x) = x
+# ambiguity
+apply_transform(f::typeof(identity), x::AbstractArray) = x
+apply_transform(f::typeof(identity), x::VecTypes) = x
+apply_transform(f::typeof(identity), x::Number) = x
 
-struct PointTrans{N, F}
-    f::F
-end
+apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x) = x
+apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x) = x
 
-PointTrans{N}(func::F) where {N, F} = PointTrans{N, F}(func)
-Base.broadcastable(x::PointTrans) = (x,)
 
-function apply_transform(f::PointTrans{N}, point::Point{N}) where N
-    return f.f(point)
-end
+# struct PointTrans{N, F}
+#     f::F
+# end
 
-function apply_transform(f::PointTrans{N1}, point::Point{N2}) where {N1, N2}
-    p_dim = to_ndim(Point{N1, Float32}, point, 0.0)
-    p_trans = f.f(p_dim)
-    if N1 < N2
-        p_large = ntuple(i-> i <= N1 ? p_trans[i] : point[i], N2)
-        return Point{N2, Float32}(p_large)
-    else
-        return to_ndim(Point{N2, Float32}, p_trans, 0.0)
-    end
-end
+# PointTrans{N}(func::F) where {N, F} = PointTrans{N, F}(func)
+# Base.broadcastable(x::PointTrans) = (x,)
+
+# function apply_transform(f::PointTrans{N}, point::Point{N}) where N
+#     return f.f(point)
+# end
+
+# function apply_transform(f::PointTrans{N1}, point::Point{N2}) where {N1, N2}
+#     p_dim = to_ndim(Point{N1, Float32}, point, 0.0)
+#     p_trans = f.f(p_dim)
+#     if N1 < N2
+#         p_large = ntuple(i-> i <= N1 ? p_trans[i] : point[i], N2)
+#         return Point{N2, Float32}(p_large)
+#     else
+#         return to_ndim(Point{N2, Float32}, p_trans, 0.0)
+#     end
+# end
 
 
 
 function apply_transform(f, data::AbstractArray)
     return map(point-> apply_transform(f, point), data)
+end
+
+function apply_transform(f::Tuple{Any, Any}, point::VecTypes{3})
+    apply_transform((f..., identity), point)
+end
+
+function apply_transform(f::Tuple{Any, Any, Any}, point::VecTypes{3})
+    Point3{Float32}(
+        f[1](point[1]),
+        f[2](point[2]),
+        f[3](point[3]),
+    )
 end
 
 function apply_transform(f::NTuple{N, Any}, point::VecTypes{N}) where {N, T}
@@ -248,13 +265,13 @@ end
 
 apply_transform(f, number::Number) = f(number)
 
-function apply_transform(f::Union{typeof(log), typeof(log10), typeof(log2)}, number::Number)
-    if number <= 0.0
-        return 0.0
-    else
-        return f(number)
-    end
-end
+# function apply_transform(f::Union{typeof(log), typeof(log10), typeof(log2)}, number::Number)
+#     if number <= 0.0
+#         return 0.0
+#     else
+#         return f(number)
+#     end
+# end
 
 function apply_transform(f::Observable, data::Observable)
     return lift((f, d)-> apply_transform(f, d), f, data)
