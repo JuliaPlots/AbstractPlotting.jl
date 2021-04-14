@@ -30,7 +30,7 @@ using AbstractPlotting: PointTrans, xyz_boundingbox, apply_transform
 end
 
 
-@testset "Tuple transforms" begin
+@testset "Tuple and identity transforms" begin
     t1 = sqrt
     t2 = (sqrt, log)
     t3 = (sqrt, log, log10)
@@ -49,13 +49,27 @@ end
 
     @test apply_transform(t3, p3) == Point3f0(sqrt(2.0), log(5.0), log10(4.0))
 
+    i2 = (identity, identity)
+    i3 = (identity, identity, identity)
+    @test apply_transform(i2, p2) == p2
+    @test apply_transform(i3, p3) == p3
+
+    # test that identity gives back exact same arrays without copying
     p2s = Point2f0[(1, 2), (3, 4)]
     @test apply_transform(identity, p2s) === p2s
-    @test apply_transform((identity, identity), p2s) === p2s
-    @test apply_transform((identity, identity, identity), p2s) === p2s
+    @test apply_transform(i2, p2s) === p2s
+    @test apply_transform(i3, p2s) === p2s
 
     p3s = Point3f0[(1, 2, 3), (3, 4, 5)]
     @test apply_transform(identity, p3s) === p3s
-    @test apply_transform((identity, identity), p3s) === p3s
-    @test apply_transform((identity, identity, identity), p3s) === p3s
+    @test apply_transform(i2, p3s) === p3s
+    @test apply_transform(i3, p3s) === p3s
+
+    @test apply_transform(identity, 1) == 1
+    @test apply_transform(i2, 1) == 1
+    @test apply_transform(i3, 1) == 1
+
+    @test apply_transform(identity, 1..2) == 1..2
+    @test apply_transform(i2, 1..2) == 1..2
+    @test apply_transform(i3, 1..2) == 1..2
 end

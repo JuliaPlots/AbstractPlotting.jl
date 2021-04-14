@@ -210,22 +210,23 @@ transform_func_obs(x) = transformation(x).transform_func
 Apply the data transform func to the data
 """
 apply_transform(f::typeof(identity), x) = x
+# these are all ambiguity fixes
 apply_transform(f::typeof(identity), x::AbstractArray) = x
 apply_transform(f::typeof(identity), x::VecTypes) = x
 apply_transform(f::typeof(identity), x::Number) = x
 apply_transform(f::typeof(identity), x::ClosedInterval) = x
 
-apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::AbstractArray) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::VecTypes) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::Number) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity)}, x::ClosedInterval) = x
+apply_transform(f::NTuple{2, typeof(identity)}, x) = x
+apply_transform(f::NTuple{2, typeof(identity)}, x::AbstractArray) = x
+apply_transform(f::NTuple{2, typeof(identity)}, x::VecTypes) = x
+apply_transform(f::NTuple{2, typeof(identity)}, x::Number) = x
+apply_transform(f::NTuple{2, typeof(identity)}, x::ClosedInterval) = x
 
-apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::AbstractArray) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::VecTypes) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::Number) = x
-apply_transform(f::Tuple{typeof(identity), typeof(identity), typeof(identity)}, x::ClosedInterval) = x
+apply_transform(f::NTuple{3, typeof(identity)}, x) = x
+apply_transform(f::NTuple{3, typeof(identity)}, x::AbstractArray) = x
+apply_transform(f::NTuple{3, typeof(identity)}, x::VecTypes) = x
+apply_transform(f::NTuple{3, typeof(identity)}, x::Number) = x
+apply_transform(f::NTuple{3, typeof(identity)}, x::ClosedInterval) = x
 
 
 struct PointTrans{N, F}
@@ -256,8 +257,6 @@ function apply_transform(f::PointTrans{N1}, point::Point{N2}) where {N1, N2}
     end
 end
 
-
-
 function apply_transform(f, data::AbstractArray)
     map(point-> apply_transform(f, point), data)
 end
@@ -268,10 +267,15 @@ function apply_transform(f::Tuple{Any, Any}, point::VecTypes{2})
         f[2](point[2]),
     )
 end
+# ambiguity fix
+apply_transform(f::NTuple{2, typeof(identity)}, point::VecTypes{2}) = point
+
 
 function apply_transform(f::Tuple{Any, Any}, point::VecTypes{3})
     apply_transform((f..., identity), point)
 end
+# ambiguity fix
+apply_transform(f::NTuple{2, typeof(identity)}, point::VecTypes{3}) = point
 
 function apply_transform(f::Tuple{Any, Any, Any}, point::VecTypes{3})
     Point3{Float32}(
@@ -280,6 +284,8 @@ function apply_transform(f::Tuple{Any, Any, Any}, point::VecTypes{3})
         f[3](point[3]),
     )
 end
+# ambiguity fix
+apply_transform(f::NTuple{3, typeof(identity)}, point::VecTypes{3}) = point
 
 
 apply_transform(f, number::Number) = f(number)
