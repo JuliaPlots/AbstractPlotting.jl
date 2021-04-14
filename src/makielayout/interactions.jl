@@ -248,11 +248,17 @@ function process_interaction(s::ScrollZoom, event::ScrollEvent, ax::Axis)
             # now to 0..1
             0.5 .+ 0.5
 
-        xorigin = tlimits[].origin[1]
-        yorigin = tlimits[].origin[2]
+        xscale = ax.xscale[]
+        yscale = ax.yscale[]
 
-        xwidth = tlimits[].widths[1]
-        ywidth = tlimits[].widths[2]
+        transf = (xscale, yscale)
+        tlimits_trans = AbstractPlotting.apply_transform(transf, tlimits[])
+
+        xorigin = tlimits_trans.origin[1]
+        yorigin = tlimits_trans.origin[2]
+
+        xwidth = tlimits_trans.widths[1]
+        ywidth = tlimits_trans.widths[2]
 
         newxwidth = xzoomlock[] ? xwidth : xwidth * z
         newywidth = yzoomlock[] ? ywidth : ywidth * z
@@ -262,7 +268,7 @@ function process_interaction(s::ScrollZoom, event::ScrollEvent, ax::Axis)
 
         timed_ticklabelspace_reset(ax, s.reset_timer, s.prev_xticklabelspace, s.prev_yticklabelspace, s.reset_delay)
 
-        tlimits[] = if ispressed(scene, xzoomkey[])
+        newrect_trans = if ispressed(scene, xzoomkey[])
             FRect(newxorigin, yorigin, newxwidth, ywidth)
         elseif ispressed(scene, yzoomkey[])
             FRect(xorigin, newyorigin, xwidth, newywidth)
@@ -270,6 +276,8 @@ function process_interaction(s::ScrollZoom, event::ScrollEvent, ax::Axis)
             FRect(newxorigin, newyorigin, newxwidth, newywidth)
         end
 
+        inv_transf = AbstractPlotting.inverse_transform(transf)
+        tlimits[] = AbstractPlotting.apply_transform(inv_transf, newrect_trans)
     end
 end
 

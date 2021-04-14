@@ -72,4 +72,9 @@ end
     @test apply_transform(identity, 1..2) == 1..2
     @test apply_transform(i2, 1..2) == 1..2
     @test apply_transform(i3, 1..2) == 1..2
+
+    pa = Point2f0(1, 2)
+    pb = Point2f0(3, 4)
+    r2 = FRect2D(pa, pb .- pa)
+    @test apply_transform(t1, r2) == FRect2D(apply_transform(t1, pa), apply_transform(t1, pb) .- apply_transform(t1, pa) )
 end

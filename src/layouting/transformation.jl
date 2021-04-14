@@ -301,6 +301,17 @@ function apply_transform(f, itr::ClosedInterval)
 end
 
 
+function apply_transform(f, r::Rect)
+    mi = minimum(r)
+    ma = maximum(r)
+    mi_t = apply_transform(f, mi)
+    ma_t = apply_transform(f, ma)
+    Rect(Vec(mi_t), Vec(ma_t .- mi_t))
+end
+# ambiguity fix
+apply_transform(f::typeof(identity), r::Rect) = r
+apply_transform(f::NTuple{2, typeof(identity)}, r::Rect) = r
+apply_transform(f::NTuple{3, typeof(identity)}, r::Rect) = r
 
 inverse_transform(::typeof(identity)) = identity
 inverse_transform(::typeof(log10)) = exp10
