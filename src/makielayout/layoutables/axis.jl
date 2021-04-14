@@ -775,18 +775,6 @@ function adjustlimits!(la)
         ylims = expandlimits(ylims, (((1 / correction_factor) - 1) .* ratios)..., identity) # don't use scale here?
     end
 
-    if ax.xscale[] == log10
-        if any(<=(0), xlims)
-            error("You have values <= 0 in your xlimits $xlims while using a log scale.")
-        end
-    end
-
-    if ax.yscale[] == log10
-        if any(<=(0), ylims)
-            error("You have values <= 0 in your ylimits $ylims while using a log scale.")
-        end
-    end
-
     bbox = BBox(xlims[1], xlims[2], ylims[1], ylims[2])
 
     la.finallimits[] = bbox
