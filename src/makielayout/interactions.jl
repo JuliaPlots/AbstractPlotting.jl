@@ -140,9 +140,18 @@ end
 
 function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
 
+    # TODO: actually, the data from the mouse event should be transformed already
+    # but the problem is that these mouse events are generated all the time
+    # and outside of log axes, you would quickly run into domain errors
+    transf = AbstractPlotting.transform_func(ax)
+    inv_transf = AbstractPlotting.inverse_transform(transf)
+
+    data = AbstractPlotting.apply_transform(inv_transf, event.data)
+    prev_data = AbstractPlotting.apply_transform(inv_transf, event.prev_data)
+
     if event.type === MouseEventTypes.leftdragstart
-        r.from = event.prev_data
-        r.to = event.data
+        r.from = prev_data
+        r.to = data
         r.rectnode[] = _chosen_limits(r, ax)
 
         selection_vertices = lift(_selection_vertices, ax.finallimits, r.rectnode)
@@ -161,7 +170,7 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
         r.active = true
 
     elseif event.type === MouseEventTypes.leftdrag
-        r.to = event.data
+        r.to = data
         r.rectnode[] = _chosen_limits(r, ax)
 
     elseif event.type === MouseEventTypes.leftdragstop
@@ -295,23 +304,50 @@ function process_interaction(dp::DragPan, event::MouseEvent, ax)
     panbutton = ax.panbutton
 
     scene = ax.scene
+    cam = camera(scene)
+    pa = pixelarea(scene)[]
 
-    movement = AbstractPlotting.to_world(ax.scene, event.px) .-
-               AbstractPlotting.to_world(ax.scene, event.prev_px)
+    mp_axscene = Vec4f0((event.px .- pa.origin)..., 0, 1)
+    mp_axscene_prev = Vec4f0((event.prev_px .- pa.origin)..., 0, 1)
 
-    xori, yori = Vec2f0(tlimits[].origin) .- movement
+    mp_axfraction, mp_axfraction_prev = map((mp_axscene, mp_axscene_prev)) do mp
+        # first to normal -1..1 space
+        (cam.pixel_space[] * mp)[1:2] .*
+        # now to 1..-1 if an axis is reversed to correct zoom point
+        (-2 .* ((ax.xreversed[], ax.yreversed[])) .+ 1) .*
+        # now to 0..1
+        0.5 .+ 0.5
+    end
+    
+    xscale = ax.xscale[]
+    yscale = ax.yscale[]
+
+    transf = (xscale, yscale)
+    tlimits_trans = AbstractPlotting.apply_transform(transf, tlimits[])
+
+    movement_frac = mp_axfraction .- mp_axfraction_prev
+
+    xscale = ax.xscale[]
+    yscale = ax.yscale[]
+
+    transf = (xscale, yscale)
+    tlimits_trans = AbstractPlotting.apply_transform(transf, tlimits[])
+
+    xori, yori = tlimits_trans.origin .- movement_frac .* widths(tlimits_trans)
 
     if xpanlock[] || ispressed(scene, ypankey[])
-        xori = tlimits[].origin[1]
+        xori = tlimits_trans.origin[1]
     end
 
     if ypanlock[] || ispressed(scene, xpankey[])
-        yori = tlimits[].origin[2]
+        yori = tlimits_trans.origin[2]
     end
 
     timed_ticklabelspace_reset(ax, dp.reset_timer, dp.prev_xticklabelspace, dp.prev_yticklabelspace, dp.reset_delay)
 
-    tlimits[] = FRect(Vec2f0(xori, yori), widths(tlimits[]))
+    inv_transf = AbstractPlotting.inverse_transform(transf)
+    newrect_trans = FRect(Vec2f0(xori, yori), widths(tlimits_trans))
+    tlimits[] = AbstractPlotting.apply_transform(inv_transf, newrect_trans)
            
     return nothing
 end
