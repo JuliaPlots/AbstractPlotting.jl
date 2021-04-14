@@ -451,7 +451,7 @@ get_tickvalues(ticks, scale, vmin, vmax) = get_tickvalues(ticks, vmin, vmax)
 
 # get_tickvalues(::AbstractPlotting.Automatic, ::typeof(log), vmin, vmax) = get_tickvalues(LogTicks(), vmin, vmax)
 
-function get_ticks(ticks_and_labels::Tuple{Any, Any}, ::AbstractPlotting.Automatic, vmin, vmax)
+function get_ticks(ticks_and_labels::Tuple{Any, Any}, any_scale, ::AbstractPlotting.Automatic, vmin, vmax)
     n1 = length(ticks_and_labels[1])
     n2 = length(ticks_and_labels[2])
     if n1 != n2
@@ -460,7 +460,7 @@ function get_ticks(ticks_and_labels::Tuple{Any, Any}, ::AbstractPlotting.Automat
     ticks_and_labels
 end
 
-function get_ticks(tickfunction::Function, formatter, vmin, vmax)
+function get_ticks(tickfunction::Function, any_scale, formatter, vmin, vmax)
     result = tickfunction(vmin, vmax)
     if result isa Tuple{Any, Any}
         tickvalues, ticklabels = result
