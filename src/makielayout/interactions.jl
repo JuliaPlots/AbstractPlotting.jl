@@ -146,10 +146,10 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
     transf = AbstractPlotting.transform_func(ax)
     inv_transf = AbstractPlotting.inverse_transform(transf)
 
-    data = AbstractPlotting.apply_transform(inv_transf, event.data)
-    prev_data = AbstractPlotting.apply_transform(inv_transf, event.prev_data)
-
     if event.type === MouseEventTypes.leftdragstart
+        data = AbstractPlotting.apply_transform(inv_transf, event.data)
+        prev_data = AbstractPlotting.apply_transform(inv_transf, event.prev_data)
+
         r.from = prev_data
         r.to = data
         r.rectnode[] = _chosen_limits(r, ax)
@@ -170,6 +170,10 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
         r.active = true
 
     elseif event.type === MouseEventTypes.leftdrag
+        # clamp mouse data to shown limits
+        rect = AbstractPlotting.apply_transform(transf, ax.finallimits[])
+        data = AbstractPlotting.apply_transform(inv_transf, rectclamp(event.data, rect))
+        
         r.to = data
         r.rectnode[] = _chosen_limits(r, ax)
 
@@ -189,6 +193,12 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
     end
 
     return nothing
+end
+
+function rectclamp(p::Point, r::Rect)
+    map(p, minimum(r), maximum(r)) do pp, mi, ma
+        clamp(pp, mi, ma)
+    end |> Point
 end
 
 function process_interaction(r::RectangleZoom, event::KeysEvent, ax::Axis)
