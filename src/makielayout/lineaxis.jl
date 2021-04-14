@@ -542,7 +542,7 @@ Gets tick labels by formatting each value in `values` according to a `Formatting
 get_ticklabels(formatstring::AbstractString, values) = [Formatting.format(formatstring, v) for v in values]
 
 
-function get_ticks(m::MultiplesTicks, ::AbstractPlotting.Automatic, vmin, vmax)
+function get_ticks(m::MultiplesTicks, any_scale, ::AbstractPlotting.Automatic, vmin, vmax)
     dvmin = vmin / m.multiple
     dvmax = vmax / m.multiple
     multiples = MakieLayout.get_tickvalues(LinearTicks(m.n_ideal), dvmin, dvmax)
