@@ -1,4 +1,4 @@
-using GLMakie, GLMakie.FileIO, GLMakie.GeometryBasics
+using GLMakie, GLMakie.FileIO; using LinearAlgebra: norm
 set_window_config!(pause_rendering = true)
 AbstractPlotting.inline!(true)
 
@@ -15,8 +15,11 @@ let
         lines!(0..10, functions[i], color = color, linewidth = 3)
     end
 
-    # GLMakie.volume(f[2, 1], [sin(x*y*z) / (x*y*z) for x in -8:8:30, y in -8:8:30, z in -8:8:30],
-    #     algorithm = :iso, isorange = 0.05, isovalue = 0.9)
+    r = LinRange(0, 10, 100)
+    volume = [sin(x) + sin(y) + 0.1z^2 for x = r, y = r, z = r]
+    ax, c = contour(f[2, 1][1, 1], volume, levels = 12, colormap = :viridis,
+        axis = (type = Axis3, viewmode = :stretch, title = "3D contour"))
+    Colorbar(f[2, 1][1, 2], c, label = "intensity")
 
     function mandelbrot(x, y)
         z = c = x + y*im
@@ -31,8 +34,8 @@ let
 
     Axis3(f[1:2, 2][2, 1:2], aspect = :data, title = "Brain mesh")
     brain = load(assetpath("brain.stl"))
-    color = [GeometryBasics.norm(tri[1] .- Point3f0(-40, 10, 45)) for tri in brain for i in 1:3]
-    mesh!(brain, color = color, colormap = Reverse(:thermal))
+    color = [norm(tri[1] .- Point3f0(-40, 10, 45)) for tri in brain for i in 1:3]
+    mesh!(brain, color = color, colormap = :Spectral)
 
     Label(f[0, :], "Makie.jl Example Figure")
 
