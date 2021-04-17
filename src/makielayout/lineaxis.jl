@@ -489,32 +489,33 @@ function get_ticks(l::LogTicks, scale::Union{typeof(log10), typeof(log2), typeof
     (ticks, labels)
 end
 
-function get_ticks(::Automatic, scale::typeof(AbstractPlotting.logit), any_formatter, vmin, vmax)
-    get_ticks(LogitTicks(WilkinsonTicks(5, k_min = 3)), scale, any_formatter, vmin, vmax)
-end
+# function get_ticks(::Automatic, scale::typeof(AbstractPlotting.logit), any_formatter, vmin, vmax)
+#     get_ticks(LogitTicks(WilkinsonTicks(5, k_min = 3)), scale, any_formatter, vmin, vmax)
+# end
 
-function get_ticks(l::LogitTicks, scale::typeof(AbstractPlotting.logit), ::Automatic, vmin, vmax)
+logit_10(x) = log10(x / (1 - x))
+expit_10(x) = 1 / (1 + exp10(-x))
 
-    logit_10(x) = log10(x / (1 - x))
-    expit_10(x) = 1 / (1 + exp10(-x))
-    ticks_scaled = get_tickvalues(l.linear_ticks, identity, logit_10(vmin), logit_10(vmax))
+# function get_ticks(l::LogitTicks, scale::typeof(AbstractPlotting.logit), ::Automatic, vmin, vmax)
+
+#     ticks_scaled = get_tickvalues(l.linear_ticks, identity, logit_10(vmin), logit_10(vmax))
     
-    ticks = expit_10.(ticks_scaled)
+#     ticks = expit_10.(ticks_scaled)
 
-    base_labels = get_ticklabels(automatic, ticks_scaled)
+#     base_labels = get_ticklabels(automatic, ticks_scaled)
     
-    labels = map(ticks_scaled, base_labels) do t, bl
-        if t == 0
-            "¹/₂"
-        elseif t < 0
-            "10" * AbstractPlotting.UnicodeFun.to_superscript(bl)
-        else
-            "1-10" * AbstractPlotting.UnicodeFun.to_superscript("-" * bl)
-        end
-    end
+#     labels = map(ticks_scaled, base_labels) do t, bl
+#         if t == 0
+#             "¹/₂"
+#         elseif t < 0
+#             "10" * AbstractPlotting.UnicodeFun.to_superscript(bl)
+#         else
+#             "1-10" * AbstractPlotting.UnicodeFun.to_superscript("-" * bl)
+#         end
+#     end
 
-    (ticks, labels)
-end
+#     (ticks, labels)
+# end
 
 """
     get_tickvalues(lt::LinearTicks, vmin, vmax)
@@ -530,7 +531,18 @@ get_tickvalues(lt::LinearTicks, vmin, vmax) = locateticks(vmin, vmax, lt.n_ideal
 
 Convert tickvalues to a float array by default.
 """
-get_tickvalues(tickvalues, vmin, vmax) = Float64.(tickvalues)
+get_tickvalues(tickvalues, vmin, vmax) = convert(Vector{Float64}, tickvalues)
+
+
+# function get_tickvalues(l::LogitTicks, vmin, vmax)
+#     ticks_scaled = get_tickvalues(l.linear_ticks, identity, logit_10(vmin), logit_10(vmax))
+#     expit_10.(ticks_scaled)
+# end
+
+function get_tickvalues(l::LogTicks, scale, vmin, vmax)
+    ticks_scaled = get_tickvalues(l.linear_ticks, scale(vmin), scale(vmax))
+    AbstractPlotting.inverse_transform(scale).(ticks_scaled)
+end
 
 """
     get_ticklabels(::Automatic, values)
@@ -602,7 +614,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax
 end
 
 # for log scales, we need to step in log steps at the edges
-function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typeof(log2), typeof(log10), typeof(AbstractPlotting.logit)}, tickvalues, vmin, vmax)
+function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typeof(log2), typeof(log10)}, tickvalues, vmin, vmax)
     vals = Float32[]
     length(tickvalues) < 2 && return vals
     n = i.n

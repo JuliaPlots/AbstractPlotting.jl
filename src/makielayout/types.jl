@@ -51,15 +51,15 @@ struct MultiplesTicks
 end
 
 
-"""
-    LogitTicks{T}(linear_ticks::T)
+# """
+#     LogitTicks{T}(linear_ticks::T)
 
-Wraps any other tick object.
-Used to apply a linear tick searching algorithm on a logit-transformed interval.
-"""
-struct LogitTicks{T}
-    linear_ticks::T
-end
+# Wraps any other tick object.
+# Used to apply a linear tick searching algorithm on a logit-transformed interval.
+# """
+# struct LogitTicks{T}
+#     linear_ticks::T
+# end
 
 """
     LogTicks{T}(linear_ticks::T)
