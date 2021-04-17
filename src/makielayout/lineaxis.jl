@@ -576,7 +576,7 @@ end
 
 
 function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax)
-    vals = Float32[]
+    vals = Float64[]
     length(tickvalues) < 2 && return vals
     n = i.n
 
@@ -584,10 +584,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax
         firstinterval = tickvalues[2] - tickvalues[1]
         stepsize = firstinterval / n
         v = tickvalues[1] - stepsize
-        while v >= vmin
-            pushfirst!(vals, v)
-            v -= stepsize
-        end
+        prepend!(tickvalues, v:-stepsize:vmin)
     end
 
     for (lo, hi) in zip(@view(tickvalues[1:end-1]), @view(tickvalues[2:end]))
@@ -604,10 +601,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax
         lastinterval = tickvalues[end] - tickvalues[end-1]
         stepsize = lastinterval / n
         v = tickvalues[end] + stepsize
-        while v <= vmax
-            push!(vals, v)
-            v += stepsize
-        end
+        append!(tickvalues, v:stepsize:vmax)
     end
 
     vals
@@ -615,7 +609,8 @@ end
 
 # for log scales, we need to step in log steps at the edges
 function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typeof(log2), typeof(log10)}, tickvalues, vmin, vmax)
-    vals = Float32[]
+
+    vals = Float64[]
     length(tickvalues) < 2 && return vals
     n = i.n
 
@@ -627,10 +622,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typ
         prevtick = invscale(scale(tickvalues[1]) - firstinterval_scaled)
         stepsize = (tickvalues[1] - prevtick) / n
         v = tickvalues[1] - stepsize
-        while v >= vmin
-            pushfirst!(vals, v)
-            v -= stepsize
-        end
+        prepend!(tickvalues, v:-stepsize:vmin)
     end
 
     for (lo, hi) in zip(@view(tickvalues[1:end-1]), @view(tickvalues[2:end]))
@@ -648,10 +640,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typ
         nexttick = invscale(scale(tickvalues[end]) + lastinterval_scaled)
         stepsize = (nexttick - tickvalues[end]) / n
         v = tickvalues[end] + stepsize
-        while v <= vmax
-            push!(vals, v)
-            v += stepsize
-        end
+        append!(tickvalues, v:stepsize:vmax)
     end
 
     vals
