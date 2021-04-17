@@ -584,7 +584,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax
         firstinterval = tickvalues[2] - tickvalues[1]
         stepsize = firstinterval / n
         v = tickvalues[1] - stepsize
-        prepend!(tickvalues, v:-stepsize:vmin)
+        prepend!(vals, v:-stepsize:vmin)
     end
 
     for (lo, hi) in zip(@view(tickvalues[1:end-1]), @view(tickvalues[2:end]))
@@ -601,7 +601,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale, tickvalues, vmin, vmax
         lastinterval = tickvalues[end] - tickvalues[end-1]
         stepsize = lastinterval / n
         v = tickvalues[end] + stepsize
-        append!(tickvalues, v:stepsize:vmax)
+        append!(vals, v:stepsize:vmax)
     end
 
     vals
@@ -622,7 +622,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typ
         prevtick = invscale(scale(tickvalues[1]) - firstinterval_scaled)
         stepsize = (tickvalues[1] - prevtick) / n
         v = tickvalues[1] - stepsize
-        prepend!(tickvalues, v:-stepsize:vmin)
+        prepend!(vals, v:-stepsize:vmin)
     end
 
     for (lo, hi) in zip(@view(tickvalues[1:end-1]), @view(tickvalues[2:end]))
@@ -640,7 +640,7 @@ function get_minor_tickvalues(i::IntervalsBetween, scale::Union{typeof(log), typ
         nexttick = invscale(scale(tickvalues[end]) + lastinterval_scaled)
         stepsize = (nexttick - tickvalues[end]) / n
         v = tickvalues[end] + stepsize
-        append!(tickvalues, v:stepsize:vmax)
+        append!(vals, v:stepsize:vmax)
     end
 
     vals
