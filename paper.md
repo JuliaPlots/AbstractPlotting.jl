@@ -50,47 +50,77 @@ The layout is non-trivial, as a legend is placed above the left axis, which conf
 The figure title is added not with a specialized function, but via the ordinary layout mechanism.
 
 ```julia
-using CairoMakie
+using GLMakie
 
-polynomials = ["20x", "3x^2 + 3x", "x^3 - 2x^2 - 10x"]
-functions = eval.(Meta.parse.("x -> " .* polynomials))
+f = Figure(resolution = (1400, 1000), font = "Helvetica")
 
-f = Figure(resolution = (700, 500), fontsize = 14, font = "Helvetica")
-ax = Axis(f[2, 1], xlabel = "x", ylabel = "f(x)", title = "Polynomials")
+a = readdlm(assetpath("airportlocations.csv"))
+a_rep = repeat(a, 100_000_000 ÷ size(a, 1), 1) .+ randn.()
+scatter(f[1, 1], airports_rep, color = (:black, 0.01), markersize = 0.5, strokewidth = 0,
+    axis = (title = "Airports (100 Million points)", limits = (-200, 200, -70, 80)))
 
-colors = [:tomato, "#04e04c", RGBf0(0.1, 0.3, 1)]
-
-for (f, p, color) in zip(functions, polynomials, colors)
-    lines!(-5..5, f, label = p, color = color, linewidth = 2)
-end
-
-Legend(f[1, 1], ax, orientation = :horizontal, colgap = 20, tellheight = true)
+r = LinRange(-5, 5, 100)
+volume = [sin(x) + sin(y) + 0.1z^2 for x = r, y = r, z = r]
+ax, c = contour(f[2, 1][1, 1], volume, levels = 8, colormap = :viridis,
+    axis = (type = Axis3, viewmode = :stretch, title = "3D contour"))
+Colorbar(f[2, 1][1, 2], c, label = "intensity")
 
 function mandelbrot(x, y)
     z = c = x + y*im
-    for i in 1:30.0; abs(z) > 2 && return i; z = z^2 + c; end
-    return 0.0
+    for i in 1:30.0; abs(z) > 2 && return i; z = z^2 + c; end; 0
 end
 
-ax2, hm = heatmap(f[1:2, 2][1, 1], -2:0.01:1, -2:0.01:2, mandelbrot,
-    interpolate = true, colormap = :thermal)
+ax2, hm = heatmap(f[1:2, 2][1, 2], -2:0.005:1, -1.1:0.005:1.1, mandelbrot,
+    interpolate = true, colormap = Reverse(:deep), axis = (title = "Mandelbrot set",))
 hidedecorations!(ax2)
-Colorbar(f[1:2, 2][2, 1], hm, height = 20, vertical = false,
-    flipaxis = false, label = "Iterations")
+Colorbar(f[1:2, 2][1, 1], hm, flipaxis = false, label = "Iterations", height = 300)
+
+Axis3(f[1:2, 2][2, 1:2], aspect = :data, title = "Brain mesh")
+brain = load(assetpath("brain.stl"))
+color = [-norm(tri[1] .- Point3f0(-40, 10, 45)) for tri in brain for i in 1:3]
+m = mesh!(brain, color = color, colormap = :thermal)
 
 Label(f[0, :], "Makie.jl Example Figure")
 
-save("paper_example.png", f, px_per_unit = 2)
+save("paper_example.png", f)
 ```
 
 ![Legends and colorbars can be placed in arbitrary positions, and aligned with axes along their main edges. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
 
 # Overview
 
+Makie's core package is `AbstractPlotting.jl`, which contains the infrastructure that plots are built out of.
+It defines primitive plot types such as lines, scatters, heatmaps and text, which can be freely combined to build up higher-level recipes such as density plots, histograms, and contour plots.
+
+There are currently three different backends for AbstractPlotting, which are `GLMakie.jl`, `CairoMakie.jl` and `WGLMakie.jl`.
+Each backend package has a different set of strengths: GLMakie excels at high-performance plotting with large datasets, CairoMakie creates beautiful vector graphics and WGLMakie can be run in the browser.
+Users can switch back and forth between backends easily, allowing them to, for example, build up a figure piece by piece in GLMakie, explore the data interactively, and then save a publication-quality version with CairoMakie.
+
+Makie is built around the idea of a reactive workflow using `Observables.jl`.
+Observables are wrappers for arbitrary objects which can trigger actions when their content is changed.
+Makie's plotting functions all accept observables as input arguments in addition to normal datatypes like numbers or arrays.
+If a plotted observable changes, this is reflected immediately in the display.
+Observables can be chained together, so that changes to many plot objects can flow from a few steering observables.
+A common example is a single *time* observable, which multiple visualizations depend on simultaneously.
+The observable approach frees the user from having to update plot objects manually to achieve interactive visualizations, which is usually required in most other plotting software.
+Makie also offers a range of GUI elements such as sliders, buttons and menus, which seamlessly fit into the observable workflow.
+For example, a slider over an integer range can be used directly to pick a 2D slice from a 3D dataset, like an fMRI image.
+This can then be plotted using a heatmap, and will update whenever the slider or 3D data are changed.
+
+Makie has a powerful layout system, which makes it easy to build up very flexible and complex figures without a lot of boilerplate setup.
+Each figure has a top-level grid layout, in which layoutable objects or nested grid layouts can be placed at arbitrary positions.
+In other plotting software, it is a common issue to place a legend not inside or outside a single axis, but centered below multiple facets or in an entirely different position.
+In Makie, objects like legends or colorbars are not specifically tied to specific axes and can therefore be placed wherever the user desires.
+The layout algorithm then guarantees that no other objects collide or overlap, which can otherwise be the cause for long-winded and non-reproducible sessions in image editing software.
+Grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by nesting their top-level layouts into a new parent layout.
+This avoids the common pitfall of incorrect axis alignments, as subfigures are not aligned along their outer bounding boxes, but their visually leading lines.
+
 
 
 # Acknowledgements
 
-We acknowledge contributions from ...
+S.D. has been supported by the German Federal Ministry of Education and Research, grant number 01IS10S27, 2020.
+The Makie project is glad to have an enthusiastic community that has helped us to improve a lot over the years.
+The authors want to thank everybody who has opened issues, reported bugs, contributed ideas or code and has supported us in driving `Makie.jl` forward.
 
 # References
