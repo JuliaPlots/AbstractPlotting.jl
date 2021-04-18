@@ -57,6 +57,7 @@ Complex meshes can be visualized and interacted with effortlessly.
 The figure layout is iteratively built by simply specifying object positions like `f[1, 1]` for "first row, first column of the figure", or even nested like `f[1:2, 2][2, 1:2]` for "first two rows, second column, and there in a nested layout second row, first two columns".
 Users do not have to set up grid structures of the correct sizes a priori, but can simply add objects where they are required and the layouts grow automatically.
 The figure title is another example of this, it is placed at `f[0, :]` which means "one row above the current first row, across all columns".
+Adding a zero-th row, simply shifts all other rows downwards, and is a very simple and intuitive way of adding elements to an existing structure.
 While other packages offer functions like `supertitle`, these are usually limited by their assumptions about the figure layout and can't handle more unusual requirements.
 In Makie, text can be placed anywhere in a layout and it's trivial to construct complex figures with multiple grids and subheaders this way.
 
