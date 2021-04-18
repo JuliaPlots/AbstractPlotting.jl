@@ -85,7 +85,7 @@ Label(f[0, :], "Makie.jl Example Figure")
 save("paper_example.png", f)
 ```
 
-![Legends and colorbars can be placed in arbitrary positions, and aligned with axes along their main edges. Lines and heatmaps are two plot types that can directly visualize functions given a one- or two-dimensional domain.\label{fig:example}](paper_example.png)
+![Makie can visualize data on the order of 100 million data points and render three-dimensional volumes an meshes. Axes and colorbars can be placed freely in nested grids and aligned in a visually pleasing way. The mandelbrot fractal demonstrates one use of multiple dispatch, where a function is directly evaluated on a two-dimensional grid without preparing arrays manually.\label{fig:example}](paper_example.png)
 
 # Overview
 
