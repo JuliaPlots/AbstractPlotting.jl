@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 # Summary
 
-`Makie.jl` is a cross-platform plotting ecosystem for the Julia programming language, which enables researchers to create high-performance, GPU-powered, interactive visualizations, as well as publication-quality vector graphics with one unified interface.
+`Makie.jl` is a cross-platform plotting ecosystem for the Julia programming language [@Bezanson:2012] , which enables researchers to create high-performance, GPU-powered, interactive visualizations, as well as publication-quality vector graphics with one unified interface.
 The infrastructure based on `Observables.jl` allows users to express how a visualization depends on multiple parameters and data sources, which can then be updated live, either programmatically, or through sliders, buttons and other GUI elements.
 A sophisticated layout system makes it easy to assemble complex figures.
 It is designed to avoid common difficulties when aligning nested subplots of different sizes, or placing colorbars or legends freely without spacing issues.
@@ -34,7 +34,7 @@ Finally, users can extend every step of this pipeline for their custom types thr
 
 Good data visualization is crucial for the work of every scientist around the world.
 To effectively understand and communicate results, different disciplines ranging from publication-quality static vector graphics, through animated movies, to interactive data exploration tools, require flexible and powerful plotting software.
-Most tools available today lack one or more of the following attributes: High performance for the fluid rendering of large datasets, interactive visualizations, the ability to extend the plotting pipeline to handle user-defined data structures and types, implementations of both 2D and 3D rendering, and the power to construct complex figures without having to tweak alignments and spacings after the fact in image editing software.
+Most tools available today lack one or more of the following attributes: High performance for the fluid rendering of large datasets, interactive visualizations with flexible dynamic languages, the ability to extend the plotting pipeline to handle user-defined data structures and types, implementations of both 2D and 3D rendering, and the power to construct complex figures without having to tweak positions after the fact in image editing software.
 Therefore, researchers have to switch between tools which means they have to spend more time to learn unfamiliar syntax and redo work if one software turns out to lack critical abilities for the task at hand.
 
 `Makie.jl` is a new plotting package which is built from the ground up to leverage the power of `Julia`, a relatively young programming language which excels at technical computing and has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
@@ -46,6 +46,7 @@ But these wrapper packages cannot take full advantage of Julia's type system and
 
 The following figure illustrates a few key features of `Makie.jl`:
 The map example augments a dataset of the world's airports to 100 million points, a size that many other plotting frameworks would struggle with.
+
 
 
 ```julia
