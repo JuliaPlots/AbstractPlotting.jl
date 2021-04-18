@@ -62,7 +62,9 @@ In Makie, text can be placed anywhere in a layout and it's trivial to construct 
 
 
 ```julia
-using GLMakie
+using GLMakie, GLMakie.FileIO
+using LinearAlgebra: norm
+using DelimitedFiles
 
 f = Figure(resolution = (1400, 1000), font = "Helvetica")
 
@@ -82,10 +84,8 @@ function mandelbrot(x, y)
     z = c = x + y*im
     for i in 1:30.0; abs(z) > 2 && return i; z = z^2 + c; end; 0
 end
-
 ax2, hm = heatmap(f[1:2, 2][1, 2], -2:0.005:1, -1.1:0.005:1.1, mandelbrot,
-    interpolate = true, colormap = Reverse(:deep),
-    axis = (title = "Mandelbrot set",))
+    colormap = Reverse(:deep), axis = (title = "Mandelbrot set",))
 hidedecorations!(ax2)
 Colorbar(f[1:2, 2][1, 1], hm, flipaxis = false,
   label = "Iterations", height = 300)
@@ -93,7 +93,7 @@ Colorbar(f[1:2, 2][1, 1], hm, flipaxis = false,
 Axis3(f[1:2, 2][2, 1:2], aspect = :data, title = "Brain mesh")
 brain = load(assetpath("brain.stl"))
 color = [-norm(x[1] .- Point(-40, 10, 45)) for x in brain for i in 1:3]
-m = mesh!(brain, color = color, colormap = :thermal)
+mesh!(brain, color = color, colormap = :thermal)
 
 Label(f[0, :], "Makie.jl Example Figure")
 
