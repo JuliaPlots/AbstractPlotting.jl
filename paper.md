@@ -47,6 +47,18 @@ But these wrapper packages cannot take full advantage of Julia's type system and
 The following figure illustrates a few key features of `Makie.jl`:
 The map example augments a dataset of the world's airports to 100 million points, a size that many other plotting frameworks would struggle with.
 
+The mandelbrot fractal heatmap on the right is plotted by simply passing an x- and y-range, as well as the mandelbrot function, which is then automatically evaluated for all xy combinations.
+Julia's multiple dispatch mechanism is, in very simple terms, a way to overload functions with different versions or methods, that are chosen depending on the set of input arguments.
+This allows Makie to offer very flexible input argument alternatives, which get the user to their visualization faster, by reducing common redundant data preprocessing steps.
+
+The volumetric contour and mesh plots in the bottom row showcase Makie's 3D ability.
+Complex meshes can be visualized and interacted with effortlessly.
+
+The figure layout is iteratively built by simply specifying object positions like `f[1, 1]` for "first row, first column of the figure", or even nested like `f[1:2, 2][2, 1:2]` for "first two rows, second column, and there in a nested layout second row, first two columns".
+Users do not have to set up grid structures of the correct sizes a priory, but can simply add objects where they are required and the layouts grow automatically.
+The figure title is another example of this, it is placed at `f[0, :]` which means "one row above the current first row, across all columns".
+While other packages offer functions like `supertitle`, these are usually limited by their assumptions about the figure layout and can't handle more unusual requirements.
+In Makie, text can be placed anywhere in a layout and it's trivial to construct complex figures with multiple grids and subheaders this way.
 
 
 ```julia
