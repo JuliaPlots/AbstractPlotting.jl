@@ -55,7 +55,7 @@ The volumetric contour and mesh plots in the bottom row showcase Makie's 3D abil
 Complex meshes can be visualized and interacted with effortlessly.
 
 The figure layout is iteratively built by simply specifying object positions like `f[1, 1]` for "first row, first column of the figure", or even nested like `f[1:2, 2][2, 1:2]` for "first two rows, second column, and there in a nested layout second row, first two columns".
-Users do not have to set up grid structures of the correct sizes a priory, but can simply add objects where they are required and the layouts grow automatically.
+Users do not have to set up grid structures of the correct sizes a priori, but can simply add objects where they are required and the layouts grow automatically.
 The figure title is another example of this, it is placed at `f[0, :]` which means "one row above the current first row, across all columns".
 While other packages offer functions like `supertitle`, these are usually limited by their assumptions about the figure layout and can't handle more unusual requirements.
 In Makie, text can be placed anywhere in a layout and it's trivial to construct complex figures with multiple grids and subheaders this way.
@@ -122,16 +122,17 @@ Makie also offers a range of GUI elements such as sliders, buttons and menus, wh
 For example, a slider over an integer range can be used directly to pick a 2D slice from a 3D dataset, like an fMRI image.
 This can then be plotted using a heatmap, and will update whenever the slider or 3D data are changed.
 
-Makie has a powerful layout system, which makes it easy to build up very flexible and complex figures without a lot of boilerplate setup.
-Each figure has a top-level grid layout, in which layoutable objects or nested grid layouts can be placed at arbitrary positions.
+A common problem when creating figures for publication is that multiple elements in the figure are overlapping, leaving too much empty space, or simply cannot be placed exactly where the user wants without a lot of trial and error.
+To alleviate these issues, Makie has a powerful layout system, which makes it easy to build up very flexible and complex figures without a lot of boilerplate setup.
+Each figure has a top-level grid layout, in which layoutable objects or further nested grid layouts can be placed at arbitrary positions.
 Grid layouts are built around the assumption that objects like axes usually have an inner important area, which is what other objects should be aligned with, and outer decorations which are visually less important and are treated as part of the gap between rows and columns.
+This avoids the well-known issue of incorrectly aligned axes between subplots, as they are not aligned along their outer bounding boxes, which depend on unpredictable things like exact tick label lengths, but their visually leading lines, the axis spines.
 In other plotting software, it is a common issue to place a legend not inside or outside a single axis, but centered below multiple facets or in an entirely different position.
 In Makie, objects like legends or colorbars are not tied to specific axes and can therefore be placed wherever the user desires.
-This is a common wish but still surprisingly hard to achieve many plotting packages, which require manual specification of precise bounding box coordinates for such cases, which leads to constant readjustments whenever any other figure parameters change.
+Flexible colorbar or legend placement is a common wish but still surprisingly hard to achieve in many plotting packages, which require manual specification of precise bounding box coordinates for such cases.
+This often leads to a cycle of readjustments whenever any other figure parameters change.
 In Makie, the layout algorithm guarantees that no other objects collide or overlap, which can otherwise be the cause for long-winded and non-reproducible sessions in image editing software.
-Grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by assembling their top-level layouts into a new parent layout.
-This avoids the common pitfall of incorrect axis alignments between subfigures, as they are not aligned along their outer bounding boxes, but their visually leading lines.
-
+Additionally, grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by assembling their top-level layouts into a new parent layout, which is a highly flexible approach of building complex figures.
 
 
 # Acknowledgements
