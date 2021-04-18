@@ -47,7 +47,7 @@ But these wrapper packages cannot take full advantage of Julia's type system and
 The following example illustrates a few key features of `Makie.jl`:
 Both plots use Julia's multiple dispatch to visualize functions directly over given intervals or ranges.
 The layout is non-trivial, as a legend is placed above the left axis, which conforms to its width automatically, while both are aligned with the right axis and its colorbar placed below.
-The figure title is added not with a specialized function, but via the ordinary layout mechanism.
+The figure title is added not with a specialized function, but via the ordinary layout mechanism, which hints at the flexibility that users have when placing elements in a figure.
 
 ```julia
 using GLMakie
@@ -56,8 +56,9 @@ f = Figure(resolution = (1400, 1000), font = "Helvetica")
 
 a = readdlm(assetpath("airportlocations.csv"))
 a_rep = repeat(a, 100_000_000 ÷ size(a, 1), 1) .+ randn.()
-scatter(f[1, 1], airports_rep, color = (:black, 0.01), markersize = 0.5, strokewidth = 0,
-    axis = (title = "Airports (100 Million points)", limits = (-200, 200, -70, 80)))
+scatter(f[1, 1], airports_rep, color = (:black, 0.01), markersize = 0.5,
+    strokewidth = 0, axis = (title = "Airports (100 Million points)",
+    limits = (-200, 200, -70, 80)))
 
 r = LinRange(-5, 5, 100)
 volume = [sin(x) + sin(y) + 0.1z^2 for x = r, y = r, z = r]
@@ -71,13 +72,15 @@ function mandelbrot(x, y)
 end
 
 ax2, hm = heatmap(f[1:2, 2][1, 2], -2:0.005:1, -1.1:0.005:1.1, mandelbrot,
-    interpolate = true, colormap = Reverse(:deep), axis = (title = "Mandelbrot set",))
+    interpolate = true, colormap = Reverse(:deep),
+    axis = (title = "Mandelbrot set",))
 hidedecorations!(ax2)
-Colorbar(f[1:2, 2][1, 1], hm, flipaxis = false, label = "Iterations", height = 300)
+Colorbar(f[1:2, 2][1, 1], hm, flipaxis = false,
+  label = "Iterations", height = 300)
 
 Axis3(f[1:2, 2][2, 1:2], aspect = :data, title = "Brain mesh")
 brain = load(assetpath("brain.stl"))
-color = [-norm(tri[1] .- Point3f0(-40, 10, 45)) for tri in brain for i in 1:3]
+color = [-norm(x[1] .- Point(-40, 10, 45)) for x in brain for i in 1:3]
 m = mesh!(brain, color = color, colormap = :thermal)
 
 Label(f[0, :], "Makie.jl Example Figure")
@@ -85,7 +88,7 @@ Label(f[0, :], "Makie.jl Example Figure")
 save("paper_example.png", f)
 ```
 
-![Makie can visualize data on the order of 100 million data points and render three-dimensional volumes an meshes. Axes and colorbars can be placed freely in nested grids and aligned in a visually pleasing way. The mandelbrot fractal demonstrates one use of multiple dispatch, where a function is directly evaluated on a two-dimensional grid without preparing arrays manually.\label{fig:example}](paper_example.png)
+![Makie can visualize data on the order of 100 million data points and render three-dimensional volumes or meshes. Axes and colorbars can be placed freely in nested grids and aligned in a visually pleasing way. The mandelbrot fractal demonstrates one use of Julia's multiple dispatch, as the mandelbrot function can be directly evaluated on a two-dimensional grid without manually preparing arrays.\label{fig:example}](paper_example.png)
 
 # Overview
 
