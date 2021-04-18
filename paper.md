@@ -124,11 +124,13 @@ This can then be plotted using a heatmap, and will update whenever the slider or
 
 Makie has a powerful layout system, which makes it easy to build up very flexible and complex figures without a lot of boilerplate setup.
 Each figure has a top-level grid layout, in which layoutable objects or nested grid layouts can be placed at arbitrary positions.
+Grid layouts are built around the assumption that objects like axes usually have an inner important area, which is what other objects should be aligned with, and outer decorations which are visually less important and are treated as part of the gap between rows and columns.
 In other plotting software, it is a common issue to place a legend not inside or outside a single axis, but centered below multiple facets or in an entirely different position.
-In Makie, objects like legends or colorbars are not specifically tied to specific axes and can therefore be placed wherever the user desires.
-The layout algorithm then guarantees that no other objects collide or overlap, which can otherwise be the cause for long-winded and non-reproducible sessions in image editing software.
-Grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by nesting their top-level layouts into a new parent layout.
-This avoids the common pitfall of incorrect axis alignments, as subfigures are not aligned along their outer bounding boxes, but their visually leading lines.
+In Makie, objects like legends or colorbars are not tied to specific axes and can therefore be placed wherever the user desires.
+This is a common wish but still surprisingly hard to achieve many plotting packages, which require manual specification of precise bounding box coordinates for such cases, which leads to constant readjustments whenever any other figure parameters change.
+In Makie, the layout algorithm guarantees that no other objects collide or overlap, which can otherwise be the cause for long-winded and non-reproducible sessions in image editing software.
+Grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by assembling their top-level layouts into a new parent layout.
+This avoids the common pitfall of incorrect axis alignments between subfigures, as they are not aligned along their outer bounding boxes, but their visually leading lines.
 
 
 
