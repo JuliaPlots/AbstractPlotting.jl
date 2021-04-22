@@ -52,14 +52,22 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
     targetlimits = Node{FRect2D}(defaultlimits(limits[], attrs.xscale[], attrs.yscale[]))
     finallimits = Node{FRect2D}(targetlimits[])
 
-    onany(targetlimits, attrs.xscale, attrs.yscale) do lims, xsc, ysc
+    # the first thing to do when setting a new scale is
+    # resetting the limits because simply through expanding they might be invalid for log
+    # but we don't have the axis here yet, so we make this nice and ugly ref for it
+    this_axis = Ref{Union{Nothing, Axis}}(nothing)
+    onany(attrs.xscale, attrs.yscale) do _, _
+        isnothing(this_axis[]) || reset_limits!(this_axis[])
+    end
+
+    on(targetlimits) do lims
         # this should validate the targetlimits before anything else happens with them
         # so there should be nothing before this lifting `targetlimits`
         # we don't use finallimits because that's one step later and you
         # already shouldn't set invalid targetlimits (even if they could
         # theoretically be adjusted to fit somehow later?)
         # and this way we can error pretty early
-        validate_limits_for_scales(lims, xsc, ysc)
+        validate_limits_for_scales(lims, attrs.xscale[], attrs.yscale[])
     end
 
     scenearea = sceneareanode!(layoutobservables.computedbbox, finallimits, aspect)
@@ -377,6 +385,7 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
     ax = Axis(fig_or_scene, layoutobservables, attrs, decorations, scene,
         xaxislinks, yaxislinks, targetlimits, finallimits, block_limit_linking,
         mouseeventhandle, scrollevents, keysevents, interactions)
+    this_axis[] = ax
 
     function process_event(event)
         for (active, interaction) in values(ax.interactions)
@@ -661,16 +670,7 @@ end
 function xautolimits(ax::Axis)
     # try getting x limits for the axis and then union them with linked axes
     xlims = getxlimits(ax)
-    # but if we have limits, then expand them with the auto margins
-    if !isnothing(xlims)
-        if !validate_limits_for_scale(xlims, ax.xscale[])
-            error("Found invalid x-limits $xlims for scale $(ax.xscale[]) which is defined on the interval $(defined_interval(ax.xscale[]))")
-        end
-        xlims = expandlimits(xlims,
-            ax.attributes.xautolimitmargin[][1],
-            ax.attributes.xautolimitmargin[][2],
-            ax.xscale[])
-    end
+
     for link in ax.xaxislinks
         if isnothing(xlims)
             xlims = getxlimits(link)
@@ -681,6 +681,18 @@ function xautolimits(ax::Axis)
             end
         end
     end
+
+    if !isnothing(xlims)
+        if !validate_limits_for_scale(xlims, ax.xscale[])
+            error("Found invalid x-limits $xlims for scale $(ax.xscale[]) which is defined on the interval $(defined_interval(ax.xscale[]))")
+        end
+
+        xlims = expandlimits(xlims,
+            ax.attributes.xautolimitmargin[][1],
+            ax.attributes.xautolimitmargin[][2],
+            ax.xscale[])
+    end
+
     # if no limits have been found, use the targetlimits directly
     if isnothing(xlims)
         xlims = (ax.targetlimits[].origin[1], ax.targetlimits[].origin[1] + ax.targetlimits[].widths[1])
@@ -691,16 +703,7 @@ end
 function yautolimits(ax)
     # try getting y limits for the axis and then union them with linked axes
     ylims = getylimits(ax)
-    # but if we have limits, then expand them with the auto margins
-    if !isnothing(ylims)
-        if !validate_limits_for_scale(ylims, ax.yscale[])
-            error("Found invalid direct y-limits $ylims for scale $(ax.yscale[]) which is defined on the interval $(defined_interval(ax.yscale[]))")
-        end
-        ylims = expandlimits(ylims,
-            ax.attributes.yautolimitmargin[][1],
-            ax.attributes.yautolimitmargin[][2],
-            ax.yscale[])
-    end
+
     for link in ax.yaxislinks
         if isnothing(ylims)
             ylims = getylimits(link)
@@ -711,6 +714,18 @@ function yautolimits(ax)
             end
         end
     end
+
+    if !isnothing(ylims)
+        if !validate_limits_for_scale(ylims, ax.yscale[])
+            error("Found invalid direct y-limits $ylims for scale $(ax.yscale[]) which is defined on the interval $(defined_interval(ax.yscale[]))")
+        end
+
+        ylims = expandlimits(ylims,
+            ax.attributes.yautolimitmargin[][1],
+            ax.attributes.yautolimitmargin[][2],
+            ax.yscale[])
+    end
+
     # if no limits have been found, use the targetlimits directly
     if isnothing(ylims)
         ylims = (ax.targetlimits[].origin[2], ax.targetlimits[].origin[2] + ax.targetlimits[].widths[2])    
