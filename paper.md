@@ -34,7 +34,7 @@ Finally, users can extend every step of this pipeline for their custom types thr
 
 Good data visualization is crucial for the work of every scientist around the world.
 To effectively understand and communicate results, different disciplines ranging from publication-quality static vector graphics, through animated movies, to interactive data exploration tools, require flexible and powerful plotting software.
-Most tools available today lack one or more of the following attributes: High performance for the fluid rendering of large datasets, interactive visualizations with flexible dynamic languages, the ability to extend the plotting pipeline to handle user-defined data structures and types, implementations of both 2D and 3D rendering, and the power to construct complex figures without having to tweak positions after the fact in image editing software.
+Most tools available today lack one or more of the following attributes: High performance for the responsive rendering of large datasets, interactive visualizations with flexible dynamic languages, the ability to extend the plotting pipeline to handle user-defined data structures and types, implementations of both 2D and 3D rendering, and the power to construct complex figures without having to tweak positions after the fact in image editing software.
 Therefore, researchers have to switch between tools which means they have to spend more time to learn unfamiliar syntax and redo work if one software turns out to lack critical abilities for the task at hand.
 
 `Makie.jl` is a new plotting package which is built from the ground up to leverage the power of `Julia`, a relatively young programming language which excels at technical computing and has seen steady growth of its user base since reaching the 1.0 milestone in 2018.
@@ -101,7 +101,7 @@ Label(f[0, :], "Makie.jl Example Figure")
 save("paper_example.png", f)
 ```
 
-![Makie can visualize data with at least 100 million points and render three-dimensional volumes or meshes. Axes and colorbars can be placed freely in nested grids and aligned in a visually pleasing way. The mandelbrot fractal heatmap demonstrates one use of Julia's multiple dispatch, as the mandelbrot function can be directly evaluated on a two-dimensional grid without manually preparing arrays.\label{fig:example}](paper_example.png)
+![Makie can visualize data with at least 100 million points interactively and render three-dimensional volumes or meshes. Axes and colorbars can be placed freely in nested grids and aligned in a visually pleasing way. The mandelbrot fractal heatmap demonstrates one use of Julia's multiple dispatch, as the mandelbrot function can be directly evaluated on a two-dimensional grid without manually preparing arrays.\label{fig:example}](paper_example.png)
 
 # Overview
 
@@ -133,12 +133,13 @@ In Makie, objects like legends or colorbars are not tied to specific axes and ca
 Flexible colorbar or legend placement is a common wish but still surprisingly hard to achieve in many plotting packages, which require manual specification of precise bounding box coordinates for such cases.
 This often leads to a cycle of readjustments whenever any other figure parameters change.
 In Makie, the layout algorithm guarantees that no other objects collide or overlap, which can otherwise be the cause for long-winded and non-reproducible sessions in image editing software.
-Additionally, grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by assembling their top-level layouts into a new parent layout, which is a highly flexible approach of building complex figures.
+Finally, grid layouts can be nested to arbitrary depths, which means that multiple different subfigures can be combined easily by assembling their top-level layouts into a new parent layout.
 
+Its ability to build responsive data visualizations with complex but clear layouts makes `Makie.jl` suitable for a wide range of work with high demands regarding both performance and aesthetics.
 
 # Acknowledgements
 
-S.D. has been supported by the German Federal Ministry of Education and Research, grant number 01IS10S27, 2020.
+S.D. has been supported by the German Federal Ministry of Education and Research, grant number 01IS10S27, 2020 as well as NSF Grant OAC-1835443.
 The Makie project is glad to have an enthusiastic community that has helped us to improve a lot over the years.
 The authors want to thank everybody who has opened issues, reported bugs, contributed ideas or code and has supported us in driving `Makie.jl` forward.
 
