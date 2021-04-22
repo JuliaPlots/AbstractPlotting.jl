@@ -1,5 +1,5 @@
 ---
-title: 'Makie.jl: High-performance plotting in Julia'
+title: 'Makie.jl: Flexible high-performance data visualization for Julia'
 tags:
   - Julia
   - plotting
