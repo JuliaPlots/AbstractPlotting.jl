@@ -563,8 +563,20 @@ function expandlimits(lims, margin_low, margin_high, scale)
     lims = inverse.((lims_scaled[1] - d_low_scaled, lims_scaled[2] + d_high_scaled))
 
     # guard against singular limits from something like a vline or hline
-    if lims[2] - lims[1] == 0
-        lims = lims .+ (-10, 10)
+    if lims[2] - lims[1] ≈ 0
+        # this works for log as well
+        # we look at the distance to zero in scaled space
+        # then try to center the value between that zero and the value
+        # that is the same scaled distance away on the other side
+        # which centers the singular value optically
+        zerodist = abs(scale(lims[1]))
+
+        # for 0 in linear space this doesn't work so here we just expand to -1, 1
+        if zerodist ≈ 0 && scale === identity
+            lims = (-one(lims[1]), one(lims[1]))
+        else
+            lims = inverse.(scale.(lims) .+ (-zerodist, zerodist))
+        end
     end
     lims
 end
