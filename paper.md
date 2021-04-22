@@ -139,7 +139,7 @@ Its ability to build responsive data visualizations with complex but clear layou
 
 # Acknowledgements
 
-S.D. has been supported by the German Federal Ministry of Education and Research, grant number 01IS10S27, 2020 as well as NSF Grant OAC-1835443.
+S.D. has been supported by the German Federal Ministry of Education and Research, grant number 01IS10S27 2020, as well as NSF Grant OAC-1835443.
 The Makie project is glad to have an enthusiastic community that has helped us to improve a lot over the years.
 The authors want to thank everybody who has opened issues, reported bugs, contributed ideas or code and has supported us in driving `Makie.jl` forward.
 
