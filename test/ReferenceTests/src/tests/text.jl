@@ -213,8 +213,7 @@ end
 end
 
 
-# @cell "Text offset" begin
-begin
+@cell "Text offset" begin
     f = Figure(resolution = (1000, 1000))
     barplot(f[1, 1], 3:5)
     text!("bar 1", position = (1, 3), offset = (0, 10), align = (:center, :baseline))
@@ -234,9 +233,18 @@ begin
     text!("ABC", space = :data, offset = (10, 0), color = (:green, 0.3), align = (:left, :baseline))
     text!("ABC", space = :data, offset = (20, 10), color = (:blue, 0.3), align = (:left, :baseline))
 
-    Axis3(f[2, 2])
-    scatter!((1, 1, 2))
-    text!("hello", position = Point3f0(1, 1, 2), offset = (10, 10))
+    LScene(f[2, 2], scenekw = (show_axis = false,))
+    scatter!(Point3f0[(0, 0, 0), (2, 2, 2)])
+    text!("hello", position = Point3f0(1, 1, 1), offset = (10, 10))
 
     f
+end
+
+
+@cell "Log10 text" begin
+    barplot([1, 10, 100], fillto = 0.1, axis = (yscale = log10,))
+    text!(["bar 1", "bar 2", "bar 3"], position = [(1, 1), (2, 10), (3, 100)],
+        offset = (0, -10), color = :white, align = (:center, :top))
+    tightlimits!(current_axis(), Bottom())
+    current_figure()
 end
