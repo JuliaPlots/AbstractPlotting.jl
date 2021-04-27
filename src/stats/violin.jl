@@ -2,7 +2,11 @@
     Theme(;
         default_theme(scene, Poly)...,
         side = :both,
-        width = 0.8,
+        width = automatic,
+        dodge = automatic,
+        n_dodge = automatic,
+        x_gap = 0.2,
+        dodge_gap = 0.03,
         trim = false,
         strokecolor = :white,
         show_median = false,
@@ -14,9 +18,11 @@ end
 conversion_trait(x::Type{<:Violin}) = SampleBased()
 
 function plot!(plot::Violin)
-    width, side, trim, show_median = plot[:width], plot[:side], plot[:trim], plot[:show_median]
+    x, y, width, side, trim, show_median = plot[1], plot[2], plot[:width], plot[:side], plot[:trim], plot[:show_median]
+    dodge, n_dodge, x_gap, dodge_gap = plot[:dodge], plot[:n_dodge], plot[:x_gap], plot[:dodge_gap]
 
-    signals = lift(plot[1], plot[2], width, side, trim, show_median) do x, y, bw, vside, trim, show_median
+    signals = lift(x, y, width, dodge, n_dodge, x_gap, dodge_gap, side, trim, show_median) do x, y, bw, dodge, n_dodge, x_gap, dodge_gap, vside, trim, show_median
+        x, bw = xw_from_dodge(x, bw, dodge, n_dodge, x_gap, dodge_gap)
         vertices = Vector{Point2f0}[]
         lines = Pair{Point2f0, Point2f0}[]
         for (key, idxs) in StructArrays.finduniquesorted(x)

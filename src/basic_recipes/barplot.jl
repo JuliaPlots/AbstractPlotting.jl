@@ -38,6 +38,21 @@ end
 
 flip(r::Rect2D) = Rect2D(reverse(origin(r)), reverse(widths(r)))
 
+function xw_from_dodge(x, width, dodge, n_dodge, x_gap, dodge_gap)
+    width === automatic && (width = 1 - x_gap)
+    if dodge === automatic
+        i_dodge = 1
+    elseif eltype(dodge) <: Integer
+        i_dodge = dodge
+    else
+        ArgumentError("The keyword argument `dodge` currently supports only `AbstractVector{<: Integer}`") |> throw
+    end
+    n_dodge === automatic && (n_dodge = maximum(i_dodge))
+    dodge_width = scale_width(dodge_gap, n_dodge)
+    shifts = shift_dodge.(i_dodge, dodge_width, dodge_gap)
+    return x .+ width .* shifts, width * dodge_width
+end
+
 function AbstractPlotting.plot!(p::BarPlot)
 
     in_y_direction = lift(p.direction) do dir
