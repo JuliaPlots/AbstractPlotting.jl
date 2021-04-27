@@ -6,7 +6,7 @@
         dodge = automatic,
         n_dodge = automatic,
         x_gap = 0.2,
-        dodge_gap = 0.03,
+        dodge_gap = 0.0,
         trim = false,
         strokecolor = :white,
         show_median = false,
