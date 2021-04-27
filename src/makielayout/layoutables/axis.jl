@@ -505,7 +505,7 @@ end
 validate_limits_for_scale(lims, scale) = all(x -> x in defined_interval(scale), lims)
 
 function AbstractPlotting.plot!(
-        ax::Axis, P::AbstractPlotting.PlotFunc,
+        la::Axis, P::AbstractPlotting.PlotFunc,
         attributes::AbstractPlotting.Attributes, args...;
         kw_attributes...)
     cycleattrs = AbstractPlotting.cycler_attributes(P)
@@ -515,15 +515,15 @@ function AbstractPlotting.plot!(
     end
 
     if cycler_applies
-        attrs = AbstractPlotting.get_cycled_attributes(ax.cycler[], P, ax.palette, cycleattrs)
+        attrs = AbstractPlotting.get_cycled_attributes(la.cycler[], P, la.palette, cycleattrs)
         merge!(attributes, attrs)
     end
 
-    plot = AbstractPlotting.plot!(ax.scene, P, attributes, args...; kw_attributes...)
+    plot = AbstractPlotting.plot!(la.scene, P, attributes, args...; kw_attributes...)
 
     # some area-like plots basically always look better if they cover the whole plot area.
     # adjust the limit margins in those cases automatically.
-    has_tight_limit_trait(P) && tightlimits!(ax)
+    has_tight_limit_trait(P) && tightlimits!(la)
 
 
     reset_limits!(la)
