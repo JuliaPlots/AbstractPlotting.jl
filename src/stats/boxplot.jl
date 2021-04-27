@@ -55,8 +55,8 @@ The boxplot has 3 components:
         whiskerlinewidth = 1.0,
         # outliers points
         show_outliers = true,
-        marker = :circle,
-        markersize = automatic,
+        marker = Circle,
+        markersize = 10,
         outlierstrokecolor = :black,
         outlierstrokewidth = 1.0,
     )
@@ -155,7 +155,8 @@ function AbstractPlotting.plot!(plot::BoxPlot)
             notchmax = notchmax,
             outliers = outlier_points,
             t_segments = t_segments,
-            width = bw
+            width = bw,
+            x = x,
         )
     end
     centers = @lift($signals.centers)
@@ -166,7 +167,9 @@ function AbstractPlotting.plot!(plot::BoxPlot)
     notchmax = @lift($show_notch ? $signals.notchmax : automatic)
     outliers = @lift($signals.outliers)
     t_segments = @lift($signals.t_segments)
+    # From here on, take `x` and `width` after dodging
     width = @lift($signals.width)
+    x = @lift($signals.x)
 
     scatter!(
         plot,
