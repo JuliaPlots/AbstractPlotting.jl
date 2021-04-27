@@ -28,7 +28,7 @@ The boxplot has 3 components:
 - `show_outliers`: show outliers as points
 """
 @recipe(BoxPlot, x, y) do scene
-    t = Theme(
+    Theme(
         color = theme(scene, :color),
         colormap = theme(scene, :colormap),
         colorrange = automatic,
@@ -57,11 +57,10 @@ The boxplot has 3 components:
         show_outliers = true,
         marker = Circle,
         markersize = 10,
+        outliercolor = automatic,
         outlierstrokecolor = :black,
         outlierstrokewidth = 1.0,
     )
-    get!(t, :outliercolor, t[:color])
-    t
 end
 
 conversion_trait(x::Type{<:BoxPlot}) = SampleBased()
@@ -171,9 +170,13 @@ function AbstractPlotting.plot!(plot::BoxPlot)
     width = @lift($signals.width)
     x = @lift($signals.x)
 
+    outliercolor = lift(plot[:outliercolor], plot[:color]) do outliercolor, color
+        outliercolor === automatic ? color : outliercolor
+    end
+
     scatter!(
         plot,
-        color = plot[:outliercolor],
+        color = outliercolor,
         marker = plot[:marker],
         markersize = plot[:markersize],
         strokecolor = plot[:outlierstrokecolor],
