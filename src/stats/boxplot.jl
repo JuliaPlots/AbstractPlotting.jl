@@ -33,8 +33,12 @@ The boxplot has 3 components:
         colormap = theme(scene, :colormap),
         colorrange = automatic,
         orientation = :vertical,
-        # box
-        width = 0.8,
+        # box and dodging
+        width = automatic,
+        dodge = automatic,
+        n_dodge = automatic,
+        x_gap = 0.2,
+        dodge_gap = 0.03,
         strokecolor = :white,
         strokewidth = 0.0,
         # notch
@@ -69,13 +73,17 @@ _flip_xy(p::Point2f0) = reverse(p)
 _flip_xy(r::Rect{2,T}) where {T} = Rect{2,T}(reverse(r.origin), reverse(r.widths))
 
 function AbstractPlotting.plot!(plot::BoxPlot)
-    args = @extract plot (width, range, show_outliers, whiskerwidth, show_notch, orientation)
+    args = @extract plot (range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap)
+    x, y, width = plot[1], plot[2], plot[:width]
+    xw = lift(xw_from_dodge, x, width, Observable(1.0), x_gap, dodge, n_dodge, dodge_gap)
+    x, width = lift(first, xw), lift(last, xw)
 
     signals = lift(
-        plot[1],
-        plot[2],
+        x,
+        y,
+        width,
         args...,
-    ) do x, y, bw, range, show_outliers, whiskerwidth, show_notch, orientation
+    ) do x, y, bw, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap
         if !(whiskerwidth == :match || whiskerwidth >= 0)
             error("whiskerwidth must be :match or a positive number. Found: $whiskerwidth")
         end
