@@ -73,17 +73,14 @@ _flip_xy(p::Point2f0) = reverse(p)
 _flip_xy(r::Rect{2,T}) where {T} = Rect{2,T}(reverse(r.origin), reverse(r.widths))
 
 function AbstractPlotting.plot!(plot::BoxPlot)
-    args = @extract plot (range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap)
-    x, y, width = plot[1], plot[2], plot[:width]
-    xw = lift(xw_from_dodge, x, width, Observable(1.0), x_gap, dodge, n_dodge, dodge_gap)
-    x, width = lift(first, xw), lift(last, xw)
+    args = @extract plot (width, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap)
 
     signals = lift(
-        x,
-        y,
-        width,
+        plot[1],
+        plot[2],
         args...,
     ) do x, y, bw, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap
+        x, bw = xw_from_dodge(x, bw, 1.0, x_gap, dodge, n_dodge, dodge_gap)
         if !(whiskerwidth == :match || whiskerwidth >= 0)
             error("whiskerwidth must be :match or a positive number. Found: $whiskerwidth")
         end
@@ -158,6 +155,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
             notchmax = notchmax,
             outliers = outlier_points,
             t_segments = t_segments,
+            width = bw
         )
     end
     centers = @lift($signals.centers)
@@ -168,16 +166,13 @@ function AbstractPlotting.plot!(plot::BoxPlot)
     notchmax = @lift($show_notch ? $signals.notchmax : automatic)
     outliers = @lift($signals.outliers)
     t_segments = @lift($signals.t_segments)
+    width = @lift($signals.width)
 
     scatter!(
         plot,
         color = plot[:outliercolor],
         marker = plot[:marker],
-        markersize = lift(
-            (w, ms) -> ms === automatic ? w * 0.1 : ms,
-            width,
-            plot.markersize,
-        ),
+        markersize = plot[:markersize],
         strokecolor = plot[:outlierstrokecolor],
         strokewidth = plot[:outlierstrokewidth],
         outliers,
