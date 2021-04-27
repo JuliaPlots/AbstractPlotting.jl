@@ -17,5 +17,5 @@ ymins = ys .- 1
 ymaxs = ys .+ 1
 dodge = [1, 2, 1, 2, 1, 2]
 
-crossbar(xs, ys, dodge = dodge, show_notch = true)
+crossbar(xs, ys, ymins, ymaxs, dodge = dodge, show_notch = true)
 ```
