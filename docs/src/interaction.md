@@ -8,7 +8,6 @@ You can also create observables whose values are updated whenever other observab
 This way you can easily build dynamic and interactive visualizations.
 
 On this page you will learn how the `Node`s pipeline and the event-based interaction system work.
-Examples that use interaction can also be found in the [Example Gallery](http://juliaplots.org/MakieReferenceImages/gallery/index.html).
 
 ## The `Node` structure
 
@@ -222,12 +221,7 @@ end
 
 ## Interactive Widgets
 
-Makie has a couple of useful interactive widgets.
-Default Makie has the `slider`, `button` and `textslider` functions.
-
-MakieLayout has more complex versions of these that can be placed into layouts and allow you to build flexible GUIs.
-Examples are [Slider](@ref), [Button](@ref) and [Menu](@ref).
-
+Makie has a couple of useful interactive widgets like sliders, buttons and menus, which you can read about in the [Layoutables](@ref) section.
 
 ## Recording Animations with Interactions
 

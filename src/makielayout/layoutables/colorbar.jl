@@ -1,5 +1,11 @@
 function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlot; kwargs...)
 
+    for key in (:colormap, :limits)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
+
     layoutable(Colorbar, fig_or_scene;
         colormap = plot.colormap,
         limits = plot.colorrange,
@@ -10,6 +16,12 @@ end
 
 function layoutable(::Type{<:Colorbar}, fig_or_scene, heatmap::Union{Heatmap, Image}; kwargs...)
 
+    for key in (:colormap, :limits, :highclip, :lowclip)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
+
     layoutable(Colorbar, fig_or_scene;
         colormap = heatmap.colormap,
         limits = heatmap.colorrange,
@@ -19,19 +31,25 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene, heatmap::Union{Heatmap, Im
     )
 end
 
-function layoutable(::Type{<:Colorbar}, fig_or_scene, plot::AbstractPlotting.Contourf; kwargs...)
+function layoutable(::Type{<:Colorbar}, fig_or_scene, contourf::AbstractPlotting.Contourf; kwargs...)
 
-    steps = plot._computed_levels
+    for key in (:colormap, :limits, :highclip, :lowclip)
+        if key in keys(kwargs)
+            error("You should not pass the `$key` attribute to the colorbar when constructing it using an existing plot object. This attribute is copied from the plot object, and setting it from the colorbar will make the plot object and the colorbar go out of sync.")
+        end
+    end
+
+    steps = contourf._computed_levels
 
     limits = lift(steps) do steps
         steps[1], steps[end]
     end
 
     layoutable(Colorbar, fig_or_scene;
-        colormap = plot._computed_colormap,
+        colormap = contourf._computed_colormap,
         limits = limits,
-        lowclip = plot._computed_extendlow,
-        highclip = plot._computed_extendhigh,
+        lowclip = contourf._computed_extendlow,
+        highclip = contourf._computed_extendhigh,
         kwargs...
     )
 
@@ -48,19 +66,30 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     @extract attrs (
         label, labelcolor, labelsize, labelvisible, labelpadding, ticklabelsize,
-        ticklabelspace, labelfont, ticklabelfont, ticklabelcolor,
+        ticklabelspace, labelfont, ticklabelfont, ticklabelcolor, ticklabelrotation,
         ticklabelsvisible, ticks, tickformat, ticksize, ticksvisible, ticklabelpad, tickalign,
         tickwidth, tickcolor, spinewidth, topspinevisible,
         rightspinevisible, leftspinevisible, bottomspinevisible, topspinecolor,
         leftspinecolor, rightspinecolor, bottomspinecolor, colormap, limits,
-        halign, valign, vertical, flipaxisposition, ticklabelalign, flip_vertical_label,
+        halign, valign, vertical, flipaxis, ticklabelalign, flip_vertical_label,
         nsteps, highclip, lowclip,
-        minorticksvisible, minortickalign, minorticksize, minortickwidth, minortickcolor, minorticks)
+        minorticksvisible, minortickalign, minorticksize, minortickwidth, minortickcolor, minorticks, scale)
 
     decorations = Dict{Symbol, Any}()
 
     protrusions = Node(GridLayoutBase.RectSides{Float32}(0, 0, 0, 0))
-    layoutobservables = LayoutObservables{Colorbar}(attrs.width, attrs.height, attrs.tellwidth, attrs.tellheight,
+
+    # make the layout width and height settings depend on `size` if they are set to automatic
+    # and determine whether they are nothing or `size` depending on colorbar orientation
+    _width = lift(attrs.size, attrs.width, vertical, typ = Any) do sz, w, v
+        w === AbstractPlotting.automatic ? (v ? sz : nothing) : w
+    end
+
+    _height = lift(attrs.size, attrs.height, vertical, typ = Any) do sz, h, v
+        h === AbstractPlotting.automatic ? (v ? nothing : sz) : h
+    end
+
+    layoutobservables = LayoutObservables{Colorbar}(_width, _height, attrs.tellwidth, attrs.tellheight,
         halign, valign, attrs.alignmode; suggestedbbox = bbox, protrusions = protrusions)
 
     framebox = @lift(round_to_IRect2D($(layoutobservables.computedbbox)))
@@ -95,35 +124,58 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
 
     cgradient = lift(colormap, typ = Any) do cmap
-        if cmap isa Symbol
-            cgrad(cmap)
-        elseif cmap isa Tuple{Symbol, Number}
-            cgrad(cmap[1], alpha = cmap[2])
-        elseif cmap isa PlotUtils.ColorGradient
+        if cmap isa PlotUtils.ColorGradient
+            # if we have a colorgradient directly, we want to keep it intact
+            # to enable correct categorical colormap behavior etc
             cmap
         else
-            error("Can't deal with colormap of type $(typeof(cmap))")
+            # this is a bit weird, first convert to a vector of colors,
+            # then use cgrad, but at least I can use `get` on that later
+            converted = AbstractPlotting.convert_attribute(
+                cmap,
+                AbstractPlotting.key"colormap"()
+            )
+            cgrad(converted)
         end
     end
 
+    map_is_categorical = lift(x -> x isa PlotUtils.CategoricalColorGradient, cgradient)
+
     steps = lift(cgradient, nsteps) do cgradient, n
-        if cgradient isa PlotUtils.CategoricalColorGradient
+        s = if cgradient isa PlotUtils.CategoricalColorGradient
             cgradient.values
         else
             collect(LinRange(0, 1, n))
         end::Vector{Float64}
     end
 
-    rects_and_colors = lift(barbox, vertical, steps, cgradient) do bbox, v, steps, gradient
+    # it's hard to draw categorical and continous colormaps well
+    # with the same primitives
+
+    # therefore we make one interpolated image for continous
+    # colormaps and number of polys for categorical colormaps
+    # at the same time, then we just set one of them invisible
+    # depending on the type of colormap
+    # this should solve most white-line issues
+
+    # for categorical colormaps we make a number of rectangle polys
+
+    rects_and_colors = lift(barbox, vertical, steps, cgradient, scale, limits) do bbox, v, steps, gradient, scale, lims
+
+        # we need to convert the 0 to 1 steps into rescaled 0 to 1 steps given the
+        # colormap's `scale` attribute
+        
+        s_scaled = scaled_steps(steps, scale, lims)
+
         xmin, ymin = minimum(bbox)
         xmax, ymax = maximum(bbox)
 
         rects = if v
-            yvals = steps .* (ymax - ymin) .+ ymin
+            yvals = s_scaled .* (ymax - ymin) .+ ymin
             [BBox(xmin, xmax, b, t)
                 for (b, t) in zip(yvals[1:end-1], yvals[2:end])]
         else
-            xvals = steps .* (xmax - xmin) .+ xmin
+            xvals = s_scaled .* (xmax - xmin) .+ xmin
             [BBox(l, r, ymin, ymax)
                 for (l, r) in zip(xvals[1:end-1], xvals[2:end])]
         end
@@ -133,15 +185,37 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
         rects, colors
     end
 
+    colors = lift(x -> getindex(x, 2), rects_and_colors)
+
     rects = poly!(topscene,
         lift(x -> getindex(x, 1), rects_and_colors),
-        color = lift(x -> getindex(x, 2), rects_and_colors),
-        show_axis = false)
+        color = colors,
+        show_axis = false,
+        visible = map_is_categorical,
+    )
 
-    decorations[:colorrects] = rects
+    decorations[:categorical_map] = rects
 
-    # hm = heatmap!(topscene, xrange, yrange, colorcells, colormap = colormap, raw = true)
-    # decorations[:heatmap] = hm
+    # for continous colormaps we sample a 1d image
+    # to avoid white lines when rendering vector graphics
+
+    continous_pixels = lift(vertical, nsteps, cgradient, limits, scale) do v, n, grad, lims, scale
+
+        s_steps = scaled_steps(LinRange(0, 1, n), scale, lims)
+        px = get.(Ref(grad), s_steps)
+        v ? reshape(px, 1, n) : reshape(px, n, 1)
+    end
+
+    cont_image = image!(topscene,
+        @lift(range(left($barbox), right($barbox), length = 2)),
+        @lift(range(bottom($barbox), top($barbox), length = 2)),
+        continous_pixels,
+        visible = @lift(!$map_is_categorical),
+        show_axis = false,
+        interpolate = true,
+    )
+
+    decorations[:continuous_map] = cont_image
 
     highclip_tri = lift(barbox, spinewidth) do box, spinewidth
         if vertical[]
@@ -225,17 +299,17 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     decorations[:spines] = lines!(topscene, borderpoints, linewidth = spinewidth, color = topspinecolor)
 
-    axispoints = lift(barbox, vertical, flipaxisposition) do scenearea,
-            vertical, flipaxisposition
+    axispoints = lift(barbox, vertical, flipaxis) do scenearea,
+            vertical, flipaxis
 
         if vertical
-            if flipaxisposition
+            if flipaxis
                 (bottomright(scenearea), topright(scenearea))
             else
                 (bottomleft(scenearea), topleft(scenearea))
             end
         else
-            if flipaxisposition
+            if flipaxis
                 (topleft(scenearea), topright(scenearea))
             else
                 (bottomleft(scenearea), bottomright(scenearea))
@@ -244,36 +318,37 @@ function layoutable(::Type{<:Colorbar}, fig_or_scene; bbox = nothing, kwargs...)
 
     end
 
-    axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxisposition,
+    axis = LineAxis(topscene, endpoints = axispoints, flipped = flipaxis,
         limits = limits, ticklabelalign = ticklabelalign, label = label,
         labelpadding = labelpadding, labelvisible = labelvisible, labelsize = labelsize,
         labelcolor = labelcolor,
         labelfont = labelfont, ticklabelfont = ticklabelfont, ticks = ticks, tickformat = tickformat,
         ticklabelsize = ticklabelsize, ticklabelsvisible = ticklabelsvisible, ticksize = ticksize,
         ticksvisible = ticksvisible, ticklabelpad = ticklabelpad, tickalign = tickalign,
+        ticklabelrotation = ticklabelrotation,
         tickwidth = tickwidth, tickcolor = tickcolor, spinewidth = spinewidth,
         ticklabelspace = ticklabelspace, ticklabelcolor = ticklabelcolor,
         spinecolor = :transparent, spinevisible = :false, flip_vertical_label = flip_vertical_label,
         minorticksvisible = minorticksvisible, minortickalign = minortickalign,
         minorticksize = minorticksize, minortickwidth = minortickwidth,
-        minortickcolor = minortickcolor, minorticks = minorticks)
+        minortickcolor = minortickcolor, minorticks = minorticks, scale = scale)
         
     decorations[:axis] = axis
 
-    onany(axis.protrusion, vertical, flipaxisposition) do axprotrusion,
-            vertical, flipaxisposition
+    onany(axis.protrusion, vertical, flipaxis) do axprotrusion,
+            vertical, flipaxis
 
 
         left, right, top, bottom = 0f0, 0f0, 0f0, 0f0
 
         if vertical
-            if flipaxisposition
+            if flipaxis
                 right += axprotrusion
             else
                 left += axprotrusion
             end
         else
-            if flipaxisposition
+            if flipaxis
                 top += axprotrusion
             else
                 bottom += axprotrusion
@@ -294,4 +369,14 @@ end
 
 function tight_ticklabel_spacing!(lc::Colorbar)
     tight_ticklabel_spacing!(lc.elements[:axis])
+end
+
+function scaled_steps(steps, scale, lims)
+    # first scale to limits so we can actually apply the scale to the values
+    # (log(0) doesn't work etc.)
+    s_limits = steps .* (lims[2] - lims[1]) .+ lims[1]
+    # scale with scaling function
+    s_limits_scaled = scale.(s_limits)
+    # then rescale to 0 to 1
+    s_scaled = (s_limits_scaled .- s_limits_scaled[1]) ./ (s_limits_scaled[end] - s_limits_scaled[1])
 end

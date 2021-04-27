@@ -323,49 +323,6 @@ function subtheme(scene, key::Symbol)
     sub
 end
 
-"""
-    xaxis_top!(la::Axis)
-
-Move the x-axis to the top, while correctly aligning the tick labels at the bottom.
-"""
-function xaxis_top!(la::Axis)
-    la.xaxisposition = :top
-    la.xticklabelalign = (la.xticklabelalign[][1], :bottom)
-    nothing
-end
-
-"""
-    xaxis_bottom!(la::Axis)
-
-Move the x-axis to the bottom, while correctly aligning the tick labels at the top.
-"""
-function xaxis_bottom!(la::Axis)
-    la.xaxisposition = :bottom
-    la.xticklabelalign = (la.xticklabelalign[][1], :top)
-    nothing
-end
-
-"""
-    yaxis_left!(la::Axis)
-
-Move the y-axis to the left, while correctly aligning the tick labels at the right.
-"""
-function yaxis_left!(la::Axis)
-    la.yaxisposition = :left
-    la.yticklabelalign = (:right, la.yticklabelalign[][2])
-    nothing
-end
-
-"""
-    yaxis_right!(la::Axis)
-
-Move the y-axis to the right, while correctly aligning the tick labels at the left.
-"""
-function yaxis_right!(la::Axis)
-    la.yaxisposition = :right
-    la.yticklabelalign = (:left, la.yticklabelalign[][2])
-    nothing
-end
 
 """
     labelslider!(scene, label, range; format = string, sliderkw = Dict(), labelkw = Dict(), valuekw = Dict(), layoutkw...)
@@ -436,9 +393,9 @@ function labelslidergrid!(scene, labels, ranges; formats = [string],
     sliders = map(x -> x.slider, elements)
     labels = map(x -> x.label, elements)
     valuelabels = map(x -> x.valuelabel, elements)
-    
+
     layout = grid!(hcat(labels, sliders, valuelabels); layoutkw...)
-    
+
     (sliders = sliders, labels = labels, valuelabels = valuelabels, layout = layout)
 end
 
@@ -450,7 +407,7 @@ function hvlines!(ax::Axis, direction::Int, datavals, axmins, axmaxs; attributes
 
     datavals, axmins, axmaxs = map(x -> x isa Observable ? x : Observable(x), (datavals, axmins, axmaxs))
 
-    linesegs = lift(ax.limits, ax.scene.px_area, datavals, axmins, axmaxs) do lims, pxa,
+    linesegs = lift(ax.finallimits, ax.scene.px_area, datavals, axmins, axmaxs) do lims, pxa,
             datavals, axmins, axmaxs
 
         xlims = (minimum(lims)[direction], maximum(lims)[direction])
@@ -491,5 +448,19 @@ Create vertical lines across `ax` at `xs` in data coordinates and `ymin` to `yma
 in axis coordinates (0 to 1). All three of these can have single or multiple values because
 they are broadcast to calculate the final line segments.
 """
-vlines!(ax::Axis, xs; ymin = 0.0, ymax = 1.0, attrs...) = 
+vlines!(ax::Axis, xs; ymin = 0.0, ymax = 1.0, attrs...) =
     hvlines!(ax, 2, xs, ymin, ymax; attrs...)
+
+"""
+    abline!(axis::Axis, a::Number, b::Number; line_kw_args...)
+Adds a line defined by `f(x) = x * b + a` to the axis.
+kwargs are the same as for a `line` plot and are passed directly to the line attributess.
+"""
+function abline!(axis::Axis, a::Number, b::Number; kwargs...)
+    f(x) = x * b + a
+    line = map(axis.finallimits) do limits
+        xmin, xmax = first.(extrema(limits))
+        return [Point2f0(xmin, f(xmin)), Point2f0(xmax, f(xmax))]
+    end
+    return linesegments!(axis, line; xautolimits=false, yautolimits=false, kwargs...)
+end

@@ -48,6 +48,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         colormap = [:black, :white],
+        colorrange = automatic,
         interpolate = true,
         fxaa = false,
         lowclip = nothing,
@@ -70,6 +71,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         colormap = :viridis,
+        colorrange = automatic,
         linewidth = 0.0,
         interpolate = false,
         levels = 1,
@@ -120,6 +122,7 @@ $(ATTRIBUTES)
         default_theme(scene)...,
         color = nothing,
         colormap = :viridis,
+        colorrange = automatic,
         shading = true,
         fxaa = true,
         lowclip = nothing,
@@ -147,6 +150,7 @@ $(ATTRIBUTES)
         linewidth = 1.0,
         color = :black,
         colormap = :viridis,
+        colorrange = automatic,
         linestyle = nothing,
         fxaa = false
     )
@@ -183,6 +187,7 @@ $(ATTRIBUTES)
         default_theme(scene)...,
         color = :black,
         colormap = :viridis,
+        colorrange = automatic,
         interpolate = false,
         shading = true,
         fxaa = true,
@@ -204,6 +209,7 @@ $(ATTRIBUTES)
         default_theme(scene)...,
         color = :gray65,
         colormap = :viridis,
+        colorrange = automatic,
         marker = Circle,
         markersize = 10,
 
@@ -266,10 +272,66 @@ $(ATTRIBUTES)
         rotation = 0.0,
         textsize = 20,
         position = Point2f0(0),
-        justification = 0.5,
-        lineheight = 1.0
+        justification = automatic,
+        lineheight = 1.0,
+        space = :screen, # or :data
+        offset = Point2f0(0, 0),
+        _glyphlayout = nothing,
     )
 end
+
+function plot!(plot::Text)
+    
+    # attach a function to any text that calculates the glyph layout and stores it
+    onany(plot[1], plot.position, plot.textsize, plot.font, plot.align, plot.rotation, plot.model, plot.justification, plot.lineheight) do str, pos, ts, f, al, rot, mo, jus, lh
+        ts = to_textsize(ts)
+        f = to_font(f)
+        rot = to_rotation(rot)
+
+        if str isa String
+            glyphlayout = layout_text(str, ts, f, al, rot, mo, jus, lh)
+        elseif str isa AbstractArray
+            glyphlayout = []
+            broadcast_foreach(str, ts, f, al, rot, Ref(mo), jus, lh) do str, ts, f, al, rot, mo, jus, lh
+                subgl = layout_text(str, ts, f, al, rot, mo, jus, lh)
+                push!(glyphlayout, subgl)
+            end
+        end
+
+        plot._glyphlayout[] = glyphlayout
+    end
+    # populate _glyphlayout first time
+    plot.position[] = plot.position[]
+
+    plot
+end
+
+# overload text plotting for a vector of tuples of a string and a point each
+function plot!(plot::Text{<:Tuple{<:AbstractArray{<:Tuple{String, <:Point}}}})
+    strings_and_positions = plot[1]
+
+    strings = Node(first.(strings_and_positions[]))
+    positions = Node(to_ndim.(Ref(Point3f0), last.(strings_and_positions[]), 0))
+
+    attrs = plot.attributes
+    pop!(attrs, :position)
+
+    t = text!(plot, strings; position = positions, attrs...)
+
+    # update both text and positions together
+    on(strings_and_positions) do str_pos
+        strs = first.(str_pos)
+        poss = to_ndim.(Ref(Point3f0), last.(str_pos), 0)
+        # first mutate strings without triggering redraw
+        t[1].val = strs
+        # then update positions with trigger
+        positions[] = poss
+    end
+
+    plot
+end
+
+
 
 function color_and_colormap!(plot, intensity = plot[:color])
     if isa(intensity[], AbstractArray{<: Number})
@@ -626,15 +688,33 @@ plot!(p::Combined) = _plot!(p)
 
 _plot!(p::Atomic{T}) where T = p
 
-function _plot!(p::Combined{Any, T}) where T
-    args = (T.parameters...,)
-    typed_args = join(string.("::", args), ", ")
-    error("Plotting for the arguments ($typed_args) not defined. If you want to support those arguments, overload plot!(plot::Plot$((args...,)))")
+function _plot!(p::Combined{fn, T}) where {fn, T}
+    throw(PlotMethodError(fn, T))
 end
-function _plot!(p::Combined{X, T}) where {X, T}
+
+struct PlotMethodError <: Exception
+    fn
+    T
+end
+
+function Base.showerror(io::IO, err::PlotMethodError)
+    fn = err.fn
+    T = err.T
     args = (T.parameters...,)
     typed_args = join(string.("::", args), ", ")
-    error("Plotting for the arguments ($typed_args) not defined for $X. If you want to support those arguments, overload plot!(plot::$X{ <: $T})")
+
+    print(io, "PlotMethodError: no ")
+    printstyled(io, fn == Any ? "plot" : fn; color=:cyan)
+    print(io, " method for arguments ")
+    printstyled(io, "($typed_args)"; color=:cyan)
+    print(io, ". To support these arguments, define\n  ")
+    printstyled(io, "plot!(::$(Combined{fn,S} where {S<:T}))"; color=:cyan)
+    print(io, "\nAvailable methods are:\n")
+    for m in methods(plot!)
+        if m.sig <: Tuple{typeof(plot!), Combined{fn}}
+            println(io, "  ", m)
+        end
+    end
 end
 
 function show_attributes(attributes)
