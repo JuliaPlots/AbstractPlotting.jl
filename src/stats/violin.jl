@@ -22,7 +22,7 @@ function plot!(plot::Violin)
     dodge, n_dodge, x_gap, dodge_gap = plot[:dodge], plot[:n_dodge], plot[:x_gap], plot[:dodge_gap]
 
     signals = lift(x, y, width, dodge, n_dodge, x_gap, dodge_gap, side, trim, show_median) do x, y, bw, dodge, n_dodge, x_gap, dodge_gap, vside, trim, show_median
-        x, bw = xw_from_dodge(x, bw, dodge, n_dodge, x_gap, dodge_gap)
+        x, bw = xw_from_dodge(x, bw, 1, x_gap, dodge, n_dodge, dodge_gap)
         vertices = Vector{Point2f0}[]
         lines = Pair{Point2f0, Point2f0}[]
         for (key, idxs) in StructArrays.finduniquesorted(x)
