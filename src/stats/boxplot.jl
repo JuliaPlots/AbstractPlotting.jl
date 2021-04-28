@@ -78,8 +78,8 @@ function AbstractPlotting.plot!(plot::BoxPlot)
         plot[1],
         plot[2],
         args...,
-    ) do x, y, bw, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap
-        x, bw = xw_from_dodge(x, bw, 1.0, x_gap, dodge, n_dodge, dodge_gap)
+    ) do x, y, width, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap
+        x̂, bw = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
         if !(whiskerwidth == :match || whiskerwidth >= 0)
             error("whiskerwidth must be :match or a positive number. Found: $whiskerwidth")
         end
@@ -92,7 +92,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
         notchmin = Float32[]
         notchmax = Float32[]
         t_segments = Point2f0[]
-        for (i, (center, idxs)) in enumerate(StructArrays.finduniquesorted(x))
+        for (i, (center, idxs)) in enumerate(StructArrays.finduniquesorted(x̂))
             values = view(y, idxs)
 
             # compute quantiles
@@ -154,8 +154,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
             notchmax = notchmax,
             outliers = outlier_points,
             t_segments = t_segments,
-            width = bw,
-            x = x,
+            boxwidth = bw,
         )
     end
     centers = @lift($signals.centers)
@@ -166,9 +165,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
     notchmax = @lift($show_notch ? $signals.notchmax : automatic)
     outliers = @lift($signals.outliers)
     t_segments = @lift($signals.t_segments)
-    # From here on, take `x` and `width` after dodging
-    width = @lift($signals.width)
-    x = @lift($signals.x)
+    boxwidth = @lift($signals.boxwidth)
 
     outliercolor = lift(plot[:outliercolor], plot[:color]) do outliercolor, color
         outliercolor === automatic ? color : outliercolor
@@ -200,7 +197,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
         midlinewidth = plot[:medianlinewidth],
         show_midline = plot[:show_median],
         orientation = orientation,
-        width = width,
+        width = boxwidth,
         show_notch = show_notch,
         notchmin = notchmin,
         notchmax = notchmax,

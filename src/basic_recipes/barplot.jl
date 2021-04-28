@@ -78,8 +78,8 @@ function AbstractPlotting.plot!(p::BarPlot)
             minimum_distance = isempty(x_diffs) ? 1.0 : minimum(x_diffs)
         end
 
-        # compute width of bars
-        x, width = xw_from_dodge(x, width, minimum_distance, x_gap, dodge, n_dodge, dodge_gap)
+        # compute width of bars and x̂ (horizontal position after dodging)
+        x̂, bw = xw_from_dodge(x, width, minimum_distance, x_gap, dodge, n_dodge, dodge_gap)
 
         # --------------------------------
         # ----------- Stacking -----------
@@ -93,13 +93,13 @@ function AbstractPlotting.plot!(p::BarPlot)
             fillto === automatic || @warn "Ignore keyword fillto when keyword stack is provided"
             i_stack = stack
             
-            from, to = stack_grouped_from_to(i_stack, y, (x = x,))
+            from, to = stack_grouped_from_to(i_stack, y, (x = x̂,))
             y, fillto = to, from
         else
             ArgumentError("The keyword argument `stack` currently supports only `AbstractVector{<: Integer}`") |> throw
         end
         
-        rects = @. bar_rectangle(x, y, width, fillto)
+        rects = @. bar_rectangle(x̂, y, bw, fillto)
         return in_y_direction ? rects : flip.(rects)
     end
 

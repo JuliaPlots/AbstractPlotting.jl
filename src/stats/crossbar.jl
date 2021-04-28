@@ -56,8 +56,8 @@ function AbstractPlotting.plot!(plot::CrossBar)
         plot[3],
         plot[4],
         args...,
-    ) do x, y, ymin, ymax, bw, dodge, n_dodge, x_gap, dodge_gap, show_notch, nmin, nmax, nw, orientation
-        x, bw = xw_from_dodge(x, bw, 1.0, x_gap, dodge, n_dodge, dodge_gap)
+    ) do x, y, ymin, ymax, width, dodge, n_dodge, x_gap, dodge_gap, show_notch, nmin, nmax, nw, orientation
+        x̂, bw = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
         show_notch = show_notch && (nmin !== automatic && nmax !== automatic)
 
         # for horizontal crossbars just flip all components
@@ -68,7 +68,7 @@ function AbstractPlotting.plot!(plot::CrossBar)
 
         # make the shape
         hw = bw ./ 2 # half box width
-        l, m, r = x .- hw, x, x .+ hw
+        l, m, r = x̂ .- hw, x̂, x̂ .+ hw
 
         if show_notch && nmin !== automatic && nmax !== automatic
             if any(nmin < ymin || nmax > ymax)
