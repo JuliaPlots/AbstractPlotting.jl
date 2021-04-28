@@ -79,7 +79,7 @@ function AbstractPlotting.plot!(p::BarPlot)
         end
 
         # compute width of bars and x̂ (horizontal position after dodging)
-        x̂, bw = xw_from_dodge(x, width, minimum_distance, x_gap, dodge, n_dodge, dodge_gap)
+        x̂, barwidth = xw_from_dodge(x, width, minimum_distance, x_gap, dodge, n_dodge, dodge_gap)
 
         # --------------------------------
         # ----------- Stacking -----------
@@ -99,7 +99,7 @@ function AbstractPlotting.plot!(p::BarPlot)
             ArgumentError("The keyword argument `stack` currently supports only `AbstractVector{<: Integer}`") |> throw
         end
         
-        rects = @. bar_rectangle(x̂, y, bw, fillto)
+        rects = @. bar_rectangle(x̂, y, barwidth, fillto)
         return in_y_direction ? rects : flip.(rects)
     end
 

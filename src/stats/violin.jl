@@ -12,6 +12,9 @@ Draw a violin plot.
 @recipe(Violin, x, y) do scene
     Theme(;
         default_theme(scene, Poly)...,
+        npoints = 200,
+        boundary = automatic,
+        bandwidth = automatic,
         side = :both,
         width = automatic,
         dodge = automatic,
@@ -29,19 +32,24 @@ end
 conversion_trait(x::Type{<:Violin}) = SampleBased()
 
 function plot!(plot::Violin)
-    x, y, width, side, trim, show_median = plot[1], plot[2], plot[:width], plot[:side], plot[:trim], plot[:show_median]
+    x, y, width, side, show_median = plot[1], plot[2], plot[:width], plot[:side], plot[:show_median]
+    npoints, boundary, bandwidth = plot[:npoints], plot[:boundary], plot[:bandwidth]
     dodge, n_dodge, x_gap, dodge_gap = plot[:dodge], plot[:n_dodge], plot[:x_gap], plot[:dodge_gap]
 
-    signals = lift(x, y, width, dodge, n_dodge, x_gap, dodge_gap, side, trim, show_median) do x, y, width, dodge, n_dodge, x_gap, dodge_gap, vside, trim, show_median
-        x̂, bw = xw_from_dodge(x, width, 1, x_gap, dodge, n_dodge, dodge_gap)
+    signals = lift(x, y, width, dodge, n_dodge, x_gap, dodge_gap, side, show_median, npoints, boundary, bandwidth) do x, y, width, dodge, n_dodge, x_gap, dodge_gap, vside, show_median, n, bound, bw
+        x̂, violinwidth = xw_from_dodge(x, width, 1, x_gap, dodge, n_dodge, dodge_gap)
         vertices = Vector{Point2f0}[]
         lines = Pair{Point2f0, Point2f0}[]
         for (key, idxs) in StructArrays.finduniquesorted(x̂)
             v = view(y, idxs)
-            
-            spec = (x = key, kde = _density(v; trim = trim), median = median(v))
+            k = KernelDensity.kde(v;
+                npoints = n,
+                (bound === automatic ? NamedTuple() : (boundary = bound,))...,
+                (bw === automatic ? NamedTuple() : (bandwidth = bw,))...,
+            )
+            spec = (x = key, kde = k, median = median(v))
             min, max = extrema_nan(spec.kde.density)
-            scale = 0.5*bw/max
+            scale = 0.5*violinwidth/max
             xl = reverse(spec.x .- spec.kde.density .* scale)
             xr = spec.x .+ spec.kde.density .* scale
             yl = reverse(spec.kde.x)

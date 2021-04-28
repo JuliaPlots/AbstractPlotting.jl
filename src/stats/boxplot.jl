@@ -79,11 +79,11 @@ function AbstractPlotting.plot!(plot::BoxPlot)
         plot[2],
         args...,
     ) do x, y, width, range, show_outliers, whiskerwidth, show_notch, orientation, x_gap, dodge, n_dodge, dodge_gap
-        x̂, bw = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
+        x̂, boxwidth = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
         if !(whiskerwidth == :match || whiskerwidth >= 0)
             error("whiskerwidth must be :match or a positive number. Found: $whiskerwidth")
         end
-        ww = whiskerwidth == :match ? bw : whiskerwidth * bw
+        ww = whiskerwidth == :match ? boxwidth : whiskerwidth * boxwidth
         outlier_points = Point2f0[]
         centers = Float32[]
         medians = Float32[]
@@ -154,7 +154,7 @@ function AbstractPlotting.plot!(plot::BoxPlot)
             notchmax = notchmax,
             outliers = outlier_points,
             t_segments = t_segments,
-            boxwidth = bw,
+            boxwidth = boxwidth,
         )
     end
     centers = @lift($signals.centers)

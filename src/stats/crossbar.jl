@@ -57,7 +57,7 @@ function AbstractPlotting.plot!(plot::CrossBar)
         plot[4],
         args...,
     ) do x, y, ymin, ymax, width, dodge, n_dodge, x_gap, dodge_gap, show_notch, nmin, nmax, nw, orientation
-        x̂, bw = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
+        x̂, boxwidth = xw_from_dodge(x, width, 1.0, x_gap, dodge, n_dodge, dodge_gap)
         show_notch = show_notch && (nmin !== automatic && nmax !== automatic)
 
         # for horizontal crossbars just flip all components
@@ -67,7 +67,7 @@ function AbstractPlotting.plot!(plot::CrossBar)
         end
 
         # make the shape
-        hw = bw ./ 2 # half box width
+        hw = boxwidth ./ 2 # half box width
         l, m, r = x̂ .- hw, x̂, x̂ .+ hw
 
         if show_notch && nmin !== automatic && nmax !== automatic
@@ -93,7 +93,7 @@ function AbstractPlotting.plot!(plot::CrossBar)
             end
             midlines = Pair.(fpoint.(m .- nw .* hw, y), fpoint.(m .+ nw .* hw, y))
         else
-            boxes = frect.(l, ymin, bw, ymax .- ymin)
+            boxes = frect.(l, ymin, boxwidth, ymax .- ymin)
             midlines = Pair.(fpoint.(l, y), fpoint.(r, y))
         end
         return [boxes;], [midlines;]
