@@ -373,7 +373,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The axis scale"
         scale = identity
         "The width or height of the colorbar, depending on if it's vertical or horizontal, unless overridden by `width` / `height`"
-        size = 20
+        size = 16
     end
     (attributes = attrs, documentation = docdict, defaults = defaultdict)
 end
@@ -764,7 +764,7 @@ function default_attributes(::Type{Legend}, scene)
         "The vertical alignment of the entry labels."
         labelvalign = :center
         "The additional space between the legend content and the border."
-        padding = (10f0, 10f0, 10f0, 10f0)
+        padding = (10f0, 10f0, 8f0, 8f0)
         "The additional space between the legend and its suggested boundingbox."
         margin = (0f0, 0f0, 0f0, 0f0)
         "The background color of the legend."
@@ -810,9 +810,9 @@ function default_attributes(::Type{Legend}, scene)
         "The orientation of the legend (:horizontal or :vertical)."
         orientation = :vertical
         "The gap between each group title and its group."
-        titlegap = 15
+        titlegap = 8
         "The gap between each group and the next."
-        groupgap = 30
+        groupgap = 16
         "The horizontal alignment of entry groups in their parent GridLayout."
         gridshalign = :center
         "The vertical alignment of entry groups in their parent GridLayout."
