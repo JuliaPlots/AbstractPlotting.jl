@@ -84,9 +84,9 @@ function default_attributes(::Type{Axis}, scene)
         "The horizontal and vertical alignment of the yticklabels."
         yticklabelalign = AbstractPlotting.automatic
         "The size of the xtick marks."
-        xticksize = 10f0
+        xticksize = 6f0
         "The size of the ytick marks."
-        yticksize = 10f0
+        yticksize = 6f0
         "Controls if the xtick marks are visible."
         xticksvisible = true
         "Controls if the ytick marks are visible."
@@ -289,7 +289,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The color of the tick labels."
         ticklabelcolor = RGBf0(0, 0, 0)
         "The size of the tick marks."
-        ticksize = 10f0
+        ticksize = 6f0
         "Controls if the tick marks are visible."
         ticksvisible = true
         "The ticks."
@@ -549,7 +549,7 @@ function default_attributes(::Type{LineAxis})
         limits = (0f0, 100f0),
         flipped = false,
         flip_vertical_label = false,
-        ticksize = 10f0,
+        ticksize = 6f0,
         tickwidth = 1f0,
         tickcolor = RGBf0(0, 0, 0),
         tickalign = 0f0,
