@@ -52,9 +52,9 @@ function default_attributes(::Type{Axis}, scene)
         "The padding between the ylabel and the ticks or axis."
         ylabelpadding = 15f0 # because of boundingbox inaccuracies of ticklabels
         "The font family of the xticklabels."
-        xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans Light")
         "The font family of the yticklabels."
-        yticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        yticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans Light")
         "The color of xticklabels."
         xticklabelcolor = RGBf0(0, 0, 0)
         "The color of yticklabels."
@@ -1067,11 +1067,11 @@ function default_attributes(::Type{Axis3}, scene)
         "The z ticklabel size"
         zticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
         "The x ticklabel font"
-        xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans Light")
         "The y ticklabel font"
-        yticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        yticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans Light")
         "The z ticklabel font"
-        zticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
+        zticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans Light")
         "The x grid color"
         xgridcolor = :gray80
         "The y grid color"
