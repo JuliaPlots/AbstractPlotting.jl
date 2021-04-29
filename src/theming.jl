@@ -26,11 +26,6 @@ If the primary monitor can't be accessed, returns (1920, 1080) (full hd)
 """
 function primary_resolution end
 
-"""
-Returns a reasonable resolution for the main monitor.
-(right now just half the resolution of the main monitor)
-"""
-reasonable_resolution() = primary_resolution() .÷ 2
 
 #=
 Conservative 7-color palette from Points of view: Color blindness, Bang Wong - Nature Methods
@@ -63,7 +58,7 @@ const minimal_default = Attributes(
     marker = Circle,
     markersize = 0.1,
     linestyle = nothing,
-    resolution = reasonable_resolution(),
+    resolution = (800, 640), # 5x4 aspect ratio
     visible = true,
     clear = true,
     show_axis = true,
