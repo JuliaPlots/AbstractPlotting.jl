@@ -24,7 +24,7 @@ function default_attributes(::Type{Axis}, scene)
         "The title's font size."
         titlesize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The gap between axis and title."
-        titlegap = 10f0
+        titlegap = 4f0
         "Controls if the title is visible."
         titlevisible = true
         "The horizontal alignment of the title."
@@ -48,9 +48,9 @@ function default_attributes(::Type{Axis}, scene)
         "Controls if the ylabel is visible."
         ylabelvisible = true
         "The padding between the xlabel and the ticks or axis."
-        xlabelpadding = 15f0
+        xlabelpadding = 5f0
         "The padding between the ylabel and the ticks or axis."
-        ylabelpadding = 15f0 # because of boundingbox inaccuracies of ticklabels
+        ylabelpadding = 5f0 # because of boundingbox inaccuracies of ticklabels
         "The font family of the xticklabels."
         xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The font family of the yticklabels."
@@ -72,9 +72,9 @@ function default_attributes(::Type{Axis}, scene)
         "The space reserved for the yticklabels."
         yticklabelspace = AbstractPlotting.automatic
         "The space between xticks and xticklabels."
-        xticklabelpad = 5f0
+        xticklabelpad = 2f0
         "The space between yticks and yticklabels."
-        yticklabelpad = 5f0
+        yticklabelpad = 4f0
         "The counterclockwise rotation of the xticklabels in radians."
         xticklabelrotation = 0f0
         "The counterclockwise rotation of the yticklabels in radians."
@@ -228,7 +228,7 @@ function default_attributes(::Type{Axis}, scene)
         "The alignment of x minor ticks on the axis spine"
         xminortickalign = 0f0
         "The tick size of x minor ticks"
-        xminorticksize = 5f0
+        xminorticksize = 4f0
         "The tick width of x minor ticks"
         xminortickwidth = 1f0
         "The tick color of x minor ticks"
@@ -240,7 +240,7 @@ function default_attributes(::Type{Axis}, scene)
         "The alignment of y minor ticks on the axis spine"
         yminortickalign = 0f0
         "The tick size of y minor ticks"
-        yminorticksize = 5f0
+        yminorticksize = 4f0
         "The tick width of y minor ticks"
         yminortickwidth = 1f0
         "The tick color of y minor ticks"
@@ -279,7 +279,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "Controls if the label is visible."
         labelvisible = true
         "The gap between the label and the ticks."
-        labelpadding = 15f0
+        labelpadding = 5f0
         "The font family of the tick labels."
         ticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The font size of the tick labels."
@@ -299,7 +299,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The space reserved for the tick labels."
         ticklabelspace = AbstractPlotting.automatic
         "The gap between tick labels and tick marks."
-        ticklabelpad = 5f0
+        ticklabelpad = 3f0
         "The alignment of the tick marks relative to the axis spine (0 = out, 1 = in)."
         tickalign = 0f0
         "The line width of the tick marks."
@@ -363,7 +363,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The alignment of minor ticks on the axis spine"
         minortickalign = 0f0
         "The tick size of minor ticks"
-        minorticksize = 5f0
+        minorticksize = 4f0
         "The tick width of minor ticks"
         minortickwidth = 1f0
         "The tick color of minor ticks"
@@ -567,12 +567,12 @@ function default_attributes(::Type{LineAxis})
         labelcolor = RGBf0(0, 0, 0),
         labelvisible = true,
         ticklabelspace = AbstractPlotting.automatic,
-        ticklabelpad = 5f0,
-        labelpadding = 15f0,
+        ticklabelpad = 3f0,
+        labelpadding = 5f0,
         reversed = false,
         minorticksvisible = true,
         minortickalign = 0f0,
-        minorticksize = 5f0,
+        minorticksize = 4f0,
         minortickwidth = 1f0,
         minortickcolor = :black,
         minorticks = AbstractPlotting.automatic,
@@ -1135,7 +1135,7 @@ function default_attributes(::Type{Axis3}, scene)
         "The title's font size."
         titlesize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The gap between axis and title."
-        titlegap = 10f0
+        titlegap = 4f0
         "Controls if the title is visible."
         titlevisible = true
         "The horizontal alignment of the title."
