@@ -22,7 +22,7 @@ function default_attributes(::Type{Axis}, scene)
         "The font family of the title."
         titlefont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The title's font size."
-        titlesize = lift_parent_attribute(scene, :fontsize, 20f0)
+        titlesize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The gap between axis and title."
         titlegap = 10f0
         "Controls if the title is visible."
@@ -40,9 +40,9 @@ function default_attributes(::Type{Axis}, scene)
         "The color of the ylabel."
         ylabelcolor = RGBf0(0, 0, 0)
         "The font size of the xlabel."
-        xlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        xlabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The font size of the ylabel."
-        ylabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        ylabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "Controls if the xlabel is visible."
         xlabelvisible = true
         "Controls if the ylabel is visible."
@@ -60,9 +60,9 @@ function default_attributes(::Type{Axis}, scene)
         "The color of yticklabels."
         yticklabelcolor = RGBf0(0, 0, 0)
         "The font size of the xticklabels."
-        xticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        xticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The font size of the yticklabels."
-        yticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        yticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "Controls if the xticklabels are visible."
         xticklabelsvisible = true
         "Controls if the yticklabels are visible."
@@ -275,7 +275,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The label font family."
         labelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The label font size."
-        labelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        labelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "Controls if the label is visible."
         labelvisible = true
         "The gap between the label and the ticks."
@@ -283,7 +283,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "The font family of the tick labels."
         ticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The font size of the tick labels."
-        ticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        ticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "Controls if the tick labels are visible."
         ticklabelsvisible = true
         "The color of the tick labels."
@@ -404,7 +404,7 @@ function default_attributes(::Type{Label}, scene)
         "The color of the text."
         color = RGBf0(0, 0, 0)
         "The font size of the text."
-        textsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        textsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The font family of the text."
         font = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The vertical alignment of the text in its suggested boundingbox"
@@ -491,7 +491,7 @@ function default_attributes(::Type{Button}, scene)
         "The extra space added to the sides of the button label's boundingbox."
         padding = (10f0, 10f0, 10f0, 10f0)
         "The font size of the button label."
-        textsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        textsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The text of the button label."
         label = "Button"
         "The font family of the button label."
@@ -742,7 +742,7 @@ function default_attributes(::Type{Legend}, scene)
         "The font family of the legend group titles."
         titlefont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The font size of the legend group titles."
-        titlesize = lift_parent_attribute(scene, :fontsize, 20f0)
+        titlesize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The horizontal alignment of the legend group titles."
         titlehalign = :center
         "The vertical alignment of the legend group titles."
@@ -754,7 +754,7 @@ function default_attributes(::Type{Legend}, scene)
         "The group title positions relative to their groups. Can be `:top` or `:left`."
         titleposition = :top
         "The font size of the entry labels."
-        labelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        labelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The font family of the entry labels."
         labelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The color of the entry labels."
@@ -911,7 +911,7 @@ function default_attributes(::Type{Textbox}, scene)
         "Controls if the textbox is defocused when a string is submitted."
         defocus_on_submit = true
         "Text size."
-        textsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        textsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "Text color."
         textcolor = :black
         "Text color for the placeholder."
@@ -1025,11 +1025,11 @@ function default_attributes(::Type{Axis3}, scene)
         "Controls if the z ticks are visible"
         zticksvisible = true
         "The x label size"
-        xlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        xlabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The y label size"
-        ylabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        ylabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The z label size"
-        zlabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        zlabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The x label font"
         xlabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The y label font"
@@ -1061,11 +1061,11 @@ function default_attributes(::Type{Axis3}, scene)
         "The z ticklabel color"
         zticklabelcolor = :black
         "The x ticklabel size"
-        xticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        xticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The y ticklabel size"
-        yticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        yticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The z ticklabel size"
-        zticklabelsize = lift_parent_attribute(scene, :fontsize, 20f0)
+        zticklabelsize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The x ticklabel font"
         xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The y ticklabel font"
@@ -1133,7 +1133,7 @@ function default_attributes(::Type{Axis3}, scene)
         "The font family of the title."
         titlefont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The title's font size."
-        titlesize = lift_parent_attribute(scene, :fontsize, 20f0)
+        titlesize = lift_parent_attribute(scene, :fontsize, 16f0)
         "The gap between axis and title."
         titlegap = 10f0
         "Controls if the title is visible."
