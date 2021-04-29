@@ -64,6 +64,24 @@ function plot!(arrowplot::Arrows{<: Tuple{AbstractVector{<: Point{N, T}}, V}}) w
             Point{N, Float32}(p1) => Point{N, Float32}(p1 .+ (dir .* Float32(s)))
         end
     end
+
+    scene = parent_scene(arrowplot)
+
+    rotations = directions
+
+    # for 2D arrows, compute the correct marker rotation given the projection / scene size
+    # for the screen-space marker
+    if N == 2
+        rotations = lift(scene.camera.projectionview, scene.px_area, headstart) do pv, pxa, hs
+            proj_rotations = map(hs) do (start, stop)
+                pstart = project(scene, start)
+                pstop = project(scene, stop)
+                diff = pstop - pstart
+            end
+        end
+    end
+
+
     linesegments!(
         arrowplot, headstart,
         color = arrowplot[:linecolor], linewidth = arrowplot[:linewidth],
@@ -73,6 +91,7 @@ function plot!(arrowplot::Arrows{<: Tuple{AbstractVector{<: Point{N, T}}, V}}) w
         arrowplot,
         lift(x-> last.(x), headstart),
         marker = lift(x-> arrow_head(N, x), arrowhead), markersize = arrowsize,
-        color = arrowcolor, rotations = directions,  strokewidth = 0.0, colormap = colormap,
+        color = arrowcolor, rotations = rotations,
+        strokewidth = 0.0, colormap = colormap,
     )
 end
