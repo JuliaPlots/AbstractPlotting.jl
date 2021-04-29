@@ -788,9 +788,9 @@ function default_attributes(::Type{Legend}, scene)
         "The number of banks in which the legend entries are grouped. Columns if the legend is vertically oriented, otherwise rows."
         nbanks = 1
         "The gap between the label of one legend entry and the patch of the next."
-        colgap = 20
+        colgap = 16
         "The gap between the entry rows."
-        rowgap = 4
+        rowgap = 3
         "The gap between the patch and the label of each legend entry."
         patchlabelgap = 5
         "The default points used for LineElements in normalized coordinates relative to each label patch."
