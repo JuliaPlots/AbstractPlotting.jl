@@ -267,7 +267,7 @@ columns respectively.
 ```@example spacing
 using CairoMakie
 
-fig = Figure(resolution = (1200, 900))
+fig = Figure()
 
 axs = [Axis(fig[i, j]) for i in 1:3, j in 1:3]
 axs[1, 1].title = "Group A"

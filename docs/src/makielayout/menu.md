@@ -16,7 +16,7 @@ The attribute `selection` is set to `optionvalue(element)` when the element's en
 ```@example
 using GLMakie
 
-fig = Figure(resolution = (1200, 900))
+fig = Figure()
 
 menu = Menu(fig, options = ["viridis", "heat", "blues"])
 
