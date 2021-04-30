@@ -508,7 +508,7 @@ Here's an example how to do this with a second y axis on the right.
 ```@example
 using CairoMakie
 
-f = Figure(resolution = (800, 600))
+f = Figure()
 
 ax1 = Axis(f[1, 1], yticklabelcolor = :blue)
 ax2 = Axis(f[1, 1], yticklabelcolor = :red, yaxisposition = :right)

@@ -320,7 +320,7 @@ You can pass your axis attributes under the keyword `axis` and your figure attri
 using CairoMakie
 
 heatmap(randn(20, 20),
-    figure = (resolution = (800, 600), backgroundcolor = :pink),
+    figure = (, backgroundcolor = :pink),
     axis = (aspect = 1, xlabel = "x axis", ylabel = "y axis")
 )
 ```

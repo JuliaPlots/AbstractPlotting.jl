@@ -72,7 +72,7 @@ Just specify `pt_per_unit` when saving vector formats and `px_per_unit` when sav
 Here's an example:
 
 ```julia
-fig = Figure(resolution = (800, 600))
+fig = Figure()
 
 save("normal.pdf", fig) # size = 800 x 600 pt
 save("larger.pdf", fig, pt_per_unit = 2) # size = 1600 x 1200 pt

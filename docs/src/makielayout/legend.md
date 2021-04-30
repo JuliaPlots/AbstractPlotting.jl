@@ -85,7 +85,7 @@ The position can be set via a shortcut symbol, first halign (l, r, c) then valig
 ```@example
 using CairoMakie
 
-f = Figure(resolution = (800, 600))
+f = Figure()
 
 ax = Axis(f[1, 1])
 
