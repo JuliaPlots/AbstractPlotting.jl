@@ -43,7 +43,8 @@ Random.seed!(2) # hide
 noto_sans = "../assets/NotoSans-Regular.ttf"
 noto_sans_bold = "../assets/NotoSans-Bold.ttf"
 
-fig = Figure(backgroundcolor = RGBf0(0.98, 0.98, 0.98), font = noto_sans)
+fig = Figure(backgroundcolor = RGBf0(0.98, 0.98, 0.98),
+    resolution = (1000, 700), font = noto_sans)
 
 fig
 ```
