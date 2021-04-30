@@ -38,7 +38,7 @@ func = Node{Any}(funcs[1])
 ys = @lift($func.(0:0.3:10))
 scat = scatter!(ax, ys, markersize = 10px, color = ys)
 
-cb = Colorbar(fig[1, 3], scat, width = 30)
+cb = Colorbar(fig[1, 3], scat)
 
 on(menu.selection) do s
     scat.colormap = s

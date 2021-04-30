@@ -18,7 +18,7 @@ Axis(f[1, 1])
 
 co = contourf!(xs, ys, zs, levels = 10)
 
-Colorbar(f[1, 2], co, width = 20)
+Colorbar(f[1, 2], co)
 
 f
 ```
@@ -39,7 +39,7 @@ Axis(f[1, 1])
 co = contourf!(xs, ys, zs, levels = -0.75:0.25:0.5,
     extendlow = :cyan, extendhigh = :magenta)
 
-Colorbar(f[1, 2], co, width = 20)
+Colorbar(f[1, 2], co)
 
 f
 ```
@@ -61,7 +61,7 @@ co = contourf!(xs, ys, zs,
     levels = -0.75:0.25:0.5,
     extendlow = :auto, extendhigh = :auto)
 
-Colorbar(f[1, 2], co, width = 20)
+Colorbar(f[1, 2], co)
 
 f
 ```

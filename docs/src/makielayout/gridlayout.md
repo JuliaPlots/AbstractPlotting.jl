@@ -41,7 +41,7 @@ scene, layout = layoutscene(resolution = (1200, 900))
 
 layout[1, 1] = Axis(scene, title = "My column has size Relative(2/3)")
 layout[1, 2] = Axis(scene, title = "My column has size Auto()")
-layout[1, 3] = Colorbar(scene, width = 30)
+layout[1, 3] = Colorbar(scene)
 
 colsize!(layout, 1, Relative(2/3))
 
