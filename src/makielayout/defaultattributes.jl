@@ -48,9 +48,9 @@ function default_attributes(::Type{Axis}, scene)
         "Controls if the ylabel is visible."
         ylabelvisible = true
         "The padding between the xlabel and the ticks or axis."
-        xlabelpadding = 5f0
+        xlabelpadding = 3f0
         "The padding between the ylabel and the ticks or axis."
-        ylabelpadding = 5f0 # because of boundingbox inaccuracies of ticklabels
+        ylabelpadding = 3f0 # because of boundingbox inaccuracies of ticklabels
         "The font family of the xticklabels."
         xticklabelfont = lift_parent_attribute(scene, :font, "DejaVu Sans")
         "The font family of the yticklabels."
