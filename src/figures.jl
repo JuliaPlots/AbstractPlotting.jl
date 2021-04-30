@@ -65,7 +65,7 @@ to_rectsides(t::Tuple{Any, Any, Any, Any}) = GridLayoutBase.RectSides{Float32}(t
 function Figure(; kwargs...)
 
     kwargs_dict = Dict(kwargs)
-    padding = pop!(kwargs_dict, :padding, current_default_theme()[:padding])
+    padding = pop!(kwargs_dict, :figure_padding, current_default_theme()[:figure_padding])
 
     scene = Scene(; camera = campixel!, kwargs_dict...)
 
