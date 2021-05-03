@@ -249,7 +249,11 @@ function convert_arguments(P::PointBased, x::Rect3D)
     convert_arguments(P, decompose(Point3f0, x)[inds])
 end
 
-edges(v::AbstractVector) = edges(range(extrema(v)...; length=length(v)))
+function edges(v::AbstractVector)
+    l = length(v)
+    rg = l > 1 ? range(extrema(v)...; length=l) : range(extrema(v)...; step=1)
+    return edges(rg)
+end
 
 function edges(centers::AbstractRange)
     min, s, l = minimum(centers), step(centers), length(centers)
