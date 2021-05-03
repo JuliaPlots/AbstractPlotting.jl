@@ -251,13 +251,17 @@ end
 
 function edges(v::AbstractVector)
     l = length(v)
-    rg = l > 1 ? range(extrema(v)...; length=l) : range(extrema(v)...; step=1)
-    return edges(rg)
-end
-
-function edges(centers::AbstractRange)
-    min, s, l = minimum(centers), step(centers), length(centers)
-    return range(min - s / 2, step=s, length=l + 1)
+    if l == 1
+        return [v[1] - 0.5, v[1] + 0.5]
+    else
+        # Equivalent to
+        # mids = 0.5 .* (v[1:end-1] .+ v[2:end])
+        # borders = [2v[1] - mids[1]; mids; 2v[end] - mids[end]]
+        borders = [0.5 * (v[max(1, i)] + v[min(end, i+1)]) for i in 0:length(v)]
+        borders[1] = 2borders[1] - borders[2]
+        borders[end] = 2borders[end] - borders[end-1]
+        return borders
+    end
 end
 
 function adjust_axes(::DiscreteSurface, x::AbstractVector{<:Number}, y::AbstractVector{<:Number}, z::AbstractMatrix)
