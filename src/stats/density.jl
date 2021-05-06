@@ -93,7 +93,7 @@ function plot!(plot::Density{<:Tuple{<:AbstractVector}})
     notify(lowerupper)
 
     colorobs = lift(plot.color, lowerupper, typ = Any) do c, lu
-        if c == :x
+        if c == :value
             [l[1] for l in lu[1]]
         elseif c == :density
             o = Float32(plot.offset[])
