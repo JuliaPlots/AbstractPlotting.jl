@@ -22,7 +22,11 @@ end
 Plot a kernel density estimate of `values`.
 `npoints` controls the resolution of the estimate, the baseline can be
 shifted with `offset` and the `direction` set to :x or :y.
-`bandwidth` and `boundary` are determined automatically by default. 
+`bandwidth` and `boundary` are determined automatically by default.
+
+`color` is usually set to a single color, but can also be set to `:value`, to color
+with a gradient along `values`, or to `:density`, which colors with an orthogonal
+gradient. For `:density`, only two-color colormaps can be rendered correctly.
 
 ## Attributes
 $(ATTRIBUTES)
