@@ -24,9 +24,9 @@ Plot a kernel density estimate of `values`.
 shifted with `offset` and the `direction` set to :x or :y.
 `bandwidth` and `boundary` are determined automatically by default.
 
-`color` is usually set to a single color, but can also be set to `:value`, to color
-with a gradient along `values`, or to `:density`, which colors with an orthogonal
-gradient. For `:density`, only two-color colormaps can be rendered correctly.
+`color` is usually set to a single color, but can also be set to `:x` or
+`:y` to color with a gradient. If you use `:y` when direction = `:x` (or vice versa),
+note that only 2-element colormaps can work correctly.
 
 ## Attributes
 $(ATTRIBUTES)
@@ -92,12 +92,14 @@ function plot!(plot::Density{<:Tuple{<:AbstractVector}})
     end
     notify(lowerupper)
 
-    colorobs = lift(plot.color, lowerupper, typ = Any) do c, lu
-        if c == :value
-            [l[1] for l in lu[1]]
-        elseif c == :density
+    colorobs = lift(plot.color, lowerupper, plot.direction, typ = Any) do c, lu, dir
+        if (dir == :x && c == :x) || (dir == :y && c == :y)
+            dim = dir == :x ? 1 : 2
+            [l[dim] for l in lu[1]]
+        elseif (dir == :y && c == :x) || (dir == :x && c == :y)
             o = Float32(plot.offset[])
-            vcat([l[2] - o for l in lu[1]], [l[2] - o for l in lu[2]])
+            dim = dir == :x ? 2 : 1
+            vcat([l[dim] - o for l in lu[1]], [l[dim] - o for l in lu[2]])
         else
             c
         end
