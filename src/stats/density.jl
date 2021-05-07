@@ -33,7 +33,7 @@ $(ATTRIBUTES)
 """
 @recipe(Density) do scene
     Theme(
-        color = :gray85,
+        color = RGBAf0(0,0,0,0.2),
         colormap = :viridis,
         colorrange = AbstractPlotting.automatic,
         strokecolor = :black,
