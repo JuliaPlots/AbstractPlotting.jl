@@ -537,11 +537,11 @@ function AbstractPlotting.plot!(
         haskey(plottheme, :cycle) ? plottheme.cycle[] : nothing
     end
 
-    no_cycle_attribute_passed = !any(keys(allattrs)) do key
+    no_cycle_attribute_passed = cycle !== nothing && !any(keys(allattrs)) do key
         any(c -> key in attrsyms(c), cycle)
     end
 
-    if cycle !== nothing && no_cycle_attribute_passed
+    if no_cycle_attribute_passed
         cycler = la.cycler[]
 
         index = if !haskey(cycler.counters, P)
