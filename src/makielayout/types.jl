@@ -9,6 +9,13 @@ end
 struct DataAspect end
 
 
+mutable struct Cycler2
+    covary::Bool
+    counters::Dict{Type, Int}
+end
+
+Cycler2() = Cycler2(true, Dict{Type, Int}())
+
 """
 LinearTicks with ideally a number of `n_ideal` tick marks.
 """
