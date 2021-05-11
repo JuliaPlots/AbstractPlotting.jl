@@ -504,12 +504,64 @@ end
 
 validate_limits_for_scale(lims, scale) = all(x -> x in defined_interval(scale), lims)
 
+
+# is_in_cycle(cycle::Symbol, symbol::Symbol) = cycle == symbol
+# is_in_cycle(cycle::Vector{Symbol}, symbol::Symbol) = symbol in cycle
+
+palettesym(sym::Symbol) = sym
+palettesym(pair::Pair{<:Any, Symbol}) = pair[2]
+attrsyms(sym::Symbol) = [sym]
+attrsyms(pair::Pair{Symbol, Symbol}) = [pair[1]]
+attrsyms(pair::Pair{Vector{Symbol}, Symbol}) = pair[1]
+
 function AbstractPlotting.plot!(
         la::Axis, P::AbstractPlotting.PlotFunc,
         attributes::AbstractPlotting.Attributes, args...;
         kw_attributes...)
 
-    plot = AbstractPlotting.plot!(la.scene, P, attributes, args...; kw_attributes...)
+    allattrs = merge(attributes, Attributes(kw_attributes))
+
+    psym = AbstractPlotting.plotsym(P)
+
+    plottheme = AbstractPlotting.default_theme(nothing, P)
+
+    cdt = AbstractPlotting.current_default_theme()
+    cycle = if haskey(cdt, psym)
+        pt = cdt[psym]
+        if haskey(pt, :cycle)
+            pt.cycle[]
+        else
+            nothing
+        end
+    else
+        haskey(plottheme, :cycle) ? plottheme.cycle[] : nothing
+    end
+
+    if cycle !== nothing
+        cycler = la.cycler[]
+
+        index = if !haskey(cycler.counters, P)
+            cycler.counters[P] = 1
+        else
+            cycler.counters[P] += 1
+        end
+
+        palettes = [la.palettes[palettesym(sym)] for sym in cycle]
+
+        for (isym, syms) in enumerate(attrsyms.(cycle))
+            for sym in syms
+                allattrs[sym] = lift(palettes..., typ = Any) do ps...
+                    cis = CartesianIndices(length.(ps))
+                    n = length(cis)
+                    k = mod1(index, n)
+                    idx = Tuple(cis[k])
+                    ps[isym][idx[isym]]
+                end
+            end
+        end
+    end
+
+    plot = AbstractPlotting.plot!(la.scene, P, allattrs, args...)
 
     # some area-like plots basically always look better if they cover the whole plot area.
     # adjust the limit margins in those cases automatically.
