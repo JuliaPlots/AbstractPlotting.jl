@@ -9,7 +9,7 @@ $(ATTRIBUTES)
 @recipe(BarPlot, x, y) do scene
     Attributes(;
         fillto = automatic,
-        color = theme(scene, :color),
+        color = theme(scene, :patchcolor),
         colormap = theme(scene, :colormap),
         colorrange = automatic,
         dodge = automatic,
@@ -18,8 +18,8 @@ $(ATTRIBUTES)
         dodge_gap = 0.03,
         marker = Rect,
         stack = automatic,
-        strokewidth = 0,
-        strokecolor = :white,
+        strokewidth = theme(scene, :patchstrokewidth),
+        strokecolor = theme(scene, :patchstrokecolor),
         width = automatic,
         direction = :y,
         visible = theme(scene, :visible),

@@ -6,7 +6,7 @@ default_theme(scene, T) = Attributes()
 
 function default_theme(scene)
     Attributes(
-        color = theme(scene, :color),
+        # color = theme(scene, :color),
         linewidth = 1,
         transformation = automatic,
         model = automatic,
@@ -147,12 +147,13 @@ $(ATTRIBUTES)
 @recipe(Lines, positions) do scene
     Attributes(;
         default_theme(scene)...,
-        linewidth = 1.0,
-        color = :black,
+        linewidth = theme(scene, :linewidth),
+        color = theme(scene, :linecolor),
         colormap = :viridis,
         colorrange = automatic,
         linestyle = nothing,
-        fxaa = false
+        fxaa = false,
+        cycle = [:color, :linestyle],
     )
 end
 
@@ -207,14 +208,14 @@ $(ATTRIBUTES)
 @recipe(Scatter, positions) do scene
     Attributes(;
         default_theme(scene)...,
-        color = :gray65,
+        color = theme(scene, :markercolor),
         colormap = :viridis,
         colorrange = automatic,
         marker = Circle,
-        markersize = 8,
+        markersize = 9,
 
-        strokecolor = :black,
-        strokewidth = 1.0,
+        strokecolor = theme(scene, :markerstrokecolor),
+        strokewidth = theme(scene, :markerstrokewidth),
         glowcolor = RGBA(0, 0, 0, 0),
         glowwidth = 0.0,
 
@@ -225,6 +226,8 @@ $(ATTRIBUTES)
         distancefield = nothing,
         markerspace = Pixel,
         fxaa = false,
+
+        cycle = [:color, :marker],
     )
 end
 
@@ -420,7 +423,7 @@ function (PT::Type{<: Combined})(parent, transformation, attributes, input_args,
     PT(parent, transformation, attributes, input_args, converted, AbstractPlot[])
 end
 
-plotsym(::Type{<:AbstractPlot{F}}) where F = Symbol(typeof(F).name.mt.name)
+plotsym(T::Type{<:AbstractPlot{F}}) where F = Symbol(split(string(Symbol(T)), "{")[1])
 
 """
     used_attributes(args...) = ()
