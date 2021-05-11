@@ -22,7 +22,7 @@ It is most commonly used as part of the `boxplot`.
 """
 @recipe(CrossBar, x, y, ymin, ymax) do scene
     t = Theme(
-    color=theme(scene, :color),
+    color=theme(scene, :patchcolor),
     colormap=theme(scene, :colormap),
     colorrange=automatic,
     orientation=:vertical,
