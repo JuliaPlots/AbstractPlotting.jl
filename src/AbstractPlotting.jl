@@ -54,6 +54,7 @@ include("documentation/docstringextension.jl")
 include("utilities/quaternions.jl")
 include("attributes.jl")
 include("dictlike.jl")
+include("interaction/PriorityObservable.jl")
 include("types.jl")
 include("utilities/utilities.jl")
 include("utilities/texture_atlas.jl")
@@ -142,10 +143,12 @@ include("stats/violin.jl")
 # Interactiveness
 include("interaction/events.jl")
 include("interaction/interactive_api.jl")
+include("interaction/inspector.jl")
 
 # documentation and help functions
 include("documentation/documentation.jl")
 include("display.jl")
+
 
 # help functions and supporting functions
 export help, help_attributes, help_arguments
@@ -199,7 +202,6 @@ export window_area
 export window_open
 export mouse_buttons
 export mouse_position
-export mousedrag
 export scroll
 export keyboard_buttons
 export unicode_input
@@ -207,6 +209,7 @@ export dropped_files
 export hasfocus
 export entered_window
 export disconnect!, must_update, force_update!, update!, update_limits!
+export DataInspector
 
 # Raymarching algorithms
 export RaymarchAlgorithm, IsoValue, Absorption, MaximumIntensityProjection, AbsorptionRGBA, IndexedAbsorptionRGBA
