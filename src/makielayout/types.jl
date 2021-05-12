@@ -9,12 +9,27 @@ end
 struct DataAspect end
 
 
-mutable struct Cycler2
-    covary::Bool
+struct Cycler
     counters::Dict{Type, Int}
 end
 
-Cycler2() = Cycler2(true, Dict{Type, Int}())
+Cycler() = Cycler(Dict{Type, Int}())
+
+
+struct Cycle
+    cycle::Vector{Pair{Vector{Symbol}, Symbol}}
+    covary::Bool
+end
+
+Cycle(cycle; covary = false) = Cycle(to_cycle(cycle), covary)
+
+to_cycle(single) = [to_cycle_single(single)]
+to_cycle(symbolvec::Vector) = map(to_cycle_single, symbolvec)
+to_cycle_single(sym::Symbol) = [sym] => sym
+to_cycle_single(pair::Pair{Symbol, Symbol}) = [pair[1]] => pair[2]
+to_cycle_single(pair::Pair{Vector{Symbol}, Symbol}) = pair
+
+
 
 """
 LinearTicks with ideally a number of `n_ideal` tick marks.
@@ -156,6 +171,7 @@ end
     scrollevents::Observable{ScrollEvent}
     keysevents::Observable{KeysEvent}
     interactions::Dict{Symbol, Tuple{Bool, Any}}
+    cycler::Cycler
 end
 
 @Layoutable Colorbar

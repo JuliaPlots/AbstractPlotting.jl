@@ -384,7 +384,7 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
 
     ax = Axis(fig_or_scene, layoutobservables, attrs, decorations, scene,
         xaxislinks, yaxislinks, targetlimits, finallimits, block_limit_linking,
-        mouseeventhandle, scrollevents, keysevents, interactions)
+        mouseeventhandle, scrollevents, keysevents, interactions, Cycler())
     this_axis[] = ax
 
     function process_event(event)
@@ -508,11 +508,16 @@ validate_limits_for_scale(lims, scale) = all(x -> x in defined_interval(scale), 
 # is_in_cycle(cycle::Symbol, symbol::Symbol) = cycle == symbol
 # is_in_cycle(cycle::Vector{Symbol}, symbol::Symbol) = symbol in cycle
 
-palettesym(sym::Symbol) = sym
-palettesym(pair::Pair{<:Any, Symbol}) = pair[2]
-attrsyms(sym::Symbol) = [sym]
-attrsyms(pair::Pair{Symbol, Symbol}) = [pair[1]]
-attrsyms(pair::Pair{Vector{Symbol}, Symbol}) = pair[1]
+palettesyms(cycle::Cycle) = [c[2] for c in cycle.cycle]
+attrsyms(cycle::Cycle) = [c[1] for c in cycle.cycle]
+
+function get_cycler_index!(c::Cycler, P::Type)
+    if !haskey(c.counters, P)
+        c.counters[P] = 1
+    else
+        c.counters[P] += 1
+    end
+end
 
 function AbstractPlotting.plot!(
         la::Axis, P::AbstractPlotting.PlotFunc,
@@ -526,7 +531,7 @@ function AbstractPlotting.plot!(
     plottheme = AbstractPlotting.default_theme(nothing, P)
 
     cdt = AbstractPlotting.current_default_theme()
-    cycle = if haskey(cdt, psym)
+    cycle_raw = if haskey(cdt, psym)
         pt = cdt[psym]
         if haskey(pt, :cycle)
             pt.cycle[]
@@ -537,29 +542,32 @@ function AbstractPlotting.plot!(
         haskey(plottheme, :cycle) ? plottheme.cycle[] : nothing
     end
 
-    no_cycle_attribute_passed = cycle !== nothing && !any(keys(allattrs)) do key
-        any(c -> key in attrsyms(c), cycle)
+    cycle = isnothing(cycle_raw) ? Cycle([]) :
+        cycle_raw isa Cycle ? cycle_raw : Cycle(cycle_raw)
+
+    no_cycle_attribute_passed = !any(keys(allattrs)) do key
+        any(syms -> key in syms, attrsyms(cycle))
     end
 
     if no_cycle_attribute_passed
-        cycler = la.cycler[]
+        cycler = la.cycler
 
-        index = if !haskey(cycler.counters, P)
-            cycler.counters[P] = 1
-        else
-            cycler.counters[P] += 1
-        end
+        index = get_cycler_index!(cycler, P)
 
-        palettes = [la.palettes[palettesym(sym)] for sym in cycle]
+        paletteattrs = [la.palette[sym] for sym in palettesyms(cycle)]
 
-        for (isym, syms) in enumerate(attrsyms.(cycle))
+        for (isym, syms) in enumerate(attrsyms(cycle))
             for sym in syms
-                allattrs[sym] = lift(palettes..., typ = Any) do ps...
-                    cis = CartesianIndices(length.(ps))
-                    n = length(cis)
-                    k = mod1(index, n)
-                    idx = Tuple(cis[k])
-                    ps[isym][idx[isym]]
+                allattrs[sym] = lift(paletteattrs..., typ = Any) do ps...
+                    if cycle.covary
+                        ps[isym][mod1(index, length(ps[isym]))]
+                    else
+                        cis = CartesianIndices(length.(ps))
+                        n = length(cis)
+                        k = mod1(index, n)
+                        idx = Tuple(cis[k])
+                        ps[isym][idx[isym]]
+                    end
                 end
             end
         end
