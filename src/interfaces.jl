@@ -19,7 +19,8 @@ function default_theme(scene)
         shininess = 32f0,
         lightposition = :eyeposition,
         nan_color = RGBAf0(0,0,0,0),
-        ssao = false
+        ssao = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -53,6 +54,7 @@ $(ATTRIBUTES)
         fxaa = false,
         lowclip = nothing,
         highclip = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -78,6 +80,7 @@ $(ATTRIBUTES)
         fxaa = true,
         lowclip = nothing,
         highclip = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -105,6 +108,7 @@ $(ATTRIBUTES)
         colormap = :viridis,
         colorrange = (0, 1),
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -127,7 +131,8 @@ $(ATTRIBUTES)
         fxaa = true,
         lowclip = nothing,
         highclip = nothing,
-        invert_normals = false
+        invert_normals = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -154,6 +159,7 @@ $(ATTRIBUTES)
         linestyle = nothing,
         fxaa = false,
         cycle = [:color, :linestyle],
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -192,6 +198,7 @@ $(ATTRIBUTES)
         interpolate = false,
         shading = true,
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -226,8 +233,8 @@ $(ATTRIBUTES)
         distancefield = nothing,
         markerspace = Pixel,
         fxaa = false,
-
         cycle = [:color, :marker],
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -254,6 +261,7 @@ $(ATTRIBUTES)
         # markerspace = relative,
         shading = true,
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -280,6 +288,7 @@ $(ATTRIBUTES)
         space = :screen, # or :data
         offset = Point2f0(0, 0),
         _glyphlayout = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 

@@ -101,7 +101,6 @@ function _precompile_()
         end
     end   # time: 0.012269881
     Base.precompile(Tuple{typeof(lift),Function,Observable{Any},Observable{Union{Nothing, FRect3D, FRect{3}, Rect3D{Float32}}}})   # time: 0.012067013
-    Base.precompile(Tuple{typeof(on),Function,Camera,Observable{AbstractPlotting.Mouse.DragEnum},Vararg{Observable, 100}})   # time: 0.010931468
     isdefined(AbstractPlotting, Symbol("#89#92")) && Base.precompile(Tuple{getfield(AbstractPlotting, Symbol("#89#92")),Tuple{Int64, Int64}})   # time: 0.010871829
     let fbody = try Base.bodyfunction(which(lift, (Function,Observable{Tuple{Vector{Tuple{String, Point{2, Float32}}}}},))) catch missing end
         if !ismissing(fbody)
@@ -250,5 +249,29 @@ function _precompile_()
     Base.precompile(Tuple{Type{Scatter{Tuple{Vector{Point{2, Float32}}}}},Scene,Transformation,Attributes,Tuple{Observable{Vector{Float64}}, Observable{Vector{Float64}}},Tuple{Observable{Vector{Point{2, Float32}}}}})   # time: 0.001059559
     Base.precompile(Tuple{typeof(is2d),GeometryBasics.HyperRectangle{3, Float32}})   # time: 0.001005834
     Base.precompile(Tuple{Type{Lines{Tuple{Vector{Point{2, Float32}}}}},Scene,Transformation,Attributes,Tuple{Observable{GeometryBasics.HyperRectangle{2, Float32}}},Tuple{Observable{Vector{Point{2, Float32}}}}})   # time: 0.001005373
+    
+    # DataInspector
+    @warnpcfail precompile(on_hover, (DataInspector, ))
+    for PT in (
+            Scatter{Tuple{Vector{Point2f0}}}, 
+            Scatter{Tuple{Vector{Point3f0}}}, 
+            MeshScatter{Tuple{Vector{Point3f0}}}, 
+            Lines{Tuple{Vector{Point2f0}}}, 
+            Lines{Tuple{Vector{Point3f0}}}, 
+            LineSegments{Tuple{Vector{Point2f0}}}, 
+            LineSegments{Tuple{Vector{Point3f0}}}, 
+            # Mesh, 
+            Surface{Tuple{IntervalSets.ClosedInterval{Float32}, IntervalSets.ClosedInterval{Float32}, Matrix{Float32}}}, 
+            Surface{Tuple{Vector{Float32}, Vector{Float32}, Matrix{Float32}}}, 
+            Surface{Tuple{Matrix{Float32}, Matrix{Float32}, Matrix{Float32}}}, 
+            Heatmap{Tuple{IntervalSets.ClosedInterval{Float32}, IntervalSets.ClosedInterval{Float32}, Matrix{Float32}}}, 
+            Heatmap{Tuple{Vector{Float32}, Vector{Float32}, Matrix{Float32}}}, 
+            Image{Tuple{IntervalSets.ClosedInterval{Float32}, IntervalSets.ClosedInterval{Float32}, Matrix{Float32}}}, 
+            Image{Tuple{Vector{Float32}, Vector{Float32}, Matrix{Float32}}}, 
+            BarPlot{Tuple{Vector{Point{2, Float32}}}}
+        )
 
+        @warnpcfail precompile(show_data_recursion, (DataInspector, PT, UInt64))
+        @warnpcfail precompile(show_data, (DataInspector, PT, UInt64))
+    end
 end
