@@ -134,7 +134,7 @@ end
 
 set_theme!(Density = (cycle = [],))
 
-Axis(f[3, 1], "No cycle")
+Axis(f[3, 1], title = "No cycle")
 
 for i in 1:6
     density!(randn(50) .+ 2i)
