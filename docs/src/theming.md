@@ -100,7 +100,13 @@ For a plot object to use cycling, either its default theme or the currently acti
 There are multiple ways to specify this attribute:
 
 ```julia
-
+# You can either make a list of symbols
+cycle = [:color, :marker]
+# or map specific plot attributes to palette attributes
+cycle = [:linecolor => :color, :marker]
+# you can also map multiple attributes that should receive
+# the same cycle attribute
+cycle = [[:linecolor, :markercolor] => :color, :marker]
 ```
 
 ```@example
