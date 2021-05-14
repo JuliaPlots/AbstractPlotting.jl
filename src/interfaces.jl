@@ -276,6 +276,7 @@ $(ATTRIBUTES)
 @recipe(Text, text) do scene
     Attributes(;
         default_theme(scene)...,
+        color = theme(scene, :textcolor),
         font = theme(scene, :font),
         strokecolor = (:black, 0.0),
         strokewidth = 0,

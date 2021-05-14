@@ -56,6 +56,7 @@ const default_palettes = Attributes(
 const minimal_default = Attributes(
     palette = default_palettes,
     font = "Dejavu Sans",
+    textcolor = :black,
     padding = Vec3f0(0.05),
     figure_padding = 16,
     rowgap = 24,
