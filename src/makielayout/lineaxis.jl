@@ -31,7 +31,7 @@ function LineAxis(parent::Scene; kwargs...)
     ticksnode = Node(Point2f0[])
     ticklines = linesegments!(
         parent, ticksnode, linewidth = tickwidth, color = tickcolor,
-        show_axis = false, visible = ticksvisible
+        show_axis = false, visible = ticksvisible, inspectable = false
     )
     decorations[:ticklines] = ticklines
     translate!(ticklines, 0, 0, 10)
@@ -39,7 +39,7 @@ function LineAxis(parent::Scene; kwargs...)
     minorticksnode = Node(Point2f0[])
     minorticklines = linesegments!(
         parent, minorticksnode, linewidth = minortickwidth, color = minortickcolor,
-        show_axis = false, visible = minorticksvisible
+        show_axis = false, visible = minorticksvisible, inspectable = false
     )
     decorations[:minorticklines] = minorticklines
 
@@ -91,7 +91,8 @@ function LineAxis(parent::Scene; kwargs...)
         color = ticklabelcolor,
         show_axis = false,
         visible = ticklabelsvisible,
-        space = :data)
+        space = :data, 
+        inspectable = false)
 
     ticklabel_ideal_space = lift(ticklabelannosnode, ticklabelalign, ticklabelrotation, ticklabelfont, ticklabelsvisible, typ=Float32) do args...
         maxwidth = if pos_extents_horizontal[][3]
@@ -185,7 +186,7 @@ function LineAxis(parent::Scene; kwargs...)
         parent, label, textsize = labelsize, color = labelcolor,
         position = labelpos, show_axis = false, visible = labelvisible,
         align = labelalign, rotation = labelrotation, font = labelfont,
-        space = :data,
+        space = :data, inspectable = false
     )
 
     decorations[:labeltext] = labeltext
@@ -351,7 +352,7 @@ function LineAxis(parent::Scene; kwargs...)
     end
 
     decorations[:axisline] = lines!(parent, linepoints, linewidth = spinewidth, visible = spinevisible,
-        color = spinecolor, raw = true)
+        color = spinecolor, raw = true, inspectable = false)
     translate!(decorations[:axisline], 0, 0, 20)
 
 
@@ -493,8 +494,8 @@ end
 #     get_ticks(LogitTicks(WilkinsonTicks(5, k_min = 3)), scale, any_formatter, vmin, vmax)
 # end
 
-logit_10(x) = log10(x / (1 - x))
-expit_10(x) = 1 / (1 + exp10(-x))
+logit_10(x) = AbstractPlotting.logit(x) / log(10)
+expit_10(x) = AbstractPlotting.logistic(log(10) * x)
 
 # function get_ticks(l::LogitTicks, scale::typeof(AbstractPlotting.logit), ::Automatic, vmin, vmax)
 

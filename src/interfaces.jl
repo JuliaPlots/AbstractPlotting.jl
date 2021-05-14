@@ -19,7 +19,8 @@ function default_theme(scene)
         shininess = 32f0,
         lightposition = :eyeposition,
         nan_color = RGBAf0(0,0,0,0),
-        ssao = false
+        ssao = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -53,6 +54,7 @@ $(ATTRIBUTES)
         fxaa = false,
         lowclip = nothing,
         highclip = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -78,6 +80,7 @@ $(ATTRIBUTES)
         fxaa = true,
         lowclip = nothing,
         highclip = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -105,6 +108,7 @@ $(ATTRIBUTES)
         colormap = :viridis,
         colorrange = (0, 1),
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -127,7 +131,8 @@ $(ATTRIBUTES)
         fxaa = true,
         lowclip = nothing,
         highclip = nothing,
-        invert_normals = false
+        invert_normals = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -152,7 +157,8 @@ $(ATTRIBUTES)
         colormap = :viridis,
         colorrange = automatic,
         linestyle = nothing,
-        fxaa = false
+        fxaa = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -191,6 +197,7 @@ $(ATTRIBUTES)
         interpolate = false,
         shading = true,
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -211,7 +218,7 @@ $(ATTRIBUTES)
         colormap = :viridis,
         colorrange = automatic,
         marker = Circle,
-        markersize = 10,
+        markersize = 8,
 
         strokecolor = :black,
         strokewidth = 1.0,
@@ -225,6 +232,7 @@ $(ATTRIBUTES)
         distancefield = nothing,
         markerspace = Pixel,
         fxaa = false,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -251,6 +259,7 @@ $(ATTRIBUTES)
         # markerspace = relative,
         shading = true,
         fxaa = true,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -277,11 +286,12 @@ $(ATTRIBUTES)
         space = :screen, # or :data
         offset = Point2f0(0, 0),
         _glyphlayout = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
 function plot!(plot::Text)
-    
+
     # attach a function to any text that calculates the glyph layout and stores it
     onany(plot[1], plot.position, plot.textsize, plot.font, plot.align, plot.rotation, plot.model, plot.justification, plot.lineheight) do str, pos, ts, f, al, rot, mo, jus, lh
         ts = to_textsize(ts)
@@ -528,6 +538,7 @@ function (PlotType::Type{<: AbstractPlot{Typ}})(scene::SceneLike, attributes::At
     end
     # create the plot, with the full attributes, the input signals, and the final signal nodes.
     plot_obj = FinalType(scene, transformation, plot_attributes, input, seperate_tuple(args))
+
     transformation.parent[] = plot_obj
     calculated_attributes!(plot_obj)
     plot_obj

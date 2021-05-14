@@ -40,7 +40,7 @@ function layoutable(::Type{Legend},
     decorations[:frame] = poly!(scene,
         @lift(enlarge($legendrect, repeat([-$framewidth/2], 4)...)),
         color = bgcolor, strokewidth = framewidth, visible = framevisible,
-        strokecolor = framecolor, raw = true)
+        strokecolor = framecolor, raw = true, inspectable = false)
 
     # the grid containing all content
     grid = GridLayout(bbox = legendrect, alignmode = Outside(padding[]...))
@@ -206,7 +206,7 @@ function layoutable(::Type{Legend},
                 push!(titletexts, nothing)
             else
                 push!(titletexts, Label(scene, text = title, font = titlefont, color = titlecolor,
-                    textsize = titlesize, halign = titlehalign, valign = titlevalign))
+                    textsize = titlesize, halign = titlehalign, valign = titlevalign, inspectable = false))
             end
 
             etexts = []
@@ -266,7 +266,7 @@ function legendelement_plots!(scene, element::MarkerElement, bbox::Node{FRect2D}
     scat = scatter!(scene, points, color = attrs.color, marker = attrs.marker,
         markersize = attrs.markersize,
         strokewidth = attrs.markerstrokewidth,
-        strokecolor = attrs.strokecolor, raw = true)
+        strokecolor = attrs.strokecolor, raw = true, inspectable = false)
     [scat]
 end
 
@@ -278,7 +278,7 @@ function legendelement_plots!(scene, element::LineElement, bbox::Node{FRect2D}, 
     points = @lift(fractionpoint.(Ref($bbox), $fracpoints))
     lin = lines!(scene, points, linewidth = attrs.linewidth, color = attrs.color,
         linestyle = attrs.linestyle,
-        raw = true)
+        raw = true, inspectable = false)
     [lin]
 end
 
@@ -290,7 +290,7 @@ function legendelement_plots!(scene, element::PolyElement, bbox::Node{FRect2D}, 
     points = @lift(fractionpoint.(Ref($bbox), $fracpoints))
     pol = poly!(scene, points, strokewidth = attrs.polystrokewidth, color = attrs.color,
         strokecolor = attrs.strokecolor,
-        raw = true)
+        raw = true, inspectable = false)
     [pol]
 end
 
@@ -486,19 +486,25 @@ function get_labeled_plots(ax)
     lplots, labels
 end
 
-get_plots(ax::Axis) = ax.scene.plots
-get_plots(scene::Scene) = scene.plots
-get_plots(lscene::LScene) = lscene.scene.plots
-
+get_plots(p::AbstractPlot) = [p]
+get_plots(ax::Axis) = get_plots(ax.scene)
+get_plots(lscene::LScene) = get_plots(lscene.scene)
+function get_plots(scene::Scene)
+    plots = AbstractPlot[]
+    for p in scene.plots
+        append!(plots, get_plots(p))
+    end
+    return plots
+end
 
 # convenience constructor for axis legend
-
 axislegend(ax = current_axis(); kwargs...) = axislegend(ax, ax; kwargs...)
 
 axislegend(title::String; kwargs...) = axislegend(current_axis(), current_axis(), title; kwargs...)
 
 """
     axislegend(ax, args...; position = :rt, kwargs...)
+    axislegend(ax, args...; position = (1, 1), kwargs...)
     axislegend(ax = current_axis(); kwargs...)
     axislegend(title::String; kwargs...)
 

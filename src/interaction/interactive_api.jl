@@ -25,12 +25,13 @@ function onpick(f, scene::SceneLike, plots::AbstractPlot...; range=1)
     map_once(events(scene).mouseposition) do mp
         p, idx = mouse_selection(args...)
         (p in fplots) && f(idx)
-        return
+        return false
     end
 end
 
 """
     mouse_selection(scene::Scene)
+
 Returns the plot that is under the current mouse position
 """
 function mouse_selection(scene::SceneLike)
@@ -64,19 +65,26 @@ function flatten_plots(array, plots = AbstractPlot[])
 end
 
 """
-    mouse_in_scene(scene::Scene)
-returns the mouseposition relative to `scene`
+    mouse_in_scene(scene::Scene[, priority = 0])
+
+Returns a new node that is true whenever the cursor is inside the given scene.
+
+See also: [`is_mouseinside`](@ref)
 """
-function mouse_in_scene(scene::SceneLike)
+function mouse_in_scene(scene::SceneLike; priority = Int8(0))
     p = rootparent(scene)
-    lift(pixelarea(p), pixelarea(scene), events(scene).mouseposition) do pa, sa, mp
-        Vec(mp) .- minimum(sa)
+    output = Node(Vec2(0.0))
+    on(events(scene).mouseposition, priority = priority) do mp
+        output[] = Vec(mp) .- minimum(pixelarea(scene)[])
     end
+    output
 end
 
 
 """
-Return the plot under pixel position x y
+    pick(scene, x, y)
+
+Returns the plot under pixel position `(x, y)`.
 """
 function pick(scene::SceneLike, x::Number, y::Number)
     return pick(scene, Vec{2, Float64}(x, y))
@@ -84,31 +92,119 @@ end
 
 
 """
-    pick(scene::Scene, xy::VecLike[, range])
+    pick(scene::Scene, xy::VecLike)
 
-Return the plot under pixel position xy
+Return the plot under pixel position xy.
 """
 function pick(scene::SceneLike, xy)
     screen = getscreen(scene)
     screen === nothing && return (nothing, 0)
     pick(scene, screen, Vec{2, Float64}(xy))
 end
+
+"""
+    pick(scene::Scene, xy::VecLike, range)
+
+Return the plot closest to xy within a given range.
+"""
 function pick(scene::SceneLike, xy, range)
     screen = getscreen(scene)
     screen === nothing && return (nothing, 0)
-    pick(scene, screen, Vec{2, Float64}(xy), Float64(range))
+    pick_closest(scene, screen, xy, range)
+end
+
+# The backend may handle this more optimally
+function pick_closest(scene::SceneLike, screen, xy, range)
+    w, h = widths(screen)
+    ((1.0 <= xy[1] <= w) && (1.0 <= xy[2] <= h)) || return (nothing, 0)
+    x0, y0 = max.(1, floor.(Int, xy .- range))
+    x1, y1 = min.([w, h], floor.(Int, xy .+ range))
+    dx = x1 - x0; dy = y1 - y0
+    
+    picks = pick(scene, screen, IRect2D(x0, y0, dx, dy))
+
+    min_dist = range^2
+    selected = (0, 0)
+    x, y =  xy .+ 1 .- Vec2f0(x0, y0)
+    for i in 1:dx, j in 1:dy
+        d = (x-i)^2 + (y-j)^2
+        if (d < min_dist) && (picks[i, j][1] != nothing)
+            min_dist = d
+            selected = (i, j)
+        end
+    end
+
+    return selected == (0, 0) ? (nothing, 0) : picks[selected[1], selected[2]]
 end
 
 """
-Normalizes mouse position relative to the screen rectangle
+    pick_sorted(scene::Scene, xy::VecLike, range)
+
+Return all `(plot, index)` pairs in a `(xy .- range, xy .+ range)` region 
+sorted by distance to `xy`.
+"""
+function pick_sorted(scene::SceneLike, xy, range)
+    screen = getscreen(scene)
+    screen === nothing && return Tuple{AbstractPlot, Int}[]
+    pick_sorted(scene, screen, xy, range)
+end
+
+function pick_sorted(scene::SceneLike, screen, xy, range)
+    w, h = widths(screen)
+    if !((1.0 <= xy[1] <= w) && (1.0 <= xy[2] <= h))
+        return Tuple{AbstractPlot, Int}[]
+    end
+    x0, y0 = max.(1, floor.(Int, xy .- range))
+    x1, y1 = min.([w, h], floor.(Int, xy .+ range))
+    dx = x1 - x0; dy = y1 - y0
+    
+    picks = pick(scene, screen, IRect2D(x0, y0, dx, dy))
+
+    selected = filter(x -> x[1] != nothing, unique(vec(picks)))
+    distances = [range^2 for _ in selected]
+    x, y =  xy .+ 1 .- Vec2f0(x0, y0)
+    for i in 1:dx, j in 1:dy
+        if picks[i, j][1] != nothing
+            d = (x-i)^2 + (y-j)^2
+            i = findfirst(isequal(picks[i, j]), selected)
+            if i === nothing
+                @warn "This shouldn't happen..."
+            elseif distances[i] > d
+                distances[i] = d
+            end
+        end
+    end
+
+    idxs = sortperm(distances)
+    permute!(selected, idxs)
+    return selected
+end
+
+"""
+    pick(scene::Scene, rect::IRect2D)
+
+Return all `(plot, index)` pairs within the given rect. The rect must be within
+screen boundaries.
+"""
+function pick(scene::SceneLike, rect::IRect2D)
+    screen = getscreen(scene)
+    screen === nothing && return Tuple{AbstractPlot, Int}[]
+    return pick(scene, screen, rect)
+end
+
+"""
+    screen_relative(scene, pos)
+
+Normalizes mouse position `pos` relative to the screen rectangle.
 """
 function screen_relative(scene::Scene, mpos)
     return Point2f0(mpos) .- Point2f0(minimum(pixelarea(scene)[]))
 end
 
 """
-    mouseposition(scene = hovered_scene()) -> pos
-Return the current position of the mouse `pos` in _data points_ of the
+    mouseposition(scene = hovered_scene())
+
+Return the current position of the mouse in _data coordinates_ of the
 given `scene`.
 
 By default uses the `scene` that the mouse is currently hovering over.
@@ -126,14 +222,17 @@ end
 
 """
     hovered_scene()
-Return the `scene` that the mouse is currently hovering over.
+
+Returns the `scene` that the mouse is currently hovering over.
 
 Properly identifies the scene for a plot with multiple sub-plots.
 """
 hovered_scene() = error("hoevered_scene is not implemented yet.")
 
+
 """
     select_rectangle(scene; kwargs...) -> rect
+
 Interactively select a rectangle on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. The function returns an **observable** `rect` whose
 value corresponds to the selected rectangle on the scene. In addition the function
@@ -146,7 +245,7 @@ rectangle has area > 0.
 
 The `kwargs...` are propagated into `lines!` which plots the selected rectangle.
 """
-function select_rectangle(scene; strokewidth = 3.0, kwargs...)
+function select_rectangle(scene; blocking = false, priority = 2, strokewidth = 3.0, kwargs...)
     key = Mouse.left
     waspressed = Node(false)
     rect = Node(FRect(0, 0, 1, 1)) # plotted rectangle
@@ -157,19 +256,18 @@ function select_rectangle(scene; strokewidth = 3.0, kwargs...)
         scene, rect, raw = true, visible = false, color = RGBAf0(0, 0, 0, 0), strokecolor = RGBAf0(0.1, 0.1, 0.8, 0.5), strokewidth = strokewidth, kwargs...,
     )
 
-    on(events(scene).mousedrag) do drag
-        if ispressed(scene, key) && is_mouseinside(scene)
-            mp = mouseposition(scene)
-            if drag == Mouse.down
+    on(events(scene).mousebutton, priority=priority) do event
+        if event.button == key
+            if event.action == Mouse.press && is_mouseinside(scene)
+                mp = mouseposition(scene)
                 waspressed[] = true
                 plotted_rect[:visible] = true # start displaying
                 rect[] = FRect(mp, 0.0, 0.0)
-            elseif drag == Mouse.pressed
-                mini = minimum(rect[])
-                rect[] = FRect(mini, mp - mini)
+                return blocking
             end
-        else
-            if drag == Mouse.up && waspressed[] # User has selected the rectangle
+        end
+        if !(event.button == key && event.action == Mouse.press)
+            if waspressed[] # User has selected the rectangle
                 waspressed[] = false
                 r = absrect(rect[])
                 w, h = widths(r)
@@ -179,14 +277,27 @@ function select_rectangle(scene; strokewidth = 3.0, kwargs...)
             end
             # always hide if not the right key is pressed
             plotted_rect[:visible] = false # make the plotted rectangle invisible
+            return blocking
         end
-        return rect_ret
+
+        return false
     end
+    on(events(scene).mouseposition, priority=priority) do event
+        if waspressed[]
+            mp = mouseposition(scene)
+            mini = minimum(rect[])
+            rect[] = FRect(mini, mp - mini)
+            return blocking
+        end
+        return false
+    end
+
     return rect_ret
 end
 
 """
     select_line(scene; kwargs...) -> line
+
 Interactively select a line (typically an arrow) on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. Return an **observable** whose value corresponds
 to the selected line on the scene. In addition the function
@@ -198,7 +309,7 @@ and only if the selected line has non-zero length.
 
 The `kwargs...` are propagated into `lines!` which plots the selected line.
 """
-function select_line(scene; kwargs...)
+function select_line(scene; blocking = false, priority = 2, kwargs...)
     key = Mouse.left
     waspressed = Node(false)
     line = Node([Point2f0(0,0), Point2f0(1,1)])
@@ -209,36 +320,46 @@ function select_line(scene; kwargs...)
         linewidth = 4, kwargs...,
     )
 
-    on(events(scene).mousedrag) do drag
-        if ispressed(scene, key) && is_mouseinside(scene)
+    on(events(scene).mousebutton, priority=priority) do event
+        if event.button == key && is_mouseinside(scene)
             mp = mouseposition(scene)
-            if drag == Mouse.down
+            if event.action == Mouse.press
                 waspressed[] = true
                 plotted_line[:visible] = true  # start displaying
                 line[][1] = mp
                 line[][2] = mp
                 line[] = line[]
-            elseif drag == Mouse.pressed
-                line[][2] = mp
-                line[] = line[] # actually update observable
+                return blocking
             end
-        else
-            if drag == Mouse.up && waspressed[] # User has selected the rectangle
+        end
+        if !(event.button == key && event.action == Mouse.press)
+            if waspressed[] # User has selected the rectangle
                 waspressed[] = false
                 if line[][1] != line[][2]
                     line_ret[] = copy(line[])
                 end
             end
-            # always hide if not the right key is pressed
             plotted_line[:visible] = false
+            return blocking
         end
-        return line_ret
+        return false
     end
+    on(events(scene).mouseposition, priority=priority) do event
+        if waspressed[]
+            mp = mouseposition(scene)
+            line[][2] = mp
+            line[] = line[] # actually update observable
+            return blocking
+        end
+        return false
+    end
+
     return line_ret
 end
 
 """
     select_point(scene; kwargs...) -> point
+    
 Interactively select a point on a 2D `scene` by clicking the left mouse button,
 dragging and then un-clicking. Return an **observable** whose value corresponds
 to the selected point on the scene. In addition the function
@@ -249,7 +370,7 @@ The value of the returned point is updated **only** when the user un-clicks.
 
 The `kwargs...` are propagated into `scatter!` which plots the selected point.
 """
-function select_point(scene; kwargs...)
+function select_point(scene; blocking = false, priority=2, kwargs...)
     key = Mouse.left
     pmarker = Circle(Point2f0(0, 0), Float32(1))
     waspressed = Node(false)
@@ -261,27 +382,36 @@ function select_point(scene; kwargs...)
         color = RGBAf0(0.1, 0.1, 0.8, 0.5), kwargs...,
     )
 
-    on(events(scene).mousedrag) do drag
-        if ispressed(scene, key) && is_mouseinside(scene)
+    on(events(scene).mousebutton, priority=priority) do event
+        if event.button == key && is_mouseinside(scene)
             mp = mouseposition(scene)
-            if drag == Mouse.down
+            if event.action == Mouse.press
                 waspressed[] = true
                 plotted_point[:visible] = true  # start displaying
                 point[][1] = mp
                 point[] = point[]
-            elseif drag == Mouse.pressed
-                point[][1] = mp
-                point[] = point[] # actually update observable
+                return blocking
             end
-        else
-            if drag == Mouse.up && waspressed[] # User has selected the rectangle
+        end
+        if !(event.button == key && event.action == Mouse.press)
+            if waspressed[] # User has selected the rectangle
                 waspressed[] = false
                 point_ret[] = copy(point[][1])
             end
-            # always hide if not the right key is pressed
             plotted_point[:visible] = false
+            return blocking
         end
-        return point_ret
+        return false
     end
+    on(events(scene).mouseposition, priority=priority) do event
+        if waspressed[]
+            mp = mouseposition(scene)
+            point[][1] = mp
+            point[] = point[] # actually update observable
+            return blocking
+        end
+        return false
+    end
+
     return point_ret
 end

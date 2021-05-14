@@ -12,8 +12,11 @@ end
 
 function disconnect!(c::Camera)
     for node in c.steering_nodes
-        filter!(listeners(node)) do x
-            !(x isa CameraLift) # remove all camera lifts
+        # remove all camera lifts
+        for f in listeners(node)
+            if f isa CameraLift 
+                off(node, f)
+            end
         end
     end
     return
@@ -41,13 +44,17 @@ end
 When mapping over nodes for the camera, we store them in the `steering_node` vector,
 to make it easier to disconnect the camera steering signals later!
 """
-function Observables.on(f, c::Camera, nodes::Node...)
+function Observables.on(f, c::Camera, nodes::AbstractObservable...; priority=Int8(0))
     # this basically reimplements onany, which is a bit annoying, but like
     # this we don't have such a closure hell and CameraLift will be nicely
     # identifiable when we disconnect the nodes!
     cl = CameraLift(f, nodes)
     for n in nodes
-        on(cl, n)
+        if n isa PriorityObservable
+            on(cl, n, priority=priority)
+        else
+            on(cl, n)
+        end
     end
     push!(c.steering_nodes, nodes...)
     return f
@@ -80,6 +87,11 @@ function is_mouseinside(scene, target)
     return false
 end
 
+"""
+    is_mouseinside(scene)
+
+Returns true if the current mouseposition is inside the given scene.
+"""
 function is_mouseinside(scene)
     return Vec(scene.events.mouseposition[]) in pixelarea(scene)[]
     # Check that mouse is not inside any other screen

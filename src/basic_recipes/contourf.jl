@@ -8,7 +8,11 @@ The attribute `levels` can be either
 - an `Int` that produces n equally wide levels or bands
 - an `AbstractVector{<:Real}` that lists n consecutive edges from low to high, which result in n-1 levels or bands
 
-If you want to show a band from `-Inf` to the low edge, set `extendlow` to `:auto` for the same color as the first level, or specify a different color (default `nothing` means no extended band)
+You can also set the `mode` attribute to `:relative`.
+In this mode you specify edges by the fraction between minimum and maximum value of `zs`.
+This can be used for example to draw bands for the upper 90% while excluding the lower 10% with `levels = 0.1:0.1:1.0, mode = :relative`.
+
+In :normal mode, if you want to show a band from `-Inf` to the low edge, set `extendlow` to `:auto` for the same color as the first level, or specify a different color (default `nothing` means no extended band)
 If you want to show a band from the high edge to `Inf`, set `extendhigh` to `:auto` for the same color as the last level, or specify a different color (default `nothing` means no extended band)
 
 ## Attributes
@@ -17,9 +21,11 @@ $(ATTRIBUTES)
 @recipe(Contourf) do scene
     Theme(
         levels = 10,
+        mode = :normal,
         colormap = :viridis,
         extendlow = nothing,
         extendhigh = nothing,
+        inspectable = theme(scene, :inspectable)
     )
 end
 
@@ -39,14 +45,24 @@ function _get_isoband_levels(levels::AbstractVector{<:Real}, mi, ma)
     edges
 end
 
-conversion_trait(::Type{<:Contourf}) = SurfaceLike()
+conversion_trait(::Type{<:Contourf}) = ContinuousSurface()
+
+function _get_isoband_levels(::Val{:normal}, levels, values)
+    _get_isoband_levels(levels, extrema_nan(values)...)
+end
+
+function _get_isoband_levels(::Val{:relative}, levels::AbstractVector, values)
+    mi, ma = extrema_nan(values)
+    Float32.(levels .* (ma - mi) .+ mi)
+end
+
 
 function AbstractPlotting.plot!(c::Contourf{<:Tuple{<:AbstractVector{<:Real}, <:AbstractVector{<:Real}, <:AbstractMatrix{<:Real}}})
     xs, ys, zs = c[1:3]
 
 
-    c.attributes[:_computed_levels] = lift(zs, c.levels) do zs, levels
-        _get_isoband_levels(levels, extrema_nan(zs)...)
+    c.attributes[:_computed_levels] = lift(zs, c.levels, c.mode) do zs, levels, mode
+        _get_isoband_levels(Val(mode), levels, vec(zs))
     end
 
     colorrange = lift(c._computed_levels) do levels
@@ -88,7 +104,7 @@ function AbstractPlotting.plot!(c::Contourf{<:Tuple{<:AbstractVector{<:Real}, <:
     PolyType = typeof(Polygon(Point2f0[], [Point2f0[]]))
 
     polys = Observable(PolyType[])
-    colors = Observable(RGBAf0[])
+    colors = Observable(Float64[])
 
     function calculate_polys(xs, ys, zs, levels::Vector{Float32}, is_extended_low, is_extended_high)
         empty!(polys[])
@@ -120,14 +136,7 @@ function AbstractPlotting.plot!(c::Contourf{<:Tuple{<:AbstractVector{<:Real}, <:
                 push!(polys[], GeometryBasics.Polygon(outline, holes))
                 # use contour level center value as color
                 center_scaled = (center - colorrange[][1]) / (colorrange[][2] - colorrange[][1])
-                color::RGBAf0 = if i == 1 && is_extended_low
-                    lowcolor[]
-                elseif i == nbands && is_extended_high
-                    highcolor[]
-                else
-                    get(c._computed_colormap[], center_scaled)
-                end
-                push!(colors[], color)
+                push!(colors[], center)
             end
         end
         polys[] = polys[]
@@ -141,12 +150,14 @@ function AbstractPlotting.plot!(c::Contourf{<:Tuple{<:AbstractVector{<:Real}, <:
 
     poly!(c,
         polys,
-        # colormap = c._computed_colormap,
-        # colorrange = colorrange,
+        colormap = c._computed_colormap,
+        colorrange = colorrange,
         color = colors,
         strokewidth = 0,
         strokecolor = :transparent,
-        shading=false)
+        shading=false,
+        inspectable = c.inspectable
+    )
 end
 
 """

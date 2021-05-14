@@ -348,7 +348,12 @@ makedocs(
             "Basic Tutorial" => "basic-tutorial.md",
             "Layout Tutorial" => "makielayout/tutorial.md",
             "animation.md",
-            "interaction.md",
+            "Interaction" => [
+                "interaction/nodes.md",
+                "interaction/events.md",
+                "interaction/inspector.md"
+            ],
+            # "interaction.md",
             "Plotting Functions" =>
                 joinpath.(
                     "plotting_functions",
@@ -407,7 +412,10 @@ makedocs(
 # env variable, which is JuliaPlots/AbstractPlotting.jl by default
 ENV["GITHUB_REPOSITORY"] = "JuliaPlots/MakieDocumentation"
 
-deploydocs(
-    repo = "github.com/JuliaPlots/MakieDocumentation",
-    push_preview = true
-)
+if !isempty(get(ENV, "DOCUMENTER_KEY", ""))
+    deploydocs(
+        repo = "github.com/JuliaPlots/MakieDocumentation",
+        push_preview = true
+    )
+end
+

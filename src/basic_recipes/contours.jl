@@ -18,7 +18,7 @@ $(ATTRIBUTES)
         levels = 5,
         linewidth = 1.0,
         alpha = 1.0,
-        fillrange = false,
+        fillrange = false
     )
 end
 
@@ -71,8 +71,8 @@ function to_levels(n::Integer, cnorm)
     range(zmin + dz; step = dz, length = n)
 end
 
-conversion_trait(::Type{<: Contour3d}) = SurfaceLike()
-conversion_trait(::Type{<: Contour}) = SurfaceLike()
+conversion_trait(::Type{<: Contour3d}) = ContinuousSurface()
+conversion_trait(::Type{<: Contour}) = ContinuousSurface()
 conversion_trait(::Type{<: Contour{<: Tuple{X, Y, Z, Vol}}}) where {X, Y, Z, Vol} = VolumeLike()
 conversion_trait(::Type{<: Contour{<: Tuple{<: AbstractArray{T, 3}}}}) where T = VolumeLike()
 
@@ -106,7 +106,7 @@ function plot!(plot::Contour{<: Tuple{X, Y, Z, Vol}}) where {X, Y, Z, Vol}
         plot, x, y, z, volume, colormap = cmap, colorrange = cliprange, algorithm = 7,
         transparency = plot.transparency, overdraw = plot.overdraw,
         ambient = plot.ambient, diffuse = plot.diffuse, lightposition = plot.lightposition,
-        shininess = plot.shininess, specular = plot.specular
+        shininess = plot.shininess, specular = plot.specular, inspectable = plot.inspectable
     )
 end
 
@@ -174,7 +174,8 @@ function plot!(plot::T) where T <: Union{Contour, Contour3d}
         end
         lines!(
             plot, lift(first, result);
-            color = lift(last, result), linewidth = plot[:linewidth]
+            color = lift(last, result), linewidth = plot[:linewidth],
+            inspectable = plot[:inspectable]
         )
     end
     plot

@@ -1,17 +1,15 @@
 @cell "heatmap_with_labels" begin
     fig = Figure(resolution = (600, 600))
     ax = fig[1, 1] = Axis(fig)
-    tightlimits!(ax)
-    values = RNG.rand(100)
+    values = RNG.rand(10, 10)
 
-    poly!(ax, [FRect2D(x, y, 1, 1) for x in 1:10 for y in 1:10], color = values,
-        strokecolor = :black, strokewidth = 1)
+    heatmap!(ax, values)
 
     text!(ax,
-        string.(round.(values, digits = 2)),
-        position = [Point2f0(x, y) .+ 0.5 for x in 1:10 for y in 1:10],
+        string.(round.(vec(values'), digits = 2)),
+        position = [Point2f0(x, y) for x in 1:10 for y in 1:10],
         align = (:center, :center),
-        color = ifelse.(values .< 0.3, :white, :black),
+        color = ifelse.(vec(values') .< 0.3, :white, :black),
         textsize = 12)
     fig
 end
@@ -238,6 +236,32 @@ end
     text!("hello", position = Point3f0(1, 1, 1), offset = (10, 10))
 
     f
+end
+
+@cell "Text Char offsets" begin
+    fig = Figure()
+    ls = LScene(fig[1, 1], scenkw = (camera=cam3d!, ))
+    text!(
+        ls,
+        ["kx", "π_2"],
+        position = [Point3f0(1, 0.5, 0.75), Point3f0(0.5, 1, 0.25)],
+        offset = [
+            [Vec2f0(0), Vec2f0(0, -5)],
+            [Vec2f0(0, 10), Vec2f0(-11, 11), Vec2f0(-22, -11)],
+        ],
+        textsize = [[20, 10], [20, 20, 20]],
+        limits = FRect3D(Point3f0(0), Point3f0(1))
+    )
+
+    ax = Axis(fig[1, 2])
+    text!(
+        ax, "x2",
+        offset=[Vec2f0(0), Vec2f0(0, 6)],
+        align = (:right, :top),
+        textsize = [20, 14]
+    )
+
+    fig
 end
 
 

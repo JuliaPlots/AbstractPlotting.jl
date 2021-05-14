@@ -100,7 +100,8 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
         font = attrs.titlefont,
         color = attrs.titlecolor,
         space = :data,
-        show_axis=false)
+        show_axis=false, 
+        inspectable = false)
     decorations[:title] = titlet
 
 
@@ -111,11 +112,14 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
     on(scene.events.scroll) do s
         if is_mouseinside(scene)
             scrollevents[] = ScrollEvent(s[1], s[2])
+            return true
         end
+        return false
     end
 
-    on(scene.events.keyboardbuttons) do buttons
-        keysevents[] = KeysEvent(buttons)
+    on(scene.events.keyboardbutton) do e
+        keysevents[] = KeysEvent(scene.events.keyboardstate)
+        return false
     end
 
     interactions = Dict{Symbol, Tuple{Bool, Any}}()
@@ -136,8 +140,9 @@ function layoutable(::Type{<:Axis3}, fig_or_scene::Union{Figure, Scene}; bbox = 
 
     function process_event(event)
         for (active, interaction) in values(ax.interactions)
-            active && process_interaction(interaction, event, ax)
+            active && process_interaction(interaction, event, ax) && return true
         end
+        return false
     end
 
     on(process_event, mouseeventhandle.obs)
@@ -380,7 +385,7 @@ function add_gridlines_and_frames!(topscene, scene, dim::Int, limits, ticknode, 
     end
     linesegments!(scene, endpoints, color = attr(:gridcolor),
         xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
-        visible = attr(:gridvisible))
+        visible = attr(:gridvisible), inspectable = false)
 
     endpoints2 = lift(limits, tickvalues, min1, min2) do lims, ticks, min1, min2
         f1 = min1 ? minimum(lims)[d1] : maximum(lims)[d1]
@@ -394,7 +399,7 @@ function add_gridlines_and_frames!(topscene, scene, dim::Int, limits, ticknode, 
     end
     linesegments!(scene, endpoints2, color = attr(:gridcolor),
         xautolimits = false, yautolimits = false, zautolimits = false, transparency = true,
-        visible = attr(:gridvisible))
+        visible = attr(:gridvisible), inspectable = false)
 
 
     framepoints = lift(limits, min1, min2,
@@ -420,7 +425,7 @@ function add_gridlines_and_frames!(topscene, scene, dim::Int, limits, ticknode, 
 
     linesegments!(topscene, framepoints, color = attr(:spinecolor), linewidth = attr(:spinewidth),
         # transparency = true,
-        visible = attr(:spinesvisible), show_axis = false)
+        visible = attr(:spinesvisible), show_axis = false, inspectable = false)
 
     nothing
 end
@@ -489,7 +494,7 @@ function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, 
 
     linesegments!(topscene, tick_segments_2dz,
         xautolimits = false, yautolimits = false, zautolimits = false,
-        transparency = true,
+        transparency = true, inspectable = false,
         color = attr(:tickcolor), linewidth = attr(:tickwidth), visible = attr(:ticksvisible))
 
     labels_positions = lift(scene.px_area, scene.camera.projectionview,
@@ -522,7 +527,7 @@ function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, 
 
     ticklabel_obj = annotations!(topscene, labels_positions, align = align, show_axis = false,
         color = attr(:ticklabelcolor), textsize = attr(:ticklabelsize),
-        font = attr(:ticklabelfont), visible = attr(:ticklabelsvisible),
+        font = attr(:ticklabelfont), visible = attr(:ticklabelsvisible), inspectable = false
     )
 
     translate!(ticklabel_obj, 0, 0, 1000)
@@ -603,7 +608,8 @@ function add_ticks_and_ticklabels!(topscene, scene, dim::Int, limits, ticknode, 
         position = @lift($label_pos_rot_valign[1]),
         rotation = @lift($label_pos_rot_valign[2]),
         align = labelalign,
-        visible = attr(:labelvisible)
+        visible = attr(:labelvisible), 
+        inspectable = false
     )
 
     nothing
@@ -647,7 +653,7 @@ function add_panel!(scene, dim1, dim2, dim3, limits, min3, attrs)
 
     faces = [1 2 3; 3 4 1]
 
-    mesh!(scene, vertices, faces, shading = false,
+    mesh!(scene, vertices, faces, shading = false, inspectable = false,
         xautolimits = false, yautolimits = false, zautolimits = false,
         color = attr(:panelcolor), visible = attr(:panelvisible))
 end
