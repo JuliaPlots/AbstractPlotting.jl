@@ -67,7 +67,7 @@ lines_theme = Theme(
     )
 )
 
-with_theme(example_plot, ggplot_theme)
+with_theme(example_plot, lines_theme)
 ```
 
 ## Theming layoutable objects
