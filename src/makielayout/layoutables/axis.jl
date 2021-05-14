@@ -249,11 +249,13 @@ function layoutable(::Type{<:Axis}, fig_or_scene::Union{Figure, Scene}; bbox = n
     end
 
     xoppositeline = lines!(topscene, xoppositelinepoints, linewidth = spinewidth,
-        visible = xoppositespinevisible, color = xoppositespinecolor, inspectable = false)
+        visible = xoppositespinevisible, color = xoppositespinecolor, inspectable = false,
+        linestyle = nothing)
     decorations[:xoppositeline] = xoppositeline
     translate!(xoppositeline, 0, 0, 20)
     yoppositeline = lines!(topscene, yoppositelinepoints, linewidth = spinewidth,
-        visible = yoppositespinevisible, color = yoppositespinecolor, inspectable = false)
+        visible = yoppositespinevisible, color = yoppositespinecolor, inspectable = false,
+        linestyle = nothing)
     decorations[:yoppositeline] = yoppositeline
     translate!(yoppositeline, 0, 0, 20)
 
