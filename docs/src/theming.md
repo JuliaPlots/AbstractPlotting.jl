@@ -140,6 +140,8 @@ for i in 1:6
     density!(randn(50) .+ 2i)
 end
 
+set_theme!() # hide
+
 f
 ```
 
