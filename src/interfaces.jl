@@ -72,7 +72,7 @@ $(ATTRIBUTES)
 @recipe(Heatmap, x, y, values) do scene
     Attributes(;
         default_theme(scene)...,
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         linewidth = 0.0,
         interpolate = false,
@@ -105,7 +105,7 @@ $(ATTRIBUTES)
         isovalue = 0.5,
         isorange = 0.05,
         color = nothing,
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = (0, 1),
         fxaa = true,
         inspectable = theme(scene, :inspectable)
@@ -125,7 +125,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = nothing,
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         shading = true,
         fxaa = true,
@@ -154,7 +154,7 @@ $(ATTRIBUTES)
         default_theme(scene)...,
         linewidth = theme(scene, :linewidth),
         color = theme(scene, :linecolor),
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         linestyle = nothing,
         fxaa = false,
@@ -193,7 +193,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = :black,
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         interpolate = false,
         shading = true,
@@ -216,7 +216,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = theme(scene, :markercolor),
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         marker = Circle,
         markersize = 9,
@@ -253,7 +253,7 @@ $(ATTRIBUTES)
     Attributes(;
         default_theme(scene)...,
         color = :black,
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = automatic,
         marker = Sphere(Point3f0(0), 1f0),
         markersize = 0.1,

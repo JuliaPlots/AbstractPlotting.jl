@@ -351,7 +351,7 @@ function default_attributes(::Type{Colorbar}, scene)
         "Controls if the parent layout can adjust to this element's height"
         tellheight = true
         "The colormap that the colorbar uses."
-        colormap = :viridis
+        colormap = lift_parent_attribute(scene, :colormap, :viridis)
         "The range of values depicted in the colorbar."
         limits = (0f0, 1f0)
         "The align mode of the colorbar in its parent GridLayout."

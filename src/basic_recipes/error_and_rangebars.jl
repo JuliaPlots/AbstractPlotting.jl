@@ -24,7 +24,7 @@ $(ATTRIBUTES)
         linewidth = 1,
         direction = :y,
         visible = theme(scene, :visible),
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         inspectable = theme(scene, :inspectable)
     )
 end
@@ -50,7 +50,7 @@ $(ATTRIBUTES)
         linewidth = 1,
         direction = :y,
         visible = theme(scene, :visible),
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         inspectable = theme(scene, :inspectable)
     )
 end

@@ -34,7 +34,7 @@ $(ATTRIBUTES)
 @recipe(Density) do scene
     Theme(
         color = theme(scene, :patchcolor),
-        colormap = :viridis,
+        colormap = theme(scene, :colormap),
         colorrange = AbstractPlotting.automatic,
         strokecolor = theme(scene, :patchstrokecolor),
         strokewidth = theme(scene, :patchstrokewidth),
