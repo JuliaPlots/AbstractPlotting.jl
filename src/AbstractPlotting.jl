@@ -61,6 +61,7 @@ include("utilities/texture_atlas.jl")
 include("interaction/nodes.jl")
 include("interaction/liftmacro.jl")
 
+include("bezier.jl")
 include("colorsampler.jl")
 include("patterns.jl")
 
@@ -148,6 +149,7 @@ include("interaction/inspector.jl")
 # documentation and help functions
 include("documentation/documentation.jl")
 include("display.jl")
+
 
 
 # help functions and supporting functions
