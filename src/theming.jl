@@ -32,7 +32,7 @@ Conservative 7-color palette from Points of view: Color blindness, Bang Wong - N
 https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106
 =#
 
-function wong_colors(alpha)
+function wong_colors(alpha = 1.0)
     colors = [
         RGB(0/255, 114/255, 178/255), # blue
         RGB(230/255, 159/255, 0/255), # orange
