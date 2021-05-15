@@ -10,7 +10,9 @@ building a complex figure step by step. This is the final result we will create:
 
 ![layout_tutorial_final](layout_tutorial_final.svg)
 
+```@raw html
 <details><summary>The full code of this example plot is here:</summary>
+```
 
 ```julia
 using CairoMakie
@@ -102,7 +104,9 @@ colsize!(hm_sublayout, 1, Aspect(1, 1))
 save("layout_tutorial_final.svg", fig)
 ```
 
+```@raw html
 </details>
+```
 
 All right, let's get started!
 
