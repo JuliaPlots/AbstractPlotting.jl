@@ -11,7 +11,7 @@ building a complex figure step by step. This is the final result we will create:
 ![layout_tutorial_final](layout_tutorial_final.svg)
 
 ```@raw html
-<details><summary>The full code of this example plot is here:</summary>
+<details><summary>You can click here to see the full code</summary>
 ```
 
 ```julia
