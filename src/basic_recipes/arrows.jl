@@ -36,7 +36,8 @@ $(ATTRIBUTES)
             lengthscale = 1f0,
             colormap = :viridis,
             quality = 32,
-            inspectable = theme(scene, :inspectable)
+            inspectable = theme(scene, :inspectable),
+            markerspace = Pixel,
         )
     )
     attr[:fxaa] = automatic
@@ -158,11 +159,13 @@ function plot!(arrowplot::Arrows{<: Tuple{AbstractVector{<: Point{N, T}}, V}}) w
 
         # for 2D arrows, compute the correct marker rotation given the projection / scene size
         # for the screen-space marker
-        rotations = lift(scene.camera.projectionview, scene.px_area, headstart) do pv, pxa, hs
-            proj_rotations = map(hs) do (start, stop)
-                pstart = project(scene, start)
-                pstop = project(scene, stop)
-                diff = pstop - pstart
+        if arrowplot.markerspace[] == Pixel
+            rotations = lift(scene.camera.projectionview, scene.px_area, headstart) do pv, pxa, hs
+                proj_rotations = map(hs) do (start, stop)
+                    pstart = project(scene, start)
+                    pstop = project(scene, stop)
+                    diff = pstop - pstart
+                end
             end
         end
 
@@ -179,7 +182,7 @@ function plot!(arrowplot::Arrows{<: Tuple{AbstractVector{<: Point{N, T}}, V}}) w
             marker = @lift(arrow_head(2, $arrowhead, $quality)),
             markersize = @lift($arrowsize === automatic ? 0.3 : $arrowsize),
             color = arrow_c, rotations = rotations, strokewidth = 0.0,
-            colormap = colormap,
+            colormap = colormap, markerspace = arrowplot.markerspace,
             fxaa = fxaa_bool, inspectable = inspectable,
             transparency = transparency, visible = visible
         )
