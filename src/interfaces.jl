@@ -158,7 +158,7 @@ $(ATTRIBUTES)
         colorrange = automatic,
         linestyle = nothing,
         fxaa = false,
-        cycle = [:color, :linestyle],
+        cycle = [:color],
         inspectable = theme(scene, :inspectable)
     )
 end
@@ -233,7 +233,7 @@ $(ATTRIBUTES)
         distancefield = nothing,
         markerspace = Pixel,
         fxaa = false,
-        cycle = [:color, :marker],
+        cycle = [:color],
         inspectable = theme(scene, :inspectable)
     )
 end
