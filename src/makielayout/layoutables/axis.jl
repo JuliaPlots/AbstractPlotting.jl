@@ -513,8 +513,6 @@ end
 validate_limits_for_scale(lims, scale) = all(x -> x in defined_interval(scale), lims)
 
 
-# is_in_cycle(cycle::Symbol, symbol::Symbol) = cycle == symbol
-# is_in_cycle(cycle::Vector{Symbol}, symbol::Symbol) = symbol in cycle
 
 palettesyms(cycle::Cycle) = [c[2] for c in cycle.cycle]
 attrsyms(cycle::Cycle) = [c[1] for c in cycle.cycle]
@@ -539,13 +537,8 @@ function AbstractPlotting.plot!(
     plottheme = AbstractPlotting.default_theme(nothing, P)
 
     cdt = AbstractPlotting.current_default_theme()
-    cycle_raw = if haskey(cdt, psym)
-        pt = cdt[psym]
-        if haskey(pt, :cycle)
-            pt.cycle[]
-        else
-            nothing
-        end
+    cycle_raw = if haskey(cdt, psym) && haskey(cdt[psym], :cycle)
+        cdt[psym].cycle[]
     else
         haskey(plottheme, :cycle) ? plottheme.cycle[] : nothing
     end
