@@ -23,7 +23,8 @@ $(ATTRIBUTES)
         width = automatic,
         direction = :y,
         visible = theme(scene, :visible),
-        inspectable = theme(scene, :inspectable)
+        inspectable = theme(scene, :inspectable),
+        cycle = [:color => :patchcolor],
     )
 end
 

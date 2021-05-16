@@ -198,7 +198,8 @@ $(ATTRIBUTES)
         interpolate = false,
         shading = true,
         fxaa = true,
-        inspectable = theme(scene, :inspectable)
+        inspectable = theme(scene, :inspectable),
+        cycle = [:color => :patchcolor],
     )
 end
 
@@ -219,7 +220,7 @@ $(ATTRIBUTES)
         colormap = theme(scene, :colormap),
         colorrange = automatic,
         marker = Circle,
-        markersize = 9,
+        markersize = theme(scene, :markersize),
 
         strokecolor = theme(scene, :markerstrokecolor),
         strokewidth = theme(scene, :markerstrokewidth),
@@ -261,7 +262,8 @@ $(ATTRIBUTES)
         # markerspace = relative,
         shading = true,
         fxaa = true,
-        inspectable = theme(scene, :inspectable)
+        inspectable = theme(scene, :inspectable),
+        cycle = [:color],
     )
 end
 

@@ -32,8 +32,8 @@ It is most commonly used as part of the `boxplot`.
     n_dodge = automatic,
     x_gap = 0.2,
     dodge_gap = 0.03,
-    strokecolor=:white,
-    strokewidth=0.0,
+    strokecolor = theme(scene, :patchstrokecolor),
+    strokewidth = theme(scene, :patchstrokewidth),
     # notch
     show_notch=false,
     notchmin=automatic,
@@ -43,7 +43,8 @@ It is most commonly used as part of the `boxplot`.
     show_midline=true,
     midlinecolor=automatic,
     midlinewidth=1.0,
-    inspectable = theme(scene, :inspectable)
+    inspectable = theme(scene, :inspectable),
+    cycle = [:color => :patchcolor],
 )
     t
 end
