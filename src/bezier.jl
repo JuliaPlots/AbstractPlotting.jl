@@ -111,17 +111,27 @@ function BezierPath(svg::AbstractString, T = Float64)
     commands = PathCommand{T}[]
     lastcomm = nothing
     function lastp()
+        c = commands[end]
         if isnothing(lastcomm)
             Point{T}(0, 0)
-        elseif commands[end] isa ClosePath
+        elseif c isa ClosePath
             r = reverse(commands)
             backto = findlast(x -> !(x isa ClosePath), r)
             if isnothing(backto)
                 error("No point to go back to")
             end
             r[backto].p
+        elseif c isa EllipticalArc
+            let
+                ϕ = c.angle
+                a2 = c.a2
+                rx = c.r1
+                ry = c.r2
+                m = Mat2(cos(ϕ), sin(ϕ), -sin(ϕ), cos(ϕ))
+                m * Point(rx * cos(a2), ry * sin(a2)) + c.c
+            end
         else
-            commands[end].p
+            c.p
         end
     end
 
@@ -188,17 +198,27 @@ function BezierPath(svg::AbstractString, T = Float64)
             push!(commands, CurveTo{T}(reflected, Point2{T}(x1, y1) + l, Point2{T}(x2, y2) + l))
             i += 5
         elseif comm == "A"
-            @show args[i+1:i+7]
+            args[i+1:i+7]
             r1, r2 = parse.(Float64, args[i+1:i+2])
             angle = parse(Float64, args[i+3])
             large_arc_flag, sweep_flag = parse.(Bool, args[i+4:i+5])
             x2, y2 = parse.(Float64, args[i+6:i+7])
             x1, y1 = lastp()
 
-            x1p, x2p = []
-            # push!(commands, ClosePath{T}())
+            push!(commands, EllipticalArc(x1, y1, x2, y2, r1, r2,
+                angle, large_arc_flag, sweep_flag))
             i += 8
-            error("A not implemented correctly yet")
+        elseif comm == "a"
+            @show args[i+1:i+7]
+            r1, r2 = parse.(Float64, args[i+1:i+2])
+            angle = parse(Float64, args[i+3])
+            large_arc_flag, sweep_flag = parse.(Bool, args[i+4:i+5])
+            x1, y1 = lastp()
+            x2, y2 = parse.(Float64, args[i+6:i+7]) .+ (x1, y1)
+
+            push!(commands, EllipticalArc(x1, y1, x2, y2, r1, r2,
+                angle, large_arc_flag, sweep_flag))
+            i += 8
         else
             for c in commands
                 println(c)
@@ -214,8 +234,37 @@ function BezierPath(svg::AbstractString, T = Float64)
 
 end
 
-# function EllipticalArc(x1, y1, x2, y2, r1, r2, angle, largearc, sweepflag)
-#     p1 = [x1, y1]
-#     p2 = [x2, y2]
+function EllipticalArc(x1, y1, x2, y2, rx, ry, ϕ, largearc, sweepflag)
+    # https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
 
-# end
+    p1 = Point(x1, y1)
+    p2 = Point(x2, y2)
+
+    m1 = Mat2(cos(ϕ), -sin(ϕ), sin(ϕ), cos(ϕ))
+    x1′, y1′ = m1 * (0.5 * (p1 - p2))
+
+    tempsqrt = (rx^2 * ry^2 - rx^2 * y1′^2 - ry^2 * x1′^2) /
+        (rx^2 * y1′^2 + ry^2 * x1′^2)
+
+    c′ = (largearc == sweepflag ? -1 : 1) *
+        sqrt(tempsqrt) * Point(rx * y1′ / ry, -ry * x1′ / rx)
+
+    c = Mat2(cos(ϕ), sin(ϕ), -sin(ϕ), cos(ϕ)) * c′ + 0.5 * (p1 + p2)
+
+    vecangle(u, v) = sign(u[1] * v[2] - u[2] * v[1]) *
+        acos(dot(u, v) / (norm(u) * norm(v)))
+
+    px(sign) = Point((sign * x1′ - c′[1]) / rx, (sign * y1′ - c′[2]) / rx)
+
+    θ1 = vecangle(Point(1.0, 0.0), px(1))
+    Δθ_pre = mod(vecangle(px(1), px(-1)), 2pi)
+    Δθ = if Δθ_pre > 0 && !sweepflag
+        Δθ_pre - 2pi
+    elseif Δθ_pre < 0 && sweepflag
+        Δθ_pre + 2pi
+    else
+        Δθ_pre
+    end
+
+    EllipticalArc(c, rx, ry, ϕ, θ1, θ1 + Δθ)
+end
