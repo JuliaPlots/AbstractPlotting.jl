@@ -209,7 +209,6 @@ function BezierPath(svg::AbstractString, T = Float64)
                 angle, large_arc_flag, sweep_flag))
             i += 8
         elseif comm == "a"
-            @show args[i+1:i+7]
             r1, r2 = parse.(Float64, args[i+1:i+2])
             angle = parse(Float64, args[i+3])
             large_arc_flag, sweep_flag = parse.(Bool, args[i+4:i+5])
@@ -219,6 +218,11 @@ function BezierPath(svg::AbstractString, T = Float64)
             push!(commands, EllipticalArc(x1, y1, x2, y2, r1, r2,
                 angle, large_arc_flag, sweep_flag))
             i += 8
+        elseif comm == "v"
+            dy = parse(Float64, args[i+1])
+            l = lastp()
+            push!(commands, LineTo{T}(Point2{T}(l[1], l[2] + dy)))
+            i += 2
         else
             for c in commands
                 println(c)
