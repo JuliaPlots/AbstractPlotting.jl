@@ -232,4 +232,5 @@ end
     scrollevents::Observable{ScrollEvent}
     keysevents::Observable{KeysEvent}
     interactions::Dict{Symbol, Tuple{Bool, Any}}
+    cycler::Cycler
 end
