@@ -525,13 +525,7 @@ function get_cycler_index!(c::Cycler, P::Type)
     end
 end
 
-function AbstractPlotting.plot!(
-        la::Axis, P::AbstractPlotting.PlotFunc,
-        attributes::AbstractPlotting.Attributes, args...;
-        kw_attributes...)
-
-    allattrs = merge(attributes, Attributes(kw_attributes))
-
+function get_cycle_for_plottype(P)::Cycle
     psym = AbstractPlotting.plotsym(P)
 
     plottheme = AbstractPlotting.default_theme(nothing, P)
@@ -543,19 +537,24 @@ function AbstractPlotting.plot!(
         haskey(plottheme, :cycle) ? plottheme.cycle[] : nothing
     end
 
-    cycle = isnothing(cycle_raw) ? Cycle([]) :
-        cycle_raw isa Cycle ? cycle_raw : Cycle(cycle_raw)
+    if isnothing(cycle_raw)
+        Cycle([])
+    elseif cycle_raw isa Cycle
+        cycle_raw
+    else
+        Cycle(cycle_raw)
+    end
+end
 
+function add_cycle_attributes!(allattrs, P, cycle::Cycle, cycler::Cycler, palette::Attributes)
     no_cycle_attribute_passed = !any(keys(allattrs)) do key
         any(syms -> key in syms, attrsyms(cycle))
     end
 
     if no_cycle_attribute_passed
-        cycler = la.cycler
-
         index = get_cycler_index!(cycler, P)
 
-        paletteattrs = [la.palette[sym] for sym in palettesyms(cycle)]
+        paletteattrs = [palette[sym] for sym in palettesyms(cycle)]
 
         for (isym, syms) in enumerate(attrsyms(cycle))
             for sym in syms
@@ -573,6 +572,17 @@ function AbstractPlotting.plot!(
             end
         end
     end
+end
+
+function AbstractPlotting.plot!(
+        la::Axis, P::AbstractPlotting.PlotFunc,
+        attributes::AbstractPlotting.Attributes, args...;
+        kw_attributes...)
+
+    allattrs = merge(attributes, Attributes(kw_attributes))
+
+    cycle = get_cycle_for_plottype(P)
+    add_cycle_attributes!(allattrs, P, cycle, la.cycler, la.palette)
 
     plot = AbstractPlotting.plot!(la.scene, P, allattrs, args...)
 
