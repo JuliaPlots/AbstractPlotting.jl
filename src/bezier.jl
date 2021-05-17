@@ -101,6 +101,64 @@ BezierCross = let
 end
 
 
+# pathtokens(::Union{Val{:M}, Val{:m}, Val{:L}, Val{:l}}) = (Float64, Float64)
+# pathtokens(::Union{Val{:H}, Val{:h}, Val{:V}, Val{:v}}) = (Float64,)
+# pathtokens(::Union{Val{:Z}, Val{:z}}) = ()
+# pathtokens(::Union{Val{:C}, Val{:c}}) = (Float64, Float64, Float64, Float64, Float64, Float64)
+# pathtokens(::Union{Val{:S}, Val{:s}}) = (Float64, Float64, Float64, Float64)
+# pathtokens(::Union{Val{:A}, Val{:a}}) = (Float64, Float64, Float64, Bool, Bool, Float64, Float64)
+# # pathtokens
+
+# function BezierPath(svg::AbstractString)
+#     n = length(svg)
+#     offset = 1
+
+#     commands = PathCommand{Float64}[]
+
+#     v = view(svg, 1:n)
+
+#     while offset < n
+#         offset += shift_to_nonseparator(v)
+#         v = view(svg, offset:n)
+#         command, offset = parsecommand(v)
+#         push!(commands, command)
+#     end
+
+#     BezierPath(commands)
+# end
+
+# function shift_to_nonseparator(substr)
+#     for (i, char) in enumerate(substr)
+#         if char ∉ " ,\n\t"
+#             return i - 1
+#         end
+#     end
+#     return length(substr) - 1
+# end
+
+# function parsecommand(substr)
+#     commandletters = "MmLlHhVvZzCcSsAa"
+#     @show substr
+
+#     command = substr[1]
+#     if command ∉ commandletters
+#         error("Expected a command letter but got $(substr[1]).")
+#     end
+
+#     types = pathtokens(Val(Symbol(command)))
+# end
+
+# function parsetypes(types, substr)
+#     offset = 1
+#     shift = 0
+#     map(types) do T
+#         offset += shift_to_nonseparator(substr)
+#         val, shift = parsetype(T, substr)
+#         offset += shift
+#         val
+#     end
+# end
+
 function BezierPath(svg::AbstractString, T = Float64)
 
     # args = [e.match for e in eachmatch(r"([a-zA-Z])|(\-?\d*\.?\d+)", svg)]
