@@ -183,7 +183,7 @@ function plot!(arrowplot::Arrows{<: Tuple{AbstractVector{<: Point{N, T}}, V}}) w
             arrowplot,
             lift(x-> last.(x), headstart),
             marker = @lift(arrow_head(2, $arrowhead, $quality)),
-            markersize = @lift($arrowsize === automatic ? 20 : $arrowsize),
+            markersize = @lift($arrowsize === automatic ? theme(scene, :markersize)[] : $arrowsize),
             color = arrow_c, rotations = rotations, strokewidth = 0.0,
             colormap = colormap, markerspace = arrowplot.markerspace,
             fxaa = fxaa_bool, inspectable = inspectable,
