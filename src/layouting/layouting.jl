@@ -362,7 +362,7 @@ function text_quads(positions, string::String, font, textsize)
         push!(scales, widths(glyph_bb))
         push!(offsets, minimum(glyph_bb))
     end
-    return positions, offsets, uv, scales
+    return convert(Vector{Point3f0}, positions), offsets, uv, scales
 end
 
 
@@ -386,7 +386,7 @@ function text_quads(allpos::Vector, strings::Vector, font, textsize)
             push!(offsets, minimum(glyph_bb))
         end
     end
-    return megapos, offsets, uv, scales
+    return convert(Vector{Point3f0}, megapos), offsets, uv, scales
 end
 
 
