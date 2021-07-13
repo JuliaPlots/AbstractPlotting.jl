@@ -258,6 +258,11 @@ function logo()
 end
 
 function __init__()
+    @warn("""
+          Everything from AbstractPlotting.jl got moved to Makie.jl. 
+          Have a look at the README for information on how to upgrade: 
+          https://github.com/JuliaPlots/AbstractPlotting.jl
+          """)
     cfg_path = joinpath(homedir(), ".config", "makie", "theme.jl")
     if isfile(cfg_path)
         @warn "The global configuration file is no longer supported." *
